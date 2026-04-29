@@ -1,8 +1,26 @@
-import UserTransformer from '#transformers/user_transformer'
+import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class ProfileController {
-  async show({ auth, serialize }: HttpContext) {
-    return serialize(UserTransformer.transform(auth.getUserOrFail()))
+  async show({ auth }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const roleRows = await db
+      .from('user_roles')
+      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .where('user_roles.user_id', user.id)
+      .select('roles.key')
+
+    return {
+      data: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        initials: user.initials,
+        institutionId: user.institutionId,
+        roles: roleRows.map((row) => row.key),
+      },
+    }
   }
 }

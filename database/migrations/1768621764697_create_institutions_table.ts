@@ -9,12 +9,7 @@ export default class extends BaseSchema {
       table.string('name', 180).notNullable()
       table.string('code', 50).notNullable().unique()
       table.string('status', 20).notNullable().defaultTo('draft')
-      table
-        .integer('created_by')
-        .unsigned()
-        .references('id')
-        .inTable('users')
-        .onDelete('SET NULL')
+      table.integer('created_by').unsigned().references('id').inTable('users').onDelete('SET NULL')
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()

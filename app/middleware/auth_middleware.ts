@@ -14,7 +14,17 @@ export default class AuthMiddleware {
       guards?: (keyof Authenticators)[]
     } = {}
   ) {
-    await ctx.auth.authenticateUsing(options.guards)
+    try {
+      await ctx.auth.authenticateUsing(options.guards)
+    } catch {
+      return ctx.response.unauthorized({
+        error: {
+          code: 'AUTH_REQUIRED',
+          message: 'Authentication required',
+          requestId: ctx.request.id(),
+        },
+      })
+    }
     return next()
   }
 }

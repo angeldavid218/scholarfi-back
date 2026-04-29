@@ -11,6 +11,26 @@ export interface ApiDefinition {
       destroy: typeof routes['auth.access_token.destroy']
     }
   }
+  store: typeof routes['store']
+  updateStatus: typeof routes['updateStatus']
+  bootstrapSchoolAdmin: typeof routes['bootstrapSchoolAdmin']
+  provisionUser: typeof routes['provisionUser']
+  assignUserRole: typeof routes['assignUserRole']
+  upsertTeacherStudentAssociation: typeof routes['upsertTeacherStudentAssociation']
+  listStudentAvailableTasks: typeof routes['listStudentAvailableTasks']
+  listTeacherTasks: typeof routes['listTeacherTasks']
+  createTask: typeof routes['createTask']
+  closeTask: typeof routes['closeTask']
+  teacherQueue: typeof routes['teacherQueue']
+  adminQueue: typeof routes['adminQueue']
+  showSubmission: typeof routes['showSubmission']
+  createSubmission: typeof routes['createSubmission']
+  teacherActionSubmission: typeof routes['teacherActionSubmission']
+  teacherRejectSubmission: typeof routes['teacherRejectSubmission']
+  adminDecisionSubmission: typeof routes['adminDecisionSubmission']
+  postRewardForSubmission: typeof routes['postRewardForSubmission']
+  showStudentBalance: typeof routes['showStudentBalance']
+  listInstitutionRewardHistory: typeof routes['listInstitutionRewardHistory']
   profile: {
     profile: {
       show: typeof routes['profile.profile.show']

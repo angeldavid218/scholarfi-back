@@ -4,10 +4,22 @@ import type { HttpContext } from '@adonisjs/core/http'
 import UserTransformer from '#transformers/user_transformer'
 
 export default class AccessTokenController {
-  async store({ request, serialize }: HttpContext) {
+  async store({ request, response, serialize }: HttpContext) {
     const { email, password } = await request.validateUsing(loginValidator)
-
-    const user = await User.verifyCredentials(email, password)
+    const requestId = request.id()
+    const authFailurePayload = {
+      error: {
+        code: 'INVALID_CREDENTIALS',
+        message: 'Invalid email or password',
+        requestId,
+      },
+    }
+    let user: User
+    try {
+      user = await User.verifyCredentials(email, password)
+    } catch {
+      return response.unauthorized(authFailurePayload)
+    }
     const token = await User.accessTokens.create(user)
 
     return serialize({

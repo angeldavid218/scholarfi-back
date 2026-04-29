@@ -46,4 +46,6 @@ router.use([
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
+  role: () => import('#middleware/role_guard_middleware'),
+  tenantScope: () => import('#middleware/tenant_scope_middleware'),
 })

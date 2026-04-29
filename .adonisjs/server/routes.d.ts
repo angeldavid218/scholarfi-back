@@ -7,18 +7,67 @@ export type ScannedRoutes = {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
+    'store': { paramsTuple?: []; params?: {} }
+    'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'provisionUser': { paramsTuple?: []; params?: {} }
+    'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
+    'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
+    'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
+    'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'createTask': { paramsTuple?: []; params?: {} }
+    'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'teacherQueue': { paramsTuple?: []; params?: {} }
+    'adminQueue': { paramsTuple?: []; params?: {} }
+    'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'createSubmission': { paramsTuple?: []; params?: {} }
+    'teacherActionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'teacherRejectSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'adminDecisionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
+    'showStudentBalance': { paramsTuple?: []; params?: {} }
+    'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   GET: {
+    'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
+    'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'teacherQueue': { paramsTuple?: []; params?: {} }
+    'adminQueue': { paramsTuple?: []; params?: {} }
+    'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showStudentBalance': { paramsTuple?: []; params?: {} }
+    'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
+    'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
+    'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'teacherQueue': { paramsTuple?: []; params?: {} }
+    'adminQueue': { paramsTuple?: []; params?: {} }
+    'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showStudentBalance': { paramsTuple?: []; params?: {} }
+    'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
+    'store': { paramsTuple?: []; params?: {} }
+    'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'provisionUser': { paramsTuple?: []; params?: {} }
+    'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
+    'createTask': { paramsTuple?: []; params?: {} }
+    'createSubmission': { paramsTuple?: []; params?: {} }
+    'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
+  }
+  PATCH: {
+    'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
+    'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'teacherActionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'teacherRejectSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'adminDecisionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {
