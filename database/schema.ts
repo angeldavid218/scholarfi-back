@@ -32,8 +32,185 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class InstitutionSchema extends BaseModel {
+  static $columns = ['code', 'createdAt', 'createdBy', 'id', 'name', 'status', 'updatedAt'] as const
+  $columns = InstitutionSchema.$columns
+  @column()
+  declare code: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdBy: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class RewardTransactionSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
+  $columns = RewardTransactionSchema.$columns
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column.dateTime()
+  declare postedAt: DateTime
+  @column()
+  declare status: string
+  @column()
+  declare studentId: number
+  @column()
+  declare submissionId: number
+  @column()
+  declare type: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class RoleSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'key', 'label', 'updatedAt'] as const
+  $columns = RoleSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare key: string
+  @column()
+  declare label: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class SimulatedBalanceSchema extends BaseModel {
+  static $columns = ['balance', 'createdAt', 'id', 'institutionId', 'studentId', 'updatedAt'] as const
+  $columns = SimulatedBalanceSchema.$columns
+  @column()
+  declare balance: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare studentId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class SubmissionValidationSchema extends BaseModel {
+  static $columns = ['action', 'comment', 'createdAt', 'id', 'schoolAdminId', 'submissionId', 'teacherId'] as const
+  $columns = SubmissionValidationSchema.$columns
+  @column()
+  declare action: string
+  @column()
+  declare comment: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare schoolAdminId: number | null
+  @column()
+  declare submissionId: number
+  @column()
+  declare teacherId: number | null
+}
+
+export class SubmissionSchema extends BaseModel {
+  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'id', 'institutionId', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
+  $columns = SubmissionSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare evidenceText: string
+  @column()
+  declare evidenceUrl: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare status: string
+  @column()
+  declare studentId: number
+  @column.dateTime()
+  declare submittedAt: DateTime
+  @column()
+  declare taskId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class TaskSchema extends BaseModel {
+  static $columns = ['createdAt', 'createdByTeacherId', 'description', 'dueAt', 'id', 'institutionId', 'rewardAmount', 'status', 'title', 'updatedAt'] as const
+  $columns = TaskSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdByTeacherId: number
+  @column()
+  declare description: string
+  @column.dateTime()
+  declare dueAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare rewardAmount: number
+  @column()
+  declare status: string
+  @column()
+  declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class TeacherStudentSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'institutionId', 'studentId', 'teacherId', 'updatedAt'] as const
+  $columns = TeacherStudentSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare studentId: number
+  @column()
+  declare teacherId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class UserRoleSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'roleId', 'updatedAt', 'userId'] as const
+  $columns = UserRoleSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare roleId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+}
+
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'updatedAt'] as const
+  static $columns = ['createdAt', 'email', 'fullName', 'id', 'institutionId', 'isActive', 'password', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -43,6 +220,10 @@ export class UserSchema extends BaseModel {
   declare fullName: string | null
   @column({ isPrimary: true })
   declare id: number
+  @column()
+  declare institutionId: number | null
+  @column()
+  declare isActive: boolean
   @column({ serializeAs: null })
   declare password: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
