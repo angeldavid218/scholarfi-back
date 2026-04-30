@@ -24,6 +24,12 @@ const routes = {
     tokens: [{"old":"/api/v1/auth/logout","type":0,"val":"api","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['auth.access_token.destroy']['types'],
   },
+  'index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions',
+    tokens: [{"old":"/api/v1/institutions","type":0,"val":"api","end":""},{"old":"/api/v1/institutions","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions","type":0,"val":"institutions","end":""}],
+    types: placeholder as Registry['index']['types'],
+  },
   'store': {
     methods: ["POST"],
     pattern: '/api/v1/institutions',
@@ -83,6 +89,12 @@ const routes = {
     pattern: '/api/v1/tasks/:id/close',
     tokens: [{"old":"/api/v1/tasks/:id/close","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/:id/close","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/:id/close","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/:id/close","type":1,"val":"id","end":""},{"old":"/api/v1/tasks/:id/close","type":0,"val":"close","end":""}],
     types: placeholder as Registry['closeTask']['types'],
+  },
+  'listStudentSubmissions': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/submissions',
+    tokens: [{"old":"/api/v1/submissions","type":0,"val":"api","end":""},{"old":"/api/v1/submissions","type":0,"val":"v1","end":""},{"old":"/api/v1/submissions","type":0,"val":"submissions","end":""}],
+    types: placeholder as Registry['listStudentSubmissions']['types'],
   },
   'teacherQueue': {
     methods: ["GET","HEAD"],

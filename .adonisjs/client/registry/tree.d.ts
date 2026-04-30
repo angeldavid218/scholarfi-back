@@ -11,6 +11,7 @@ export interface ApiDefinition {
       destroy: typeof routes['auth.access_token.destroy']
     }
   }
+  index: typeof routes['index']
   store: typeof routes['store']
   updateStatus: typeof routes['updateStatus']
   bootstrapSchoolAdmin: typeof routes['bootstrapSchoolAdmin']
@@ -21,6 +22,7 @@ export interface ApiDefinition {
   listTeacherTasks: typeof routes['listTeacherTasks']
   createTask: typeof routes['createTask']
   closeTask: typeof routes['closeTask']
+  listStudentSubmissions: typeof routes['listStudentSubmissions']
   teacherQueue: typeof routes['teacherQueue']
   adminQueue: typeof routes['adminQueue']
   showSubmission: typeof routes['showSubmission']

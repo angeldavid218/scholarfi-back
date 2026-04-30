@@ -43,6 +43,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_token_controller').default['destroy']>>>
     }
   }
+  'index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['index']>>>
+    }
+  }
   'store': {
     methods: ["POST"]
     pattern: '/api/v1/institutions'
@@ -161,6 +173,18 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/task').closeTaskValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['close']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['close']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'listStudentSubmissions': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/submissions'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/submissions_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/submissions_controller').default['index']>>>
     }
   }
   'teacherQueue': {

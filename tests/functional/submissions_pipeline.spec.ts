@@ -113,7 +113,77 @@ test.group('Submissions pipeline', (group) => {
     assert.deepEqual(body.data.history, [])
   })
 
-  test('teacher queue is scoped and teacher can validate submission', async ({ client, assert }) => {
+  test('student can list own submissions only', async ({ client, assert }) => {
+    const institutionId = await createInstitution('PIPE-LST')
+    const teacher = await User.create({
+      email: 'pipe-teacher-list@example.com',
+      password: 'Secret123!',
+      fullName: 'Teacher List',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    const student = await User.create({
+      email: 'pipe-student-list@example.com',
+      password: 'Secret123!',
+      fullName: 'Student List',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(student.id, 'student', 'Student')
+    const otherStudent = await User.create({
+      email: 'pipe-student-list-other@example.com',
+      password: 'Secret123!',
+      fullName: 'Student Other',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(otherStudent.id, 'student', 'Student')
+
+    const taskInsert = await db
+      .table('tasks')
+      .insert({
+        institution_id: institutionId,
+        created_by_teacher_id: teacher.id,
+        title: 'List submissions task',
+        description: 'List',
+        reward_amount: 15,
+        due_at: null,
+        status: 'active',
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+    const task = taskInsert[0] as any
+    const taskId = typeof task === 'number' ? task : task.id
+
+    const studentToken = await loginToken(client, student.email)
+    await client
+      .post('/api/v1/submissions')
+      .header('authorization', `Bearer ${studentToken}`)
+      .json({ taskId, evidenceText: 'Mine' })
+
+    const otherToken = await loginToken(client, otherStudent.email)
+    await client
+      .post('/api/v1/submissions')
+      .header('authorization', `Bearer ${otherToken}`)
+      .json({ taskId, evidenceText: 'Other' })
+
+    const listResponse = await client
+      .get('/api/v1/submissions')
+      .header('authorization', `Bearer ${studentToken}`)
+
+    listResponse.assertStatus(200)
+    const body = listResponse.body() as any
+    assert.lengthOf(body.data, 1)
+    assert.equal(body.data[0].studentId, student.id)
+    assert.equal(body.data[0].statusLabelEs, 'Pendiente de validacion docente')
+  })
+
+  test('teacher queue is scoped and teacher can validate submission', async ({
+    client,
+    assert,
+  }) => {
     const institutionId = await createInstitution('PIPE-TEA')
     const teacher = await User.create({
       email: 'pipe-teacher-2@example.com',
@@ -271,7 +341,10 @@ test.group('Submissions pipeline', (group) => {
     assert.equal(Number(rewardRows[0].amount), 40)
   })
 
-  test('history is chronological and includes teacher reject reason', async ({ client, assert }) => {
+  test('history is chronological and includes teacher reject reason', async ({
+    client,
+    assert,
+  }) => {
     const institutionId = await createInstitution('PIPE-HIS')
     const teacher = await User.create({
       email: 'pipe-teacher-5@example.com',

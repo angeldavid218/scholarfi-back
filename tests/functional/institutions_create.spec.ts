@@ -117,4 +117,48 @@ test.group('Institutions create', (group) => {
       },
     })
   })
+
+  test('super admin can list institutions', async ({ client, assert }) => {
+    await db.table('institutions').insert([
+      {
+        name: 'List School One',
+        code: 'LIST-ONE',
+        status: 'draft',
+        created_by: null,
+        created_at: new Date(),
+        updated_at: null,
+      },
+      {
+        name: 'List School Two',
+        code: 'LIST-TWO',
+        status: 'active',
+        created_by: null,
+        created_at: new Date(),
+        updated_at: null,
+      },
+    ])
+
+    await User.create({
+      email: 'list-super-admin@example.com',
+      password: 'Secret123!',
+      fullName: 'List Super Admin',
+    })
+    const user = await User.findByOrFail('email', 'list-super-admin@example.com')
+    await assignRoleToUser(user.id, 'super_admin', 'Super Admin')
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: 'list-super-admin@example.com',
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as any).data.token as string
+
+    const response = await client
+      .get('/api/v1/institutions')
+      .header('authorization', `Bearer ${token}`)
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    assert.isAtLeast(body.data.length, 2)
+    assert.equal(body.data.some((item: any) => item.code === 'LIST-ONE'), true)
+    assert.equal(body.data.some((item: any) => item.code === 'LIST-TWO'), true)
+  })
 })

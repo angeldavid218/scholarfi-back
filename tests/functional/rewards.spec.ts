@@ -56,7 +56,10 @@ async function loginToken(client: any, email: string) {
 test.group('Rewards and balance flows', (group) => {
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
-  test('idempotent reward repost does not duplicate transaction or balance', async ({ client, assert }) => {
+  test('idempotent reward repost does not duplicate transaction or balance', async ({
+    client,
+    assert,
+  }) => {
     const institutionId = await createInstitution('RW-IDP')
 
     const teacher = await User.create({

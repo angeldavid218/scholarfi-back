@@ -14,6 +14,21 @@ import type { HttpContext } from '@adonisjs/core/http'
 type DbErrorWithCode = Error & { code?: string }
 
 export default class InstitutionsController {
+  async index() {
+    const rows = await Institution.query().orderBy('created_at', 'desc').orderBy('id', 'desc')
+
+    return {
+      data: rows.map((institution) => ({
+        id: institution.id,
+        name: institution.name,
+        code: institution.code,
+        status: institution.status,
+        createdAt: institution.createdAt,
+        updatedAt: institution.updatedAt,
+      })),
+    }
+  }
+
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createInstitutionValidator)
 

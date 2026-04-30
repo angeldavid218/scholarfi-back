@@ -7,6 +7,7 @@ export type ScannedRoutes = {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
+    'index': { paramsTuple?: []; params?: {} }
     'store': { paramsTuple?: []; params?: {} }
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -17,6 +18,7 @@ export type ScannedRoutes = {
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
     'createTask': { paramsTuple?: []; params?: {} }
     'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
     'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -30,8 +32,10 @@ export type ScannedRoutes = {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   GET: {
+    'index': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
     'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -40,8 +44,10 @@ export type ScannedRoutes = {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
+    'index': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
     'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

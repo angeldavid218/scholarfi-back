@@ -49,3 +49,43 @@ Default API URL: `http://localhost:3333`
 - `npm run typecheck` - Run TypeScript checks without emitting files
 - `npm run test` - Run backend test suite (Japa)
 
+## Demo Operations (Epic 6)
+
+Use deterministic demo commands for sales/demo readiness.
+
+```bash
+# Seed only when DB is empty
+node ace demo:seed
+
+# Reset to deterministic baseline every time
+node ace demo:reset
+```
+
+Default deterministic dataset:
+
+- `1` active institution (`SFA-DEMO`)
+- `1` school admin, `1` teacher, `2` students
+- teacher/student associations for both students
+- starter task + approved starter submission + reward + balance (unless `--no-starter` flag is used)
+
+Reset documentation:
+
+1. Run `node ace demo:reset`
+2. Confirm deterministic users exist:
+   - `demo.admin@scholarfi.test`
+   - `demo.teacher@scholarfi.test`
+   - `demo.student1@scholarfi.test`
+   - `demo.student2@scholarfi.test`
+3. Confirm deterministic institution code exists: `SFA-DEMO`.
+
+### Demo Seed Users (quick login reference)
+
+After `node ace demo:seed` or `node ace demo:reset`, use these credentials:
+
+| Role | Email | Password | Institution |
+|---|---|---|---|
+| School Admin | `demo.admin@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+| Teacher | `demo.teacher@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+| Student | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+| Student | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+

@@ -47,7 +47,7 @@ export default class SubmissionsController {
     institutionId: number | null,
     action: 'validate' | 'reject',
     reason: string | null,
-    requestId: string
+    requestId: string | undefined
   ) {
     const submission = await Submission.query()
       .innerJoin('tasks', 'tasks.id', 'submissions.task_id')
@@ -64,7 +64,7 @@ export default class SubmissionsController {
           error: {
             code: 'TENANT_SCOPE_VIOLATION',
             message: 'Cross-tenant access is not allowed',
-            requestId,
+            requestId: requestId ?? 'unknown',
           },
         },
       }
@@ -77,7 +77,7 @@ export default class SubmissionsController {
           error: {
             code: 'INVALID_STATE_TRANSITION',
             message: 'Submission is not in a teacher-actionable state',
-            requestId,
+            requestId: requestId ?? 'unknown',
           },
         },
       }
@@ -231,6 +231,31 @@ export default class SubmissionsController {
     }
   }
 
+  async index({ auth }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const rows = await Submission.query()
+      .where('institution_id', user.institutionId ?? -1)
+      .andWhere('student_id', user.id)
+      .orderBy('submitted_at', 'desc')
+      .orderBy('id', 'desc')
+
+    return {
+      data: rows.map((submission) => ({
+        id: submission.id,
+        institutionId: submission.institutionId,
+        taskId: submission.taskId,
+        studentId: submission.studentId,
+        evidenceText: submission.evidenceText,
+        evidenceUrl: submission.evidenceUrl,
+        status: submission.status,
+        statusLabelEs: statusLabelEs(submission.status),
+        submittedAt: submission.submittedAt,
+        createdAt: submission.createdAt,
+        updatedAt: submission.updatedAt,
+      })),
+    }
+  }
+
   async teacherQueue({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
 
@@ -243,6 +268,8 @@ export default class SubmissionsController {
         'submissions.id',
         'submissions.task_id',
         'submissions.student_id',
+        'submissions.evidence_text',
+        'submissions.evidence_url',
         'submissions.status',
         'submissions.submitted_at',
         'submissions.created_at',
@@ -256,6 +283,8 @@ export default class SubmissionsController {
         id: row.id,
         taskId: row.taskId,
         studentId: row.studentId,
+        evidenceText: row.evidenceText,
+        evidenceUrl: row.evidenceUrl,
         taskTitle: row.title,
         status: row.status,
         statusLabelEs: statusLabelEs(row.status),
@@ -338,6 +367,8 @@ export default class SubmissionsController {
         'submissions.id',
         'submissions.task_id',
         'submissions.student_id',
+        'submissions.evidence_text',
+        'submissions.evidence_url',
         'submissions.status',
         'submissions.submitted_at',
         'submissions.created_at',
@@ -351,6 +382,8 @@ export default class SubmissionsController {
         id: row.id,
         taskId: row.taskId,
         studentId: row.studentId,
+        evidenceText: row.evidenceText,
+        evidenceUrl: row.evidenceUrl,
         taskTitle: row.title,
         status: row.status,
         statusLabelEs: statusLabelEs(row.status),

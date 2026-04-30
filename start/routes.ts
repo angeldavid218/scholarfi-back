@@ -29,6 +29,10 @@ router
     router
       .group(() => {
         router
+          .get('/', [() => import('#controllers/institutions_controller'), 'index'])
+          .as('index')
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
           .post('/', [() => import('#controllers/institutions_controller'), 'store'])
           .as('store')
           .use(middleware.role({ roles: ['super_admin'] }))
@@ -94,7 +98,14 @@ router
     router
       .group(() => {
         router
-          .get('/teacher-queue', [() => import('#controllers/submissions_controller'), 'teacherQueue'])
+          .get('/', [() => import('#controllers/submissions_controller'), 'index'])
+          .as('listStudentSubmissions')
+          .use(middleware.role({ roles: ['student'] }))
+        router
+          .get('/teacher-queue', [
+            () => import('#controllers/submissions_controller'),
+            'teacherQueue',
+          ])
           .as('teacherQueue')
           .use(middleware.role({ roles: ['teacher'] }))
         router
@@ -110,15 +121,24 @@ router
           .as('createSubmission')
           .use(middleware.role({ roles: ['student'] }))
         router
-          .patch('/:id/teacher-action', [() => import('#controllers/submissions_controller'), 'teacherAction'])
+          .patch('/:id/teacher-action', [
+            () => import('#controllers/submissions_controller'),
+            'teacherAction',
+          ])
           .as('teacherActionSubmission')
           .use(middleware.role({ roles: ['teacher'] }))
         router
-          .patch('/:id/teacher-reject', [() => import('#controllers/submissions_controller'), 'teacherReject'])
+          .patch('/:id/teacher-reject', [
+            () => import('#controllers/submissions_controller'),
+            'teacherReject',
+          ])
           .as('teacherRejectSubmission')
           .use(middleware.role({ roles: ['teacher'] }))
         router
-          .patch('/:id/admin-decision', [() => import('#controllers/submissions_controller'), 'adminDecision'])
+          .patch('/:id/admin-decision', [
+            () => import('#controllers/submissions_controller'),
+            'adminDecision',
+          ])
           .as('adminDecisionSubmission')
           .use(middleware.role({ roles: ['school_admin'] }))
       })
@@ -129,7 +149,10 @@ router
     router
       .group(() => {
         router
-          .post('/post/:submissionId', [() => import('#controllers/rewards_controller'), 'postForSubmission'])
+          .post('/post/:submissionId', [
+            () => import('#controllers/rewards_controller'),
+            'postForSubmission',
+          ])
           .as('postRewardForSubmission')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
@@ -137,7 +160,10 @@ router
           .as('showStudentBalance')
           .use(middleware.role({ roles: ['student'] }))
         router
-          .get('/history', [() => import('#controllers/rewards_controller'), 'listInstitutionHistory'])
+          .get('/history', [
+            () => import('#controllers/rewards_controller'),
+            'listInstitutionHistory',
+          ])
           .as('listInstitutionRewardHistory')
           .use(middleware.role({ roles: ['school_admin'] }))
       })
