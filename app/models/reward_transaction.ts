@@ -1,3 +1,5 @@
 import { RewardTransactionSchema } from '#database/schema'
 
-export default class RewardTransaction extends RewardTransactionSchema {}
+export default class RewardTransaction extends RewardTransactionSchema {
+  declare studentName: string
+}

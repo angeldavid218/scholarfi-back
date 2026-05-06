@@ -66,12 +66,13 @@ Default deterministic dataset:
 - `1` active institution (`SFA-DEMO`)
 - `1` school admin, `1` teacher, `2` students
 - teacher/student associations for both students
-- starter task + approved starter submission + reward + balance (unless `--no-starter` flag is used)
+- rich task + submission mix by default: **8** teacher tasks (7 active, 1 closed), **4** submissions in the teacher validation queue (`pending`), **2** in the school-admin queue (`validated` after teacher sign-off), plus **2** open tasks with no submission yet; includes the original approved submission + posted reward + balance for student 1 (skip all tasks/submissions with `node ace demo:reset --starter` / `node ace demo:seed --starter`)
 
 Reset documentation:
 
 1. Run `node ace demo:reset`
 2. Confirm deterministic users exist:
+   - `demo.super@scholarfi.test` (platform super admin — `/super` for institutions)
    - `demo.admin@scholarfi.test`
    - `demo.teacher@scholarfi.test`
    - `demo.student1@scholarfi.test`
@@ -84,6 +85,7 @@ After `node ace demo:seed` or `node ace demo:reset`, use these credentials:
 
 | Role | Email | Password | Institution |
 |---|---|---|---|
+| Super Admin | `demo.super@scholarfi.test` | `DemoPass123!` | — (platform; no tenant) |
 | School Admin | `demo.admin@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
 | Teacher | `demo.teacher@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
 | Student | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |

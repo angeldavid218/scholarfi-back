@@ -2,7 +2,9 @@ import Institution from '#models/institution'
 import Task from '#models/task'
 import { closeTaskValidator, createTaskValidator } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
+import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import { parsePositiveInt } from '../utils/parsePositive.ts'
 
 export default class TasksController {
   async store({ auth, request, response }: HttpContext) {
@@ -66,27 +68,64 @@ export default class TasksController {
     }
   }
 
-  async index({ auth }: HttpContext) {
+  async teacherSummary({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
+    const institutionId = user.institutionId ?? -1
+    const teacherId = user.id
+
+    const totalRow = await db
+      .from('tasks')
+      .where('institution_id', institutionId)
+      .andWhere('created_by_teacher_id', teacherId)
+      .count('* as total')
+      .first()
+
+    const closedRow = await db
+      .from('tasks')
+      .where('institution_id', institutionId)
+      .andWhere('created_by_teacher_id', teacherId)
+      .andWhere('status', 'closed')
+      .count('* as total')
+      .first()
+
+    const total = totalRow?.total as string | number | undefined
+    const closed = closedRow?.total as string | number | undefined
+
+    return {
+      data: {
+        total: Number(total ?? 0),
+        closed: Number(closed ?? 0),
+      },
+    }
+  }
+
+  async index({ auth, request }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const page = parsePositiveInt(request.input('page'), 1)
+    const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
 
     const tasks = await Task.query()
       .where('institution_id', user.institutionId ?? -1)
       .andWhere('created_by_teacher_id', user.id)
       .orderBy('created_at', 'desc')
+      .paginate(page, perPage)
 
     return {
-      data: tasks.map((task) => ({
-        id: task.id,
-        institutionId: task.institutionId,
-        createdByTeacherId: task.createdByTeacherId,
-        title: task.title,
-        description: task.description,
-        rewardAmount: task.rewardAmount,
-        dueAt: task.dueAt,
-        status: task.status,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-      })),
+      data: {
+        items: tasks.all().map((task) => ({
+          id: task.id,
+          institutionId: task.institutionId,
+          createdByTeacherId: task.createdByTeacherId,
+          title: task.title,
+          description: task.description,
+          rewardAmount: task.rewardAmount,
+          dueAt: task.dueAt,
+          status: task.status,
+          createdAt: task.createdAt,
+          updatedAt: task.updatedAt,
+        })),
+        meta: tasks.getMeta(),
+      },
     }
   }
 

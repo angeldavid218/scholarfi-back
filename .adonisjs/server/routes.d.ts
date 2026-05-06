@@ -15,6 +15,7 @@ export type ScannedRoutes = {
     'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
+    'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
     'createTask': { paramsTuple?: []; params?: {} }
     'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -28,30 +29,35 @@ export type ScannedRoutes = {
     'adminDecisionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
     'showStudentBalance': { paramsTuple?: []; params?: {} }
+    'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'index': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
+    'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
     'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showStudentBalance': { paramsTuple?: []; params?: {} }
+    'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'index': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
+    'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
     'showSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showStudentBalance': { paramsTuple?: []; params?: {} }
+    'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }

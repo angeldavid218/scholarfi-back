@@ -78,6 +78,7 @@ test.group('Account profile', (group) => {
 
     assert.equal(payload.email, 'profile-user@example.com')
     assert.equal(payload.institutionId, institutionId)
+    assert.equal(payload.institutionName, 'Demo Institution')
     assert.deepEqual(payload.roles.sort(), ['school_admin', 'teacher'])
   })
 })

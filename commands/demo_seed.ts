@@ -10,18 +10,19 @@ export default class DemoSeed extends BaseCommand {
 
   @flags.boolean({
     flagName: 'starter',
-    description: 'Seed without starter task/submission data',
+    description: 'Omit tasks/submissions/rewards (institution + users only)',
   })
   declare starter: boolean
 
   async run() {
     const result = await seedDemoBaseline({
       forceReset: false,
-      includeStarterData: this.starter,
+      includeStarterData: !this.starter,
     })
 
     this.logger.success('Demo baseline seeded successfully')
     this.logger.info(`Institution: ${result.institutionId}`)
+    this.logger.info(`Super admin user: ${result.superAdminId}`)
     this.logger.info(`School admin user: ${result.schoolAdminId}`)
     this.logger.info(`Teacher user: ${result.teacherId}`)
     this.logger.info(`Students: ${result.studentIds.join(', ')}`)

@@ -72,6 +72,12 @@ const routes = {
     tokens: [{"old":"/api/v1/tasks/available","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/available","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/available","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/available","type":0,"val":"available","end":""}],
     types: placeholder as Registry['listStudentAvailableTasks']['types'],
   },
+  'teacherTasksSummary': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/tasks/summary',
+    tokens: [{"old":"/api/v1/tasks/summary","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/summary","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/summary","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/summary","type":0,"val":"summary","end":""}],
+    types: placeholder as Registry['teacherTasksSummary']['types'],
+  },
   'listTeacherTasks': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/tasks',
@@ -149,6 +155,12 @@ const routes = {
     pattern: '/api/v1/rewards/balance',
     tokens: [{"old":"/api/v1/rewards/balance","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/balance","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/balance","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/balance","type":0,"val":"balance","end":""}],
     types: placeholder as Registry['showStudentBalance']['types'],
+  },
+  'rewardHistorySummary': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/rewards/history/summary',
+    tokens: [{"old":"/api/v1/rewards/history/summary","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/history/summary","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/history/summary","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/history/summary","type":0,"val":"history","end":""},{"old":"/api/v1/rewards/history/summary","type":0,"val":"summary","end":""}],
+    types: placeholder as Registry['rewardHistorySummary']['types'],
   },
   'listInstitutionRewardHistory': {
     methods: ["GET","HEAD"],

@@ -5,6 +5,7 @@ import Task from '#models/task'
 import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
+import { parsePositiveInt } from '../utils/parsePositive.ts'
 
 function parseId(input: unknown): number | null {
   const parsed = Number(input)
@@ -131,25 +132,57 @@ export default class RewardsController {
     }
   }
 
-  async listInstitutionHistory({ auth }: HttpContext) {
+  async historySummary({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
-    const rewards = await RewardTransaction.query()
+    const row = await db
+      .from('reward_transactions')
       .where('institution_id', user.institutionId ?? -1)
-      .orderBy('posted_at', 'desc')
-      .orderBy('id', 'desc')
+      .count('* as total')
+      .sum('amount as credits_total')
+      .first()
+
+    const total = row?.total as string | number | undefined
+    const creditsTotal = row?.credits_total as string | number | null | undefined
 
     return {
-      data: rewards.map((reward) => ({
-        id: reward.id,
-        institutionId: reward.institutionId,
-        submissionId: reward.submissionId,
-        studentId: reward.studentId,
-        amount: reward.amount,
-        type: reward.type,
-        status: reward.status,
-        postedAt: reward.postedAt,
-        createdAt: reward.createdAt,
-      })),
+      data: {
+        transactionCount: Number(total ?? 0),
+        creditsTotal:
+          creditsTotal === null || creditsTotal === undefined || creditsTotal === ''
+            ? 0
+            : Number(creditsTotal),
+      },
+    }
+  }
+
+  async listInstitutionHistory({ auth, request }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const page = parsePositiveInt(request.input('page'), 1)
+    const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
+    const rewards = await RewardTransaction.query()
+      .join('users', 'reward_transactions.student_id', 'users.id')
+      .select('reward_transactions.*', 'users.full_name as studentName')
+      .where('reward_transactions.institution_id', user.institutionId ?? -1)
+      .orderBy('posted_at', 'desc')
+      .orderBy('id', 'desc')
+      .paginate(page, perPage)
+
+    return {
+      data: {
+        items: rewards.all().map((reward) => ({
+          id: reward.id,
+          institutionId: reward.institutionId,
+          submissionId: reward.submissionId,
+          studentId: reward.studentId,
+          studentName: reward.$extras?.studentName ?? '',
+          amount: reward.amount,
+          type: reward.type,
+          status: reward.status,
+          postedAt: reward.postedAt,
+          createdAt: reward.createdAt,
+        })),
+        meta: rewards.getMeta(),
+      },
     }
   }
 }

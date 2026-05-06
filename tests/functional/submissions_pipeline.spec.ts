@@ -239,14 +239,15 @@ test.group('Submissions pipeline', (group) => {
       .get('/api/v1/submissions/teacher-queue')
       .header('authorization', `Bearer ${teacherToken}`)
     queueResponse.assertStatus(200)
-    assert.lengthOf((queueResponse.body() as any).data, 1)
+    assert.lengthOf((queueResponse.body() as any).data.items, 1)
+    assert.equal((queueResponse.body() as any).data.meta.total, 1)
 
     const otherToken = await loginToken(client, otherTeacher.email)
     const otherQueueResponse = await client
       .get('/api/v1/submissions/teacher-queue')
       .header('authorization', `Bearer ${otherToken}`)
     otherQueueResponse.assertStatus(200)
-    assert.lengthOf((otherQueueResponse.body() as any).data, 0)
+    assert.lengthOf((otherQueueResponse.body() as any).data.items, 0)
 
     const validateResponse = await client
       .patch(`/api/v1/submissions/${submissionId}/teacher-action`)
@@ -326,7 +327,8 @@ test.group('Submissions pipeline', (group) => {
       .get('/api/v1/submissions/admin-queue')
       .header('authorization', `Bearer ${adminToken}`)
     queueResponse.assertStatus(200)
-    assert.lengthOf((queueResponse.body() as any).data, 1)
+    assert.lengthOf((queueResponse.body() as any).data.items, 1)
+    assert.equal((queueResponse.body() as any).data.meta.total, 1)
 
     const approveResponse = await client
       .patch(`/api/v1/submissions/${submissionId}/admin-decision`)

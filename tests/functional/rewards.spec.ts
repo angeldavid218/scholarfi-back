@@ -325,15 +325,24 @@ test.group('Rewards and balance flows', (group) => {
       .get('/api/v1/rewards/history')
       .header('authorization', `Bearer ${adminAToken}`)
     historyA.assertStatus(200)
-    assert.lengthOf((historyA.body() as any).data, 1)
-    assert.equal((historyA.body() as any).data[0].institutionId, institutionA)
+    assert.lengthOf((historyA.body() as any).data.items, 1)
+    assert.equal((historyA.body() as any).data.items[0].institutionId, institutionA)
+    assert.equal((historyA.body() as any).data.meta.currentPage, 1)
+
+    const summaryA = await client
+      .get('/api/v1/rewards/history/summary')
+      .header('authorization', `Bearer ${adminAToken}`)
+    summaryA.assertStatus(200)
+    assert.equal((summaryA.body() as any).data.transactionCount, 1)
+    assert.equal(Number((summaryA.body() as any).data.creditsTotal), 25)
 
     const adminBToken = await loginToken(client, adminB.email)
     const historyB = await client
       .get('/api/v1/rewards/history')
       .header('authorization', `Bearer ${adminBToken}`)
     historyB.assertStatus(200)
-    assert.lengthOf((historyB.body() as any).data, 1)
-    assert.equal((historyB.body() as any).data[0].institutionId, institutionB)
+    assert.lengthOf((historyB.body() as any).data.items, 1)
+    assert.equal((historyB.body() as any).data.items[0].institutionId, institutionB)
+    assert.equal((historyB.body() as any).data.meta.currentPage, 1)
   })
 })

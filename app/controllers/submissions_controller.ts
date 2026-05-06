@@ -11,6 +11,7 @@ import {
 } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
+import { parsePositiveInt } from '../utils/parsePositive.ts'
 
 type DbErrorWithCode = Error & { code?: string }
 
@@ -256,8 +257,10 @@ export default class SubmissionsController {
     }
   }
 
-  async teacherQueue({ auth }: HttpContext) {
+  async teacherQueue({ auth, request }: HttpContext) {
     const user = auth.getUserOrFail()
+    const page = parsePositiveInt(request.input('page'), 1)
+    const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
 
     const rows = await Submission.query()
       .innerJoin('tasks', 'tasks.id', 'submissions.task_id')
@@ -277,21 +280,25 @@ export default class SubmissionsController {
         'tasks.title'
       )
       .orderBy('submissions.submitted_at', 'asc')
+      .paginate(page, perPage)
 
     return {
-      data: rows.map((row: any) => ({
-        id: row.id,
-        taskId: row.taskId,
-        studentId: row.studentId,
-        evidenceText: row.evidenceText,
-        evidenceUrl: row.evidenceUrl,
-        taskTitle: row.title,
-        status: row.status,
-        statusLabelEs: statusLabelEs(row.status),
-        submittedAt: row.submittedAt,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-      })),
+      data: {
+        items: rows.all().map((row: any) => ({
+          id: row.id,
+          taskId: row.taskId,
+          studentId: row.studentId,
+          evidenceText: row.evidenceText,
+          evidenceUrl: row.evidenceUrl,
+          taskTitle: row.title,
+          status: row.status,
+          statusLabelEs: statusLabelEs(row.status),
+          submittedAt: row.submittedAt,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+        })),
+        meta: rows.getMeta(),
+      },
     }
   }
 
@@ -357,8 +364,11 @@ export default class SubmissionsController {
     return result.payload
   }
 
-  async adminQueue({ auth }: HttpContext) {
+  async adminQueue({ auth, request }: HttpContext) {
     const user = auth.getUserOrFail()
+    const page = parsePositiveInt(request.input('page'), 1)
+    const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
+
     const rows = await Submission.query()
       .innerJoin('tasks', 'tasks.id', 'submissions.task_id')
       .where('submissions.institution_id', user.institutionId ?? -1)
@@ -376,21 +386,25 @@ export default class SubmissionsController {
         'tasks.title'
       )
       .orderBy('submissions.submitted_at', 'asc')
+      .paginate(page, perPage)
 
     return {
-      data: rows.map((row: any) => ({
-        id: row.id,
-        taskId: row.taskId,
-        studentId: row.studentId,
-        evidenceText: row.evidenceText,
-        evidenceUrl: row.evidenceUrl,
-        taskTitle: row.title,
-        status: row.status,
-        statusLabelEs: statusLabelEs(row.status),
-        submittedAt: row.submittedAt,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-      })),
+      data: {
+        items: rows.all().map((row: any) => ({
+          id: row.id,
+          taskId: row.taskId,
+          studentId: row.studentId,
+          evidenceText: row.evidenceText,
+          evidenceUrl: row.evidenceUrl,
+          taskTitle: row.title,
+          status: row.status,
+          statusLabelEs: statusLabelEs(row.status),
+          submittedAt: row.submittedAt,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+        })),
+        meta: rows.getMeta(),
+      },
     }
   }
 

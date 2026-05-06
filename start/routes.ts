@@ -79,6 +79,10 @@ router
           .as('listStudentAvailableTasks')
           .use(middleware.role({ roles: ['student'] }))
         router
+          .get('/summary', [() => import('#controllers/tasks_controller'), 'teacherSummary'])
+          .as('teacherTasksSummary')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
           .get('/', [() => import('#controllers/tasks_controller'), 'index'])
           .as('listTeacherTasks')
           .use(middleware.role({ roles: ['teacher'] }))
@@ -159,6 +163,13 @@ router
           .get('/balance', [() => import('#controllers/rewards_controller'), 'showStudentBalance'])
           .as('showStudentBalance')
           .use(middleware.role({ roles: ['student'] }))
+        router
+          .get('/history/summary', [
+            () => import('#controllers/rewards_controller'),
+            'historySummary',
+          ])
+          .as('rewardHistorySummary')
+          .use(middleware.role({ roles: ['school_admin'] }))
         router
           .get('/history', [
             () => import('#controllers/rewards_controller'),

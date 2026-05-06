@@ -130,12 +130,19 @@ test.group('Tasks list teacher', (group) => {
     const response = await client.get('/api/v1/tasks').header('authorization', `Bearer ${token}`)
     response.assertStatus(200)
     const body = response.body() as any
-    assert.equal(body.data.length, 2)
+    assert.equal(body.data.items.length, 2)
+    assert.equal(body.data.meta.total, 2)
+    assert.equal(body.data.meta.currentPage, 1)
 
-    const titles = body.data.map((task: any) => task.title).sort()
+    const titles = body.data.items.map((task: any) => task.title).sort()
     assert.deepEqual(titles, ['Task A1', 'Task A2'])
 
-    const statuses = body.data.map((task: any) => task.status).sort()
+    const statuses = body.data.items.map((task: any) => task.status).sort()
     assert.deepEqual(statuses, ['active', 'closed'])
+
+    const summary = await client.get('/api/v1/tasks/summary').header('authorization', `Bearer ${token}`)
+    summary.assertStatus(200)
+    assert.equal((summary.body() as any).data.total, 2)
+    assert.equal((summary.body() as any).data.closed, 1)
   })
 })

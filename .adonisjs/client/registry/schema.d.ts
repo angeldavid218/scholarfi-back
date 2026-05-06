@@ -139,6 +139,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['available']>>>
     }
   }
+  'teacherTasksSummary': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/tasks/summary'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['teacherSummary']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['teacherSummary']>>>
+    }
+  }
   'listTeacherTasks': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/tasks'
@@ -293,6 +305,18 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/rewards_controller').default['showStudentBalance']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/rewards_controller').default['showStudentBalance']>>>
+    }
+  }
+  'rewardHistorySummary': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/rewards/history/summary'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/rewards_controller').default['historySummary']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/rewards_controller').default['historySummary']>>>
     }
   }
   'listInstitutionRewardHistory': {

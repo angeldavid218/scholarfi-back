@@ -56,7 +56,8 @@ async function insertUser(
   input: {
     email: string
     fullName: string
-    institutionId: number
+    /** `null` for platform-wide roles (e.g. super admin). */
+    institutionId: number | null
   }
 ) {
   const dbModule = await import('@adonisjs/lucid/services/db')
@@ -71,7 +72,7 @@ async function insertUser(
       email: input.email,
       full_name: input.fullName,
       password: hashedPassword,
-      institution_id: input.institutionId,
+      institution_id: input.institutionId ?? null,
       is_active: true,
       created_at: ts(0).toJSDate(),
       updated_at: null,
@@ -133,9 +134,17 @@ export async function seedDemoBaseline(options: {
       { client: trx }
     )
 
+    const superAdminRole = await ensureRole('super_admin', 'Super Admin', trx)
     const schoolAdminRole = await ensureRole('school_admin', 'School Admin', trx)
     const teacherRole = await ensureRole('teacher', 'Teacher', trx)
     const studentRole = await ensureRole('student', 'Student', trx)
+
+    const superAdminId = await insertUser(trx, {
+      email: 'demo.super@scholarfi.test',
+      fullName: 'Demo Super Admin',
+      institutionId: null,
+    })
+    await assignRole(superAdminId, superAdminRole, trx)
 
     const schoolAdminId = await insertUser(trx, {
       email: 'demo.admin@scholarfi.test',
@@ -185,13 +194,16 @@ export async function seedDemoBaseline(options: {
         },
       ])
 
-    let task: Task | null = null
-    let submission: Submission | null = null
+    let starterTask: Task | null = null
+    let starterSubmission: Submission | null = null
 
     if (includeStarterData) {
-      task = await Task.create(
+      const institutionId = institution.id
+
+      // Task 1 — golden path: approved submission + posted reward (student 1).
+      starterTask = await Task.create(
         {
-          institutionId: institution.id,
+          institutionId,
           createdByTeacherId: teacherId,
           title: 'Completa tu primera evidencia',
           description: 'Entrega evidencia corta para validar el flujo demo',
@@ -202,10 +214,10 @@ export async function seedDemoBaseline(options: {
         { client: trx }
       )
 
-      submission = await Submission.create(
+      starterSubmission = await Submission.create(
         {
-          institutionId: institution.id,
-          taskId: task.id,
+          institutionId,
+          taskId: starterTask.id,
           studentId: studentOneId,
           evidenceText: 'Actividad completada en clase',
           evidenceUrl: 'https://example.org/demo-evidence',
@@ -217,7 +229,7 @@ export async function seedDemoBaseline(options: {
 
       await SubmissionValidation.create(
         {
-          submissionId: submission.id,
+          submissionId: starterSubmission.id,
           teacherId,
           schoolAdminId: null,
           action: 'validate',
@@ -228,7 +240,7 @@ export async function seedDemoBaseline(options: {
 
       await SubmissionValidation.create(
         {
-          submissionId: submission.id,
+          submissionId: starterSubmission.id,
           teacherId: null,
           schoolAdminId: schoolAdminId,
           action: 'approve',
@@ -239,10 +251,10 @@ export async function seedDemoBaseline(options: {
 
       await RewardTransaction.create(
         {
-          institutionId: institution.id,
-          submissionId: submission.id,
+          institutionId,
+          submissionId: starterSubmission.id,
           studentId: studentOneId,
-          amount: task.rewardAmount,
+          amount: starterTask.rewardAmount,
           type: 'credit',
           status: 'posted',
           postedAt: ts(20),
@@ -252,9 +264,214 @@ export async function seedDemoBaseline(options: {
 
       await SimulatedBalance.create(
         {
-          institutionId: institution.id,
+          institutionId,
           studentId: studentOneId,
-          balance: task.rewardAmount,
+          balance: starterTask.rewardAmount,
+        },
+        { client: trx }
+      )
+
+      // Task 2 — teacher queue: two pending submissions (same task, both students).
+      const taskReflection = await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Reflexion: aprendizajes clave de la semana',
+          description:
+            'Resume dos ideas nuevas y una pregunta abierta que quieras discutir en el foro.',
+          rewardAmount: 25,
+          dueAt: ts(3000),
+          status: 'active',
+        },
+        { client: trx }
+      )
+
+      await Submission.create(
+        {
+          institutionId,
+          taskId: taskReflection.id,
+          studentId: studentOneId,
+          evidenceText:
+            'Reflexion 1: entendi mejor como se auditan las decisiones y quien valida cada paso.',
+          evidenceUrl: null,
+          status: 'pending',
+          submittedAt: ts(30),
+        },
+        { client: trx }
+      )
+
+      await Submission.create(
+        {
+          institutionId,
+          taskId: taskReflection.id,
+          studentId: studentTwoId,
+          evidenceText:
+            'Reflexion 2: el flujo docente-admin me ayudo a ver el cuello de botella antes de recompensar.',
+          evidenceUrl: 'https://example.org/reflection-s2',
+          status: 'pending',
+          submittedAt: ts(31),
+        },
+        { client: trx }
+      )
+
+      // Task 3 — teacher queue: pending (student 1 only).
+      const taskPortfolio = await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Portafolio: evidencia fotografica del proyecto',
+          description: 'Adjunta una foto clara y una nota breve del contexto (aula, equipo, fecha).',
+          rewardAmount: 40,
+          dueAt: ts(4320),
+          status: 'active',
+        },
+        { client: trx }
+      )
+
+      await Submission.create(
+        {
+          institutionId,
+          taskId: taskPortfolio.id,
+          studentId: studentOneId,
+          evidenceText:
+            'Evidencia: foto del tablero Kanban del equipo con tres tareas movidas a "hecho".',
+          evidenceUrl: 'https://example.org/portfolio-s1.jpg',
+          status: 'pending',
+          submittedAt: ts(32),
+        },
+        { client: trx }
+      )
+
+      // Task 4 — teacher queue: pending (student 2 only).
+      const taskEssay = await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Ensayo corto (250–300 palabras)',
+          description: 'Argumenta con una tesis, dos pruebas y una conclusion de una frase.',
+          rewardAmount: 35,
+          dueAt: ts(5200),
+          status: 'active',
+        },
+        { client: trx }
+      )
+
+      await Submission.create(
+        {
+          institutionId,
+          taskId: taskEssay.id,
+          studentId: studentTwoId,
+          evidenceText:
+            'Ensayo: la trazabilidad reduce friccion entre docentes y administracion porque cada accion queda asociada a un rol y a un estado canonico.',
+          evidenceUrl: null,
+          status: 'pending',
+          submittedAt: ts(33),
+        },
+        { client: trx }
+      )
+
+      // Task 5 — admin queue: teacher-validated, awaiting school admin (both students).
+      const taskLab = await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Laboratorio guiado — checklist de calidad',
+          description:
+            'Completa el checklist en clase y registra cualquier desviacion con una sola oracion.',
+          rewardAmount: 60,
+          dueAt: ts(6000),
+          status: 'active',
+        },
+        { client: trx }
+      )
+
+      const labSubmissionS1 = await Submission.create(
+        {
+          institutionId,
+          taskId: taskLab.id,
+          studentId: studentOneId,
+          evidenceText:
+            'Checklist: normas de evidencia, formato de enlace, y confirmacion de identidad revisadas.',
+          evidenceUrl: 'https://example.org/lab-checklist-s1',
+          status: 'validated',
+          submittedAt: ts(28),
+        },
+        { client: trx }
+      )
+
+      await SubmissionValidation.create(
+        {
+          submissionId: labSubmissionS1.id,
+          teacherId,
+          schoolAdminId: null,
+          action: 'validate',
+          comment: 'Cumple criterios; enviar a administracion para aprobacion final.',
+        },
+        { client: trx }
+      )
+
+      const labSubmissionS2 = await Submission.create(
+        {
+          institutionId,
+          taskId: taskLab.id,
+          studentId: studentTwoId,
+          evidenceText:
+            'Checklist: capturas de pantalla del flujo y nota de tiempo invertido (18 min).',
+          evidenceUrl: null,
+          status: 'validated',
+          submittedAt: ts(29),
+        },
+        { client: trx }
+      )
+
+      await SubmissionValidation.create(
+        {
+          submissionId: labSubmissionS2.id,
+          teacherId,
+          schoolAdminId: null,
+          action: 'validate',
+          comment: 'Listo para decision de administracion escolar.',
+        },
+        { client: trx }
+      )
+
+      // Task 6 — closed (teacher history / no new submissions).
+      await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Ciclo anterior — cierre de unidad',
+          description: 'Tarea archivada del ciclo pasado; conservada solo como referencia.',
+          rewardAmount: 20,
+          dueAt: ts(-2000),
+          status: 'closed',
+        },
+        { client: trx }
+      )
+
+      // Tasks 7–8 — active, no submissions yet (students see open work immediately).
+      await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Reto opcional: lectura complementaria',
+          description: 'Lee el material enlazado por el docente y redacta tres bullets de takeaway.',
+          rewardAmount: 15,
+          dueAt: ts(8000),
+          status: 'active',
+        },
+        { client: trx }
+      )
+
+      await Task.create(
+        {
+          institutionId,
+          createdByTeacherId: teacherId,
+          title: 'Mapa conceptual (digital o foto)',
+          description: 'Organiza conceptos principales y relaciones; entrega imagen legible.',
+          rewardAmount: 45,
+          dueAt: ts(9000),
+          status: 'active',
         },
         { client: trx }
       )
@@ -262,11 +479,12 @@ export async function seedDemoBaseline(options: {
 
     return {
       institutionId: institution.id,
+      superAdminId,
       schoolAdminId,
       teacherId,
       studentIds: [studentOneId, studentTwoId],
-      starterTaskId: task?.id ?? null,
-      starterSubmissionId: submission?.id ?? null,
+      starterTaskId: starterTask?.id ?? null,
+      starterSubmissionId: starterSubmission?.id ?? null,
     }
   })
 }

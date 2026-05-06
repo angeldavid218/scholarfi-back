@@ -19,6 +19,7 @@ export interface ApiDefinition {
   assignUserRole: typeof routes['assignUserRole']
   upsertTeacherStudentAssociation: typeof routes['upsertTeacherStudentAssociation']
   listStudentAvailableTasks: typeof routes['listStudentAvailableTasks']
+  teacherTasksSummary: typeof routes['teacherTasksSummary']
   listTeacherTasks: typeof routes['listTeacherTasks']
   createTask: typeof routes['createTask']
   closeTask: typeof routes['closeTask']
@@ -32,6 +33,7 @@ export interface ApiDefinition {
   adminDecisionSubmission: typeof routes['adminDecisionSubmission']
   postRewardForSubmission: typeof routes['postRewardForSubmission']
   showStudentBalance: typeof routes['showStudentBalance']
+  rewardHistorySummary: typeof routes['rewardHistorySummary']
   listInstitutionRewardHistory: typeof routes['listInstitutionRewardHistory']
   profile: {
     profile: {
