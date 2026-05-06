@@ -51,6 +51,10 @@ router
           .as('bootstrapSchoolAdmin')
           .use(middleware.role({ roles: ['super_admin'] }))
         router
+          .get('/users', [() => import('#controllers/institutions_controller'), 'listInstitutionUsers'])
+          .as('listInstitutionUsers')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
           .post('/users', [() => import('#controllers/institutions_controller'), 'provisionUser'])
           .as('provisionUser')
           .use(middleware.role({ roles: ['school_admin'] }))

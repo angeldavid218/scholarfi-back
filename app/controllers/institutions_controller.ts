@@ -13,6 +13,12 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 type DbErrorWithCode = Error & { code?: string }
 
+function parsePositiveInt(input: unknown, fallback: number): number {
+  const parsed = Number(input)
+  if (!Number.isInteger(parsed) || parsed <= 0) return fallback
+  return parsed
+}
+
 export default class InstitutionsController {
   async index() {
     const rows = await Institution.query().orderBy('created_at', 'desc').orderBy('id', 'desc')
@@ -181,6 +187,67 @@ export default class InstitutionsController {
         })
       }
       throw error
+    }
+  }
+
+  async listInstitutionUsers({ auth, request, response }: HttpContext) {
+    const actor = auth.getUserOrFail()
+
+    if (!actor.institutionId) {
+      return response.forbidden({
+        error: {
+          code: 'INSTITUTION_SCOPE_REQUIRED',
+          message: 'School admin must belong to an institution',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const page = parsePositiveInt(request.input('page'), 1)
+    const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
+    const search = String(request.input('search', '')).trim()
+
+    let userQuery = User.query()
+      .where('institution_id', actor.institutionId)
+      .orderBy('full_name', 'asc')
+      .orderBy('id', 'asc')
+
+    if (search.length > 0) {
+      userQuery = userQuery.whereILike('full_name', `%${search}%`)
+    }
+
+    const paginated = await userQuery.paginate(page, perPage)
+    const users = paginated.all()
+    const userIds = users.map((u) => u.id)
+
+    const rolesByUser = new Map<number, string[]>()
+    if (userIds.length > 0) {
+      const roleRows = await db
+        .from('user_roles')
+        .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+        .whereIn('user_roles.user_id', userIds)
+        .select('user_roles.user_id as userId', 'roles.key as roleKey')
+        .orderBy('roles.key', 'asc')
+
+      for (const row of roleRows) {
+        const uid = row.userId as number
+        const key = row.roleKey as string
+        const list = rolesByUser.get(uid) ?? []
+        list.push(key)
+        rolesByUser.set(uid, list)
+      }
+    }
+
+    return {
+      data: {
+        items: users.map((u) => ({
+          id: u.id,
+          email: u.email,
+          fullName: u.fullName,
+          roles: rolesByUser.get(u.id) ?? [],
+        })),
+        meta: paginated.getMeta(),
+      },
     }
   }
 

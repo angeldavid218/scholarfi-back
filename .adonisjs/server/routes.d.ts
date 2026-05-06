@@ -11,6 +11,7 @@ export type ScannedRoutes = {
     'store': { paramsTuple?: []; params?: {} }
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'provisionUser': { paramsTuple?: []; params?: {} }
     'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
@@ -35,6 +36,7 @@ export type ScannedRoutes = {
   }
   GET: {
     'index': { paramsTuple?: []; params?: {} }
+    'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -49,6 +51,7 @@ export type ScannedRoutes = {
   }
   HEAD: {
     'index': { paramsTuple?: []; params?: {} }
+    'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }

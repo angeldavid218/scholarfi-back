@@ -48,6 +48,12 @@ const routes = {
     tokens: [{"old":"/api/v1/institutions/:id/bootstrap-school-admin","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/bootstrap-school-admin","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/bootstrap-school-admin","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/bootstrap-school-admin","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/bootstrap-school-admin","type":0,"val":"bootstrap-school-admin","end":""}],
     types: placeholder as Registry['bootstrapSchoolAdmin']['types'],
   },
+  'listInstitutionUsers': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions/users',
+    tokens: [{"old":"/api/v1/institutions/users","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/users","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/users","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/users","type":0,"val":"users","end":""}],
+    types: placeholder as Registry['listInstitutionUsers']['types'],
+  },
   'provisionUser': {
     methods: ["POST"],
     pattern: '/api/v1/institutions/users',

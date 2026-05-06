@@ -91,6 +91,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['bootstrapSchoolAdmin']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'listInstitutionUsers': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/users'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['listInstitutionUsers']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['listInstitutionUsers']>>>
+    }
+  }
   'provisionUser': {
     methods: ["POST"]
     pattern: '/api/v1/institutions/users'

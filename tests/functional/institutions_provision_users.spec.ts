@@ -118,4 +118,83 @@ test.group('Institutions provision users', (group) => {
       },
     })
   })
+
+  test('school admin lists institution users with search scoped to institution', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution('active')
+    const otherInsert = await db
+      .table('institutions')
+      .insert({
+        name: `Other Institution ${Date.now()}`,
+        code: `PROV-OTHER-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        status: 'active',
+        created_by: null,
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+    const otherCreated = otherInsert[0] as any
+    const otherInstitutionId =
+      typeof otherCreated === 'number' ? otherCreated : otherCreated.id
+
+    const schoolAdmin = await User.create({
+      email: 'school-admin-list@example.com',
+      password: 'Secret123!',
+      fullName: 'Admin Lister',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(schoolAdmin.id, 'school_admin', 'School Admin')
+
+    const teacher = await User.create({
+      email: 'list-teacher-x@example.com',
+      password: 'Secret123!',
+      fullName: 'Ana Busqueda Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const student = await User.create({
+      email: 'list-student-x@example.com',
+      password: 'Secret123!',
+      fullName: 'Bruno Otro Student',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(student.id, 'student', 'Student')
+
+    await User.create({
+      email: 'other-inst-user@example.com',
+      password: 'Secret123!',
+      fullName: 'Ana Fuera',
+      institutionId: otherInstitutionId,
+      isActive: true,
+    })
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: 'school-admin-list@example.com',
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as any).data.token as string
+
+    const listResponse = await client
+      .get('/api/v1/institutions/users')
+      .header('authorization', `Bearer ${token}`)
+    listResponse.assertStatus(200)
+    const body = listResponse.body() as any
+    assert.equal(body.data.meta.total, 3)
+    assert.lengthOf(body.data.items, 3)
+
+    const searchResponse = await client
+      .get('/api/v1/institutions/users?search=Ana')
+      .header('authorization', `Bearer ${token}`)
+    searchResponse.assertStatus(200)
+    const searchBody = searchResponse.body() as any
+    assert.equal(searchBody.data.meta.total, 1)
+    assert.equal(searchBody.data.items[0].fullName, 'Ana Busqueda Teacher')
+    assert.deepEqual(searchBody.data.items[0].roles.sort(), ['teacher'])
+  })
 })
