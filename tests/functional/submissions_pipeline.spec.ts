@@ -329,6 +329,7 @@ test.group('Submissions pipeline', (group) => {
     queueResponse.assertStatus(200)
     assert.lengthOf((queueResponse.body() as any).data.items, 1)
     assert.equal((queueResponse.body() as any).data.meta.total, 1)
+    assert.equal((queueResponse.body() as any).data.items[0].studentName, 'Student Three')
 
     const approveResponse = await client
       .patch(`/api/v1/submissions/${submissionId}/admin-decision`)

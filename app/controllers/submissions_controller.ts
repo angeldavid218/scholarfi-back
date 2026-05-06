@@ -371,6 +371,7 @@ export default class SubmissionsController {
 
     const rows = await Submission.query()
       .innerJoin('tasks', 'tasks.id', 'submissions.task_id')
+      .innerJoin('users', 'users.id', 'submissions.student_id')
       .where('submissions.institution_id', user.institutionId ?? -1)
       .andWhere('submissions.status', SUBMISSION_STATUS.validated)
       .select(
@@ -383,26 +384,34 @@ export default class SubmissionsController {
         'submissions.submitted_at',
         'submissions.created_at',
         'submissions.updated_at',
-        'tasks.title'
+        'tasks.title',
+        'users.full_name as studentName'
       )
       .orderBy('submissions.submitted_at', 'asc')
       .paginate(page, perPage)
 
     return {
       data: {
-        items: rows.all().map((row: any) => ({
-          id: row.id,
-          taskId: row.taskId,
-          studentId: row.studentId,
-          evidenceText: row.evidenceText,
-          evidenceUrl: row.evidenceUrl,
-          taskTitle: row.title,
-          status: row.status,
-          statusLabelEs: statusLabelEs(row.status),
-          submittedAt: row.submittedAt,
-          createdAt: row.createdAt,
-          updatedAt: row.updatedAt,
-        })),
+        items: rows.all().map((row) => {
+          const studentName =
+            (row.$extras.studentName as string | undefined) ??
+            (row as { studentName?: string }).studentName ??
+            ''
+          return {
+            id: row.id,
+            taskId: row.taskId,
+            studentId: row.studentId,
+            studentName,
+            evidenceText: row.evidenceText,
+            evidenceUrl: row.evidenceUrl,
+            taskTitle: (row as { title?: string }).title ?? '',
+            status: row.status,
+            statusLabelEs: statusLabelEs(row.status),
+            submittedAt: row.submittedAt,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+          }
+        }),
         meta: rows.getMeta(),
       },
     }
