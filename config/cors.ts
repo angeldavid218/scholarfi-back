@@ -1,6 +1,11 @@
 import app from '@adonisjs/core/services/app'
 import { defineConfig } from '@adonisjs/cors'
 
+const prodAllowedOrigins = (process.env.CORS_ORIGIN ?? 'https://scholarfi.netlify.app')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
 /**
  * Configuration options to tweak the CORS policy. The following
  * options are documented on the official documentation website.
@@ -15,10 +20,9 @@ const corsConfig = defineConfig({
 
   /**
    * In development, allow every origin to simplify local front/backend setup.
-   * In production, keep an explicit allowlist (empty by default, so no
-   * cross-origin browser access is allowed until configured).
+   * In production, keep an explicit allowlist.
    */
-  origin: app.inDev ? true : [],
+  origin: app.inDev ? true : prodAllowedOrigins,
 
   /**
    * HTTP methods accepted for cross-origin requests.
