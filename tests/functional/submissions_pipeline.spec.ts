@@ -339,7 +339,7 @@ test.group('Submissions pipeline', (group) => {
     assert.equal((approveResponse.body() as any).data.status, 'approved')
     assert.isNumber((approveResponse.body() as any).data.rewardTransactionId)
 
-    const rewardRows = await db.from('reward_transactions').where('submission_id', submissionId)
+    const rewardRows = await db.from('token_transactions').where('achievement_id', submissionId)
     assert.lengthOf(rewardRows, 1)
     assert.equal(Number(rewardRows[0].amount), 40)
   })

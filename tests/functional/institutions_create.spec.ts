@@ -158,7 +158,13 @@ test.group('Institutions create', (group) => {
     response.assertStatus(200)
     const body = response.body() as any
     assert.isAtLeast(body.data.length, 2)
-    assert.equal(body.data.some((item: any) => item.code === 'LIST-ONE'), true)
-    assert.equal(body.data.some((item: any) => item.code === 'LIST-TWO'), true)
+    assert.equal(
+      body.data.some((item: any) => item.code === 'LIST-ONE'),
+      true
+    )
+    assert.equal(
+      body.data.some((item: any) => item.code === 'LIST-TWO'),
+      true
+    )
   })
 })

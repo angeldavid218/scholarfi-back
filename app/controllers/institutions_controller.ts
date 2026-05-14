@@ -1,6 +1,7 @@
 import Institution from '#models/institution'
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
+import { makeTokenService } from '#services/tokens/factory'
 import {
   bootstrapSchoolAdminValidator,
   createInstitutionValidator,
@@ -324,6 +325,11 @@ export default class InstitutionsController {
         return createdUser
       })
 
+      if (payload.role === 'student') {
+        const tokenService = await makeTokenService()
+        await tokenService.createWallet(String(user.id))
+      }
+
       return {
         data: {
           id: user.id,
@@ -412,6 +418,11 @@ export default class InstitutionsController {
 
       return payload.role
     })
+
+    if (result === 'student') {
+      const tokenService = await makeTokenService()
+      await tokenService.createWallet(String(targetUser.id))
+    }
 
     return {
       data: {

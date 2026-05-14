@@ -1,10 +1,9 @@
-import RewardTransaction from '#models/reward_transaction'
-import SimulatedBalance from '#models/simulated_balance'
 import Submission from '#models/submission'
 import Task from '#models/task'
+import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
-import { DateTime } from 'luxon'
+import { makeTokenService } from '#services/tokens/factory'
 import { parsePositiveInt } from '../utils/parsePositive.ts'
 
 function parseId(input: unknown): number | null {
@@ -51,83 +50,34 @@ export default class RewardsController {
     }
 
     const task = await Task.findOrFail(submission.taskId)
-    const amount = task.rewardAmount
-
-    let rewardTransaction: RewardTransaction | null = null
-    let idempotent = false
-
-    await db.transaction(async (trx) => {
-      const inserted = await db
-        .table('reward_transactions')
-        .useTransaction(trx)
-        .insert({
-          institution_id: submission.institutionId,
-          submission_id: submission.id,
-          student_id: submission.studentId,
-          amount,
-          type: 'credit',
-          status: 'posted',
-          posted_at: DateTime.now().toJSDate(),
-          created_at: new Date(),
-          updated_at: null,
-        })
-        .onConflict('submission_id')
-        .ignore()
-        .returning('id')
-
-      if (inserted.length > 0) {
-        const row = inserted[0] as any
-        const insertedRewardId = typeof row === 'number' ? row : row.id
-        rewardTransaction = await RewardTransaction.query()
-          .useTransaction(trx)
-          .where('id', insertedRewardId)
-          .firstOrFail()
-        await db
-          .table('simulated_balances')
-          .useTransaction(trx)
-          .insert({
-            institution_id: submission.institutionId,
-            student_id: submission.studentId,
-            balance: amount,
-            created_at: new Date(),
-            updated_at: null,
-          })
-          .onConflict(['institution_id', 'student_id'])
-          .merge({
-            balance: db.raw('simulated_balances.balance + ?', [amount]),
-            updated_at: new Date(),
-          })
-      } else {
-        idempotent = true
-        rewardTransaction = await RewardTransaction.query()
-          .useTransaction(trx)
-          .where('submission_id', submission.id)
-          .firstOrFail()
-      }
+    const tokenService = await makeTokenService()
+    const result = await tokenService.mintTokens({
+      userId: submission.studentId,
+      institutionId: submission.institutionId,
+      amount: task.rewardAmount,
+      achievementId: submission.id,
     })
 
     return {
       data: {
         submissionId: submission.id,
-        rewardTransactionId: rewardTransaction!.id,
-        amount,
-        idempotent,
+        rewardTransactionId: result.transactionId,
+        amount: task.rewardAmount,
+        idempotent: result.idempotent ?? false,
       },
     }
   }
 
   async showStudentBalance({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
-    const balance = await SimulatedBalance.query()
-      .where('institution_id', user.institutionId ?? -1)
-      .andWhere('student_id', user.id)
-      .first()
+    const tokenService = await makeTokenService()
+    const balance = await tokenService.getBalance(String(user.id))
 
     return {
       data: {
         institutionId: user.institutionId,
         studentId: user.id,
-        simulatedBalance: balance?.balance ?? 0,
+        simulatedBalance: balance,
       },
     }
   }
@@ -135,8 +85,10 @@ export default class RewardsController {
   async historySummary({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
     const row = await db
-      .from('reward_transactions')
+      .from('token_transactions')
       .where('institution_id', user.institutionId ?? -1)
+      .where('type', 'mint')
+      .where('status', 'confirmed')
       .count('* as total')
       .sum('amount as credits_total')
       .first()
@@ -159,29 +111,39 @@ export default class RewardsController {
     const user = auth.getUserOrFail()
     const page = parsePositiveInt(request.input('page'), 1)
     const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
-    const rewards = await RewardTransaction.query()
-      .join('users', 'reward_transactions.student_id', 'users.id')
-      .select('reward_transactions.*', 'users.full_name as studentName')
-      .where('reward_transactions.institution_id', user.institutionId ?? -1)
-      .orderBy('posted_at', 'desc')
-      .orderBy('id', 'desc')
-      .paginate(page, perPage)
+
+    const tokenService = await makeTokenService()
+    const { items, meta } = await tokenService.getInstitutionTransactionHistory(
+      user.institutionId ?? -1,
+      { page, perPage }
+    )
+
+    const studentIds = [...new Set(items.map((i) => i.userId))]
+    const namesById = new Map<number, string>()
+    if (studentIds.length > 0) {
+      const users = await User.query().whereIn('id', studentIds).select('id', 'full_name')
+      for (const u of users) {
+        namesById.set(u.id, u.fullName ?? '')
+      }
+    }
 
     return {
       data: {
-        items: rewards.all().map((reward) => ({
+        items: items.map((reward) => ({
           id: reward.id,
           institutionId: reward.institutionId,
-          submissionId: reward.submissionId,
-          studentId: reward.studentId,
-          studentName: reward.$extras?.studentName ?? '',
+          submissionId: reward.achievementId,
+          studentId: reward.userId,
+          studentName: namesById.get(reward.userId) ?? '',
           amount: reward.amount,
           type: reward.type,
           status: reward.status,
-          postedAt: reward.postedAt,
+          provider: reward.provider,
+          transactionSignature: reward.transactionSignature,
+          postedAt: reward.createdAt,
           createdAt: reward.createdAt,
         })),
-        meta: rewards.getMeta(),
+        meta,
       },
     }
   }

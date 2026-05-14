@@ -5,10 +5,14 @@
 
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
+  CatalogRewards: () => import('#controllers/catalog_rewards_controller'),
   Institutions: () => import('#controllers/institutions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   Profile: () => import('#controllers/profile_controller'),
+  Redemptions: () => import('#controllers/redemptions_controller'),
   Rewards: () => import('#controllers/rewards_controller'),
+  Students: () => import('#controllers/students_controller'),
   Submissions: () => import('#controllers/submissions_controller'),
   Tasks: () => import('#controllers/tasks_controller'),
+  TokenHealth: () => import('#controllers/token_health_controller'),
 }

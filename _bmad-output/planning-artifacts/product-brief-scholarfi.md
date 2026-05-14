@@ -1,12 +1,12 @@
 ---
-title: "Product Brief: scholarfi"
-status: "complete"
-created: "2026-04-28T21:45:00Z"
-updated: "2026-04-28T21:45:00Z"
+title: 'Product Brief: scholarfi'
+status: 'complete'
+created: '2026-04-28T21:45:00Z'
+updated: '2026-04-28T21:45:00Z'
 inputs:
-  - "User-provided product vision and constraints (chat)"
-  - "Design system notes: Scholarship meets DeFi (chat)"
-  - "Web context: K-12 gamification outcomes and school onboarding/RBAC adoption barriers"
+  - 'User-provided product vision and constraints (chat)'
+  - 'Design system notes: Scholarship meets DeFi (chat)'
+  - 'Web context: K-12 gamification outcomes and school onboarding/RBAC adoption barriers'
 ---
 
 # Product Brief: ScholarFi Demo Simulator

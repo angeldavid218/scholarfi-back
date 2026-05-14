@@ -83,6 +83,42 @@ test.group('Institutions provision users', (group) => {
     assert.equal(body.data.institutionId, institutionId)
   })
 
+  test('school admin provisions student and creates ledger row', async ({ client, assert }) => {
+    const institutionId = await createInstitution('active')
+
+    const schoolAdmin = await User.create({
+      email: 'school-admin-student-wallet@example.com',
+      password: 'Secret123!',
+      fullName: 'School Admin Student',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(schoolAdmin.id, 'school_admin', 'School Admin')
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: 'school-admin-student-wallet@example.com',
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as any).data.token as string
+
+    const response = await client
+      .post('/api/v1/institutions/users')
+      .header('authorization', `Bearer ${token}`)
+      .json({
+        fullName: 'Provisioned Student',
+        email: 'provisioned-student-wallet@example.com',
+        password: 'Secret123!',
+        role: 'student',
+      })
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    const studentId = body.data.id as number
+    const row = await db.from('token_balances').where('user_id', studentId).first()
+    assert.isDefined(row)
+    assert.equal(Number(row.balance), 0)
+  })
+
   test('school admin cannot provision users when institution is inactive', async ({ client }) => {
     const institutionId = await createInstitution('inactive')
 
@@ -136,8 +172,7 @@ test.group('Institutions provision users', (group) => {
       })
       .returning('id')
     const otherCreated = otherInsert[0] as any
-    const otherInstitutionId =
-      typeof otherCreated === 'number' ? otherCreated : otherCreated.id
+    const otherInstitutionId = typeof otherCreated === 'number' ? otherCreated : otherCreated.id
 
     const schoolAdmin = await User.create({
       email: 'school-admin-list@example.com',

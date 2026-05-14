@@ -1,9 +1,9 @@
 ---
-title: "Product Brief Distillate: scholarfi"
+title: 'Product Brief Distillate: scholarfi'
 type: llm-distillate
-source: "product-brief-scholarfi.md"
-created: "2026-04-28T21:52:00Z"
-purpose: "Token-efficient context for downstream PRD creation"
+source: 'product-brief-scholarfi.md'
+created: '2026-04-28T21:52:00Z'
+purpose: 'Token-efficient context for downstream PRD creation'
 ---
 
 # ScholarFi Product Brief Distillate

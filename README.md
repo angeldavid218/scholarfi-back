@@ -16,24 +16,24 @@ AdonisJS + TypeScript API for the ScholarFi demo simulator.
 npm install
 ```
 
-2. Copy environment template:
+1. Copy environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-3. Set required values in `.env`:
+1. Set required values in `.env`:
 
 - `APP_KEY` (generate using `node ace generate:key`)
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE`
 
-4. Run migrations:
+1. Run migrations:
 
 ```bash
 node ace migration:run
 ```
 
-5. Start the API:
+1. Start the API:
 
 ```bash
 npm run dev
@@ -72,22 +72,24 @@ Reset documentation:
 
 1. Run `node ace demo:reset`
 2. Confirm deterministic users exist:
-   - `demo.super@scholarfi.test` (platform super admin — `/super` for institutions)
-   - `demo.admin@scholarfi.test`
-   - `demo.teacher@scholarfi.test`
-   - `demo.student1@scholarfi.test`
-   - `demo.student2@scholarfi.test`
+  - `demo.super@scholarfi.test` (platform super admin — `/super` for institutions)
+  - `demo.admin@scholarfi.test`
+  - `demo.teacher@scholarfi.test`
+  - `demo.student1@scholarfi.test`
+  - `demo.student2@scholarfi.test`
 3. Confirm deterministic institution code exists: `SFA-DEMO`.
 
 ### Demo Seed Users (quick login reference)
 
 After `node ace demo:seed` or `node ace demo:reset`, use these credentials:
 
-| Role | Email | Password | Institution |
-|---|---|---|---|
-| Super Admin | `demo.super@scholarfi.test` | `DemoPass123!` | — (platform; no tenant) |
-| School Admin | `demo.admin@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
-| Teacher | `demo.teacher@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
-| Student | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
-| Student | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+
+| Role         | Email                          | Password       | Institution             |
+| ------------ | ------------------------------ | -------------- | ----------------------- |
+| Super Admin  | `demo.super@scholarfi.test`    | `DemoPass123!` | — (platform; no tenant) |
+| School Admin | `demo.admin@scholarfi.test`    | `DemoPass123!` | `SFA-DEMO`              |
+| Teacher      | `demo.teacher@scholarfi.test`  | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
+
 

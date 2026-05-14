@@ -8,18 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AuthAccessTokenSchema extends BaseModel {
-  static $columns = [
-    'abilities',
-    'createdAt',
-    'expiresAt',
-    'hash',
-    'id',
-    'lastUsedAt',
-    'name',
-    'tokenableId',
-    'type',
-    'updatedAt',
-  ] as const
+  static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
   $columns = AuthAccessTokenSchema.$columns
   @column()
   declare abilities: string
@@ -43,6 +32,25 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class CatalogRewardSchema extends BaseModel {
+  static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'title', 'updatedAt'] as const
+  $columns = CatalogRewardSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare creditCost: number
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class InstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'createdBy', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns
@@ -62,19 +70,31 @@ export class InstitutionSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class RedemptionSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'rewardId', 'status', 'transactionSignature', 'updatedAt', 'userId'] as const
+  $columns = RedemptionSchema.$columns
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare rewardId: number
+  @column()
+  declare status: string
+  @column()
+  declare transactionSignature: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+}
+
 export class RewardTransactionSchema extends BaseModel {
-  static $columns = [
-    'amount',
-    'createdAt',
-    'id',
-    'institutionId',
-    'postedAt',
-    'status',
-    'studentId',
-    'submissionId',
-    'type',
-    'updatedAt',
-  ] as const
+  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
   $columns = RewardTransactionSchema.$columns
   @column()
   declare amount: number
@@ -114,14 +134,7 @@ export class RoleSchema extends BaseModel {
 }
 
 export class SimulatedBalanceSchema extends BaseModel {
-  static $columns = [
-    'balance',
-    'createdAt',
-    'id',
-    'institutionId',
-    'studentId',
-    'updatedAt',
-  ] as const
+  static $columns = ['balance', 'createdAt', 'id', 'institutionId', 'studentId', 'updatedAt'] as const
   $columns = SimulatedBalanceSchema.$columns
   @column()
   declare balance: number
@@ -138,15 +151,7 @@ export class SimulatedBalanceSchema extends BaseModel {
 }
 
 export class SubmissionValidationSchema extends BaseModel {
-  static $columns = [
-    'action',
-    'comment',
-    'createdAt',
-    'id',
-    'schoolAdminId',
-    'submissionId',
-    'teacherId',
-  ] as const
+  static $columns = ['action', 'comment', 'createdAt', 'id', 'schoolAdminId', 'submissionId', 'teacherId'] as const
   $columns = SubmissionValidationSchema.$columns
   @column()
   declare action: string
@@ -165,18 +170,7 @@ export class SubmissionValidationSchema extends BaseModel {
 }
 
 export class SubmissionSchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'evidenceText',
-    'evidenceUrl',
-    'id',
-    'institutionId',
-    'status',
-    'studentId',
-    'submittedAt',
-    'taskId',
-    'updatedAt',
-  ] as const
+  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'id', 'institutionId', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
   $columns = SubmissionSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -201,18 +195,7 @@ export class SubmissionSchema extends BaseModel {
 }
 
 export class TaskSchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'createdByTeacherId',
-    'description',
-    'dueAt',
-    'id',
-    'institutionId',
-    'rewardAmount',
-    'status',
-    'title',
-    'updatedAt',
-  ] as const
+  static $columns = ['createdAt', 'createdByTeacherId', 'description', 'dueAt', 'id', 'institutionId', 'rewardAmount', 'status', 'title', 'updatedAt'] as const
   $columns = TaskSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -237,14 +220,7 @@ export class TaskSchema extends BaseModel {
 }
 
 export class TeacherStudentSchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'id',
-    'institutionId',
-    'studentId',
-    'teacherId',
-    'updatedAt',
-  ] as const
+  static $columns = ['createdAt', 'id', 'institutionId', 'studentId', 'teacherId', 'updatedAt'] as const
   $columns = TeacherStudentSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -258,6 +234,54 @@ export class TeacherStudentSchema extends BaseModel {
   declare teacherId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+}
+
+export class TokenBalanceSchema extends BaseModel {
+  static $columns = ['balance', 'id', 'updatedAt', 'userId'] as const
+  $columns = TokenBalanceSchema.$columns
+  @column()
+  declare balance: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: number
+}
+
+export class TokenTransactionSchema extends BaseModel {
+  static $columns = ['achievementId', 'amount', 'createdAt', 'errorMessage', 'id', 'institutionId', 'provider', 'redemptionId', 'status', 'tokenMint', 'transactionSignature', 'type', 'updatedAt', 'userId', 'walletPublicKey'] as const
+  $columns = TokenTransactionSchema.$columns
+  @column()
+  declare achievementId: number | null
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare provider: string
+  @column()
+  declare redemptionId: number | null
+  @column()
+  declare status: string
+  @column()
+  declare tokenMint: string | null
+  @column()
+  declare transactionSignature: string | null
+  @column()
+  declare type: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+  @column()
+  declare walletPublicKey: string | null
 }
 
 export class UserRoleSchema extends BaseModel {
@@ -276,21 +300,14 @@ export class UserRoleSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = [
-    'createdAt',
-    'email',
-    'fullName',
-    'id',
-    'institutionId',
-    'isActive',
-    'password',
-    'updatedAt',
-  ] as const
+  static $columns = ['createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'id', 'institutionId', 'isActive', 'password', 'updatedAt', 'walletPublicKey'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
   declare email: string
+  @column()
+  declare encryptedWalletSecret: string | null
   @column()
   declare fullName: string | null
   @column({ isPrimary: true })
@@ -303,4 +320,6 @@ export class UserSchema extends BaseModel {
   declare password: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare walletPublicKey: string | null
 }
