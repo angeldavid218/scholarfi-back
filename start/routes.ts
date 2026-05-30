@@ -51,7 +51,10 @@ router
           .as('bootstrapSchoolAdmin')
           .use(middleware.role({ roles: ['super_admin'] }))
         router
-          .get('/users', [() => import('#controllers/institutions_controller'), 'listInstitutionUsers'])
+          .get('/users', [
+            () => import('#controllers/institutions_controller'),
+            'listInstitutionUsers',
+          ])
           .as('listInstitutionUsers')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
@@ -188,13 +191,11 @@ router
 
     router
       .group(() => {
-        router
-          .get('/profile', [controllers.Profile, 'show'])
-          .use(
-            middleware.role({
-              roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
-            })
-          )
+        router.get('/profile', [controllers.Profile, 'show']).use(
+          middleware.role({
+            roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
+          })
+        )
       })
       .prefix('account')
       .as('profile')

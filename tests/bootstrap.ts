@@ -1,9 +1,9 @@
-import { createRequire } from 'module'
+import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 
 try {
-  const Client_BetterSQLite3 = require('knex/lib/dialects/better-sqlite3/index.js')
-  Client_BetterSQLite3.prototype._formatBindings = function (bindings: any) {
+  const ClientBetterSQLite3 = require('knex/lib/dialects/better-sqlite3/index.js')
+  ClientBetterSQLite3.prototype._formatBindings = function (bindings: any) {
     if (!bindings) {
       return []
     }

@@ -5,7 +5,7 @@ import Task from '#models/task'
 import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
-import { parsePositiveInt } from '../utils/parsePositive.ts'
+import { parsePositiveInt } from '../utils/parse_positive.ts'
 
 function parseId(input: unknown): number | null {
   const parsed = Number(input)

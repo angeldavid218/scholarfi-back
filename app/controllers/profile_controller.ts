@@ -13,7 +13,10 @@ export default class ProfileController {
 
     let institutionName: string | null = null
     if (user.institutionId) {
-      const institution = await Institution.query().where('id', user.institutionId).select('name').first()
+      const institution = await Institution.query()
+        .where('id', user.institutionId)
+        .select('name')
+        .first()
       institutionName = institution?.name ?? null
     }
 

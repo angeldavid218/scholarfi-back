@@ -136,8 +136,7 @@ test.group('Institutions provision users', (group) => {
       })
       .returning('id')
     const otherCreated = otherInsert[0] as any
-    const otherInstitutionId =
-      typeof otherCreated === 'number' ? otherCreated : otherCreated.id
+    const otherInstitutionId = typeof otherCreated === 'number' ? otherCreated : otherCreated.id
 
     const schoolAdmin = await User.create({
       email: 'school-admin-list@example.com',

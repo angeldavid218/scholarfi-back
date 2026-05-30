@@ -41,7 +41,10 @@ async function loginToken(client: any, email: string) {
 test.group('NGO flow and dashboard', (group) => {
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
-  test('Super Admin can manage NGO institutions and codes must be unique', async ({ client, assert }) => {
+  test('Super Admin can manage NGO institutions and codes must be unique', async ({
+    client,
+    assert,
+  }) => {
     // 1. Create a Super Admin
     const superAdmin = await User.create({
       email: 'super-admin-ngo@example.com',
@@ -178,7 +181,8 @@ test.group('NGO flow and dashboard', (group) => {
         updated_at: null,
       })
       .returning('id')
-    const schoolId = typeof schoolInsert[0] === 'number' ? schoolInsert[0] : (schoolInsert[0] as any).id
+    const schoolId =
+      typeof schoolInsert[0] === 'number' ? schoolInsert[0] : (schoolInsert[0] as any).id
 
     // NGO
     const ngoInsert = await db
@@ -283,7 +287,10 @@ test.group('NGO flow and dashboard', (group) => {
         updated_at: null,
       })
       .returning('id')
-    const subApprovedId = typeof subApprovedInsert[0] === 'number' ? subApprovedInsert[0] : (subApprovedInsert[0] as any).id
+    const subApprovedId =
+      typeof subApprovedInsert[0] === 'number'
+        ? subApprovedInsert[0]
+        : (subApprovedInsert[0] as any).id
 
     await db.table('submissions').insert([
       {

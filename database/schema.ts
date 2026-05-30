@@ -8,7 +8,18 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AuthAccessTokenSchema extends BaseModel {
-  static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
+  static $columns = [
+    'abilities',
+    'createdAt',
+    'expiresAt',
+    'hash',
+    'id',
+    'lastUsedAt',
+    'name',
+    'tokenableId',
+    'type',
+    'updatedAt',
+  ] as const
   $columns = AuthAccessTokenSchema.$columns
   @column()
   declare abilities: string
@@ -69,7 +80,18 @@ export class NgoInstitutionSchema extends BaseModel {
 }
 
 export class RewardTransactionSchema extends BaseModel {
-  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
+  static $columns = [
+    'amount',
+    'createdAt',
+    'id',
+    'institutionId',
+    'postedAt',
+    'status',
+    'studentId',
+    'submissionId',
+    'type',
+    'updatedAt',
+  ] as const
   $columns = RewardTransactionSchema.$columns
   @column()
   declare amount: number
@@ -109,7 +131,14 @@ export class RoleSchema extends BaseModel {
 }
 
 export class SimulatedBalanceSchema extends BaseModel {
-  static $columns = ['balance', 'createdAt', 'id', 'institutionId', 'studentId', 'updatedAt'] as const
+  static $columns = [
+    'balance',
+    'createdAt',
+    'id',
+    'institutionId',
+    'studentId',
+    'updatedAt',
+  ] as const
   $columns = SimulatedBalanceSchema.$columns
   @column()
   declare balance: number
@@ -126,7 +155,15 @@ export class SimulatedBalanceSchema extends BaseModel {
 }
 
 export class SubmissionValidationSchema extends BaseModel {
-  static $columns = ['action', 'comment', 'createdAt', 'id', 'schoolAdminId', 'submissionId', 'teacherId'] as const
+  static $columns = [
+    'action',
+    'comment',
+    'createdAt',
+    'id',
+    'schoolAdminId',
+    'submissionId',
+    'teacherId',
+  ] as const
   $columns = SubmissionValidationSchema.$columns
   @column()
   declare action: string
@@ -145,7 +182,18 @@ export class SubmissionValidationSchema extends BaseModel {
 }
 
 export class SubmissionSchema extends BaseModel {
-  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'id', 'institutionId', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
+  static $columns = [
+    'createdAt',
+    'evidenceText',
+    'evidenceUrl',
+    'id',
+    'institutionId',
+    'status',
+    'studentId',
+    'submittedAt',
+    'taskId',
+    'updatedAt',
+  ] as const
   $columns = SubmissionSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -170,7 +218,18 @@ export class SubmissionSchema extends BaseModel {
 }
 
 export class TaskSchema extends BaseModel {
-  static $columns = ['createdAt', 'createdByTeacherId', 'description', 'dueAt', 'id', 'institutionId', 'rewardAmount', 'status', 'title', 'updatedAt'] as const
+  static $columns = [
+    'createdAt',
+    'createdByTeacherId',
+    'description',
+    'dueAt',
+    'id',
+    'institutionId',
+    'rewardAmount',
+    'status',
+    'title',
+    'updatedAt',
+  ] as const
   $columns = TaskSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -195,7 +254,14 @@ export class TaskSchema extends BaseModel {
 }
 
 export class TeacherStudentSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'institutionId', 'studentId', 'teacherId', 'updatedAt'] as const
+  static $columns = [
+    'createdAt',
+    'id',
+    'institutionId',
+    'studentId',
+    'teacherId',
+    'updatedAt',
+  ] as const
   $columns = TeacherStudentSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -227,7 +293,17 @@ export class UserRoleSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'updatedAt'] as const
+  static $columns = [
+    'createdAt',
+    'email',
+    'fullName',
+    'id',
+    'institutionId',
+    'isActive',
+    'ngoInstitutionId',
+    'password',
+    'updatedAt',
+  ] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

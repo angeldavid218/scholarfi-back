@@ -140,7 +140,9 @@ test.group('Tasks list teacher', (group) => {
     const statuses = body.data.items.map((task: any) => task.status).sort()
     assert.deepEqual(statuses, ['active', 'closed'])
 
-    const summary = await client.get('/api/v1/tasks/summary').header('authorization', `Bearer ${token}`)
+    const summary = await client
+      .get('/api/v1/tasks/summary')
+      .header('authorization', `Bearer ${token}`)
     summary.assertStatus(200)
     assert.equal((summary.body() as any).data.total, 2)
     assert.equal((summary.body() as any).data.closed, 1)

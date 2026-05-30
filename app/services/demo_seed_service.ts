@@ -322,7 +322,8 @@ export async function seedDemoBaseline(options: {
           institutionId,
           createdByTeacherId: teacherId,
           title: 'Portafolio: evidencia fotografica del proyecto',
-          description: 'Adjunta una foto clara y una nota breve del contexto (aula, equipo, fecha).',
+          description:
+            'Adjunta una foto clara y una nota breve del contexto (aula, equipo, fecha).',
           rewardAmount: 40,
           dueAt: ts(4320),
           status: 'active',
@@ -457,7 +458,8 @@ export async function seedDemoBaseline(options: {
           institutionId,
           createdByTeacherId: teacherId,
           title: 'Reto opcional: lectura complementaria',
-          description: 'Lee el material enlazado por el docente y redacta tres bullets de takeaway.',
+          description:
+            'Lee el material enlazado por el docente y redacta tres bullets de takeaway.',
           rewardAmount: 15,
           dueAt: ts(8000),
           status: 'active',
