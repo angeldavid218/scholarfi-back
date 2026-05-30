@@ -34,6 +34,21 @@ export default class NgoInstitutionsController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createNgoInstitutionValidator)
 
+    const existing = await NgoInstitution.findBy('code', payload.code)
+    if (existing) {
+      return response.conflict({
+        error: {
+          code: 'NGO_INSTITUTION_CODE_TAKEN',
+          message: 'NGO Institution code already exists',
+          details: {
+            field: 'code',
+            value: payload.code,
+          },
+          requestId: request.id(),
+        },
+      })
+    }
+
     try {
       const ngo = await NgoInstitution.create({
         name: payload.name,
@@ -111,6 +126,21 @@ export default class NgoInstitutionsController {
         error: {
           code: 'NGO_INSTITUTION_NOT_FOUND',
           message: 'NGO Institution not found',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const existingUser = await User.findBy('email', payload.email)
+    if (existingUser) {
+      return response.conflict({
+        error: {
+          code: 'EMAIL_TAKEN',
+          message: 'Email already exists',
+          details: {
+            field: 'email',
+            value: payload.email,
+          },
           requestId: request.id(),
         },
       })

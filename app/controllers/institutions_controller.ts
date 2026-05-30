@@ -42,6 +42,21 @@ export default class InstitutionsController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createInstitutionValidator)
 
+    const existing = await Institution.findBy('code', payload.code)
+    if (existing) {
+      return response.conflict({
+        error: {
+          code: 'INSTITUTION_CODE_TAKEN',
+          message: 'Institution code already exists',
+          details: {
+            field: 'code',
+            value: payload.code,
+          },
+          requestId: request.id(),
+        },
+      })
+    }
+
     try {
       const institution = await Institution.create({
         name: payload.name,
@@ -119,6 +134,21 @@ export default class InstitutionsController {
         error: {
           code: 'INSTITUTION_NOT_FOUND',
           message: 'Institution not found',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const existingUser = await User.findBy('email', payload.email)
+    if (existingUser) {
+      return response.conflict({
+        error: {
+          code: 'EMAIL_TAKEN',
+          message: 'Email already exists',
+          details: {
+            field: 'email',
+            value: payload.email,
+          },
           requestId: request.id(),
         },
       })
@@ -285,6 +315,21 @@ export default class InstitutionsController {
         error: {
           code: 'INSTITUTION_INACTIVE',
           message: 'Institution must be active for user provisioning',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const existingUser = await User.findBy('email', payload.email)
+    if (existingUser) {
+      return response.conflict({
+        error: {
+          code: 'EMAIL_TAKEN',
+          message: 'Email already exists',
+          details: {
+            field: 'email',
+            value: payload.email,
+          },
           requestId: request.id(),
         },
       })
