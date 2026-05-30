@@ -97,7 +97,8 @@ async function clearDemoTables() {
       user_roles,
       roles,
       users,
-      institutions
+      institutions,
+      ngo_institutions
     RESTART IDENTITY CASCADE
   `)
 }
@@ -138,6 +139,7 @@ export async function seedDemoBaseline(options: {
     const schoolAdminRole = await ensureRole('school_admin', 'School Admin', trx)
     const teacherRole = await ensureRole('teacher', 'Teacher', trx)
     const studentRole = await ensureRole('student', 'Student', trx)
+    const ngoAdminRole = await ensureRole('ngo_admin', 'NGO Admin', trx)
 
     const superAdminId = await insertUser(trx, {
       email: 'demo.super@scholarfi.test',

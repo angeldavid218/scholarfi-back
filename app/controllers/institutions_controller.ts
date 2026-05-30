@@ -13,6 +13,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 type DbErrorWithCode = Error & { code?: string }
 
+function isUniqueConstraintError(code: string | undefined): boolean {
+  return code === '23505' || code === 'SQLITE_CONSTRAINT_UNIQUE' || code === 'SQLITE_CONSTRAINT'
+}
+
 function parsePositiveInt(input: unknown, fallback: number): number {
   const parsed = Number(input)
   if (!Number.isInteger(parsed) || parsed <= 0) return fallback
@@ -57,7 +61,7 @@ export default class InstitutionsController {
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
-      if (dbError.code === '23505') {
+      if (isUniqueConstraintError(dbError.code)) {
         return response.conflict({
           error: {
             code: 'INSTITUTION_CODE_TAKEN',
@@ -173,7 +177,7 @@ export default class InstitutionsController {
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
-      if (dbError.code === '23505') {
+      if (isUniqueConstraintError(dbError.code)) {
         return response.conflict({
           error: {
             code: 'EMAIL_TAKEN',
@@ -338,7 +342,7 @@ export default class InstitutionsController {
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
-      if (dbError.code === '23505') {
+      if (isUniqueConstraintError(dbError.code)) {
         return response.conflict({
           error: {
             code: 'EMAIL_TAKEN',

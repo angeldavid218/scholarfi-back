@@ -57,31 +57,38 @@ export default class RewardsController {
     let idempotent = false
 
     await db.transaction(async (trx) => {
-      const inserted = await db
-        .table('reward_transactions')
+      const existing = await RewardTransaction.query()
         .useTransaction(trx)
-        .insert({
-          institution_id: submission.institutionId,
-          submission_id: submission.id,
-          student_id: submission.studentId,
-          amount,
-          type: 'credit',
-          status: 'posted',
-          posted_at: DateTime.now().toJSDate(),
-          created_at: new Date(),
-          updated_at: null,
-        })
-        .onConflict('submission_id')
-        .ignore()
-        .returning('id')
+        .where('submission_id', submissionId)
+        .first()
 
-      if (inserted.length > 0) {
+      if (existing) {
+        idempotent = true
+        rewardTransaction = existing
+      } else {
+        const inserted = await db
+          .table('reward_transactions')
+          .useTransaction(trx)
+          .insert({
+            institution_id: submission.institutionId,
+            submission_id: submission.id,
+            student_id: submission.studentId,
+            amount,
+            type: 'credit',
+            status: 'posted',
+            posted_at: DateTime.now().toJSDate(),
+            created_at: new Date(),
+            updated_at: null,
+          })
+          .returning('id')
+
         const row = inserted[0] as any
         const insertedRewardId = typeof row === 'number' ? row : row.id
         rewardTransaction = await RewardTransaction.query()
           .useTransaction(trx)
           .where('id', insertedRewardId)
           .firstOrFail()
+
         await db
           .table('simulated_balances')
           .useTransaction(trx)
@@ -97,12 +104,6 @@ export default class RewardsController {
             balance: db.raw('simulated_balances.balance + ?', [amount]),
             updated_at: new Date(),
           })
-      } else {
-        idempotent = true
-        rewardTransaction = await RewardTransaction.query()
-          .useTransaction(trx)
-          .where('submission_id', submission.id)
-          .firstOrFail()
       }
     })
 

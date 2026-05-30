@@ -1,3 +1,43 @@
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+
+try {
+  const Client_BetterSQLite3 = require('knex/lib/dialects/better-sqlite3/index.js')
+  Client_BetterSQLite3.prototype._formatBindings = function (bindings: any) {
+    if (!bindings) {
+      return []
+    }
+    return bindings.map((binding: any) => {
+      if (binding instanceof Date) {
+        const pad = (n: number, size = 2) => String(n).padStart(size, '0')
+        return (
+          binding.getUTCFullYear() +
+          '-' +
+          pad(binding.getUTCMonth() + 1) +
+          '-' +
+          pad(binding.getUTCDate()) +
+          ' ' +
+          pad(binding.getUTCHours()) +
+          ':' +
+          pad(binding.getUTCMinutes()) +
+          ':' +
+          pad(binding.getUTCSeconds()) +
+          '.' +
+          pad(binding.getUTCMilliseconds(), 3)
+        )
+      }
+
+      if (typeof binding === 'boolean') {
+        return Number(binding)
+      }
+
+      return binding
+    })
+  }
+} catch (e) {
+  console.error('FAILED TO PATCH better-sqlite3 knex dialect:', e)
+}
+
 import { assert } from '@japa/assert'
 import { apiClient } from '@japa/api-client'
 import app from '@adonisjs/core/services/app'

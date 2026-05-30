@@ -6,7 +6,7 @@ const dbConfig = defineConfig({
   /**
    * Default connection used for all queries.
    */
-  connection: 'pg',
+  connection: env.get('DB_CONNECTION') || 'pg',
 
   connections: {
     /**
