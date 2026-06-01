@@ -51,7 +51,10 @@ router
           .as('bootstrapSchoolAdmin')
           .use(middleware.role({ roles: ['super_admin'] }))
         router
-          .get('/users', [() => import('#controllers/institutions_controller'), 'listInstitutionUsers'])
+          .get('/users', [
+            () => import('#controllers/institutions_controller'),
+            'listInstitutionUsers',
+          ])
           .as('listInstitutionUsers')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
@@ -188,13 +191,54 @@ router
 
     router
       .group(() => {
-        router
-          .get('/profile', [controllers.Profile, 'show'])
-          .use(middleware.role({ roles: ['super_admin', 'school_admin', 'teacher', 'student'] }))
+        router.get('/profile', [controllers.Profile, 'show']).use(
+          middleware.role({
+            roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
+          })
+        )
       })
       .prefix('account')
       .as('profile')
       .use(middleware.auth())
       .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/', [() => import('#controllers/ngo_institutions_controller'), 'index'])
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
+          .post('/', [() => import('#controllers/ngo_institutions_controller'), 'store'])
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
+          .patch('/:id/status', [
+            () => import('#controllers/ngo_institutions_controller'),
+            'updateStatus',
+          ])
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
+          .post('/:id/bootstrap-ngo-admin', [
+            () => import('#controllers/ngo_institutions_controller'),
+            'bootstrapNgoAdmin',
+          ])
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
+          .patch('/:id/assign-user', [
+            () => import('#controllers/ngo_institutions_controller'),
+            'assignUser',
+          ])
+          .use(middleware.role({ roles: ['super_admin'] }))
+      })
+      .prefix('ngo-institutions')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .get('/summary', [() => import('#controllers/dashboard_controller'), 'summary'])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+      })
+      .prefix('dashboard')
+      .use(middleware.auth())
   })
   .prefix('/api/v1')

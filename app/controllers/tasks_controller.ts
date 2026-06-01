@@ -4,7 +4,7 @@ import { closeTaskValidator, createTaskValidator } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
-import { parsePositiveInt } from '../utils/parsePositive.ts'
+import { parsePositiveInt } from '../utils/parse_positive.ts'
 
 export default class TasksController {
   async store({ auth, request, response }: HttpContext) {

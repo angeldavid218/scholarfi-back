@@ -5,8 +5,10 @@
 
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
+  Dashboard: () => import('#controllers/dashboard_controller'),
   Institutions: () => import('#controllers/institutions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
+  NgoInstitutions: () => import('#controllers/ngo_institutions_controller'),
   Profile: () => import('#controllers/profile_controller'),
   Rewards: () => import('#controllers/rewards_controller'),
   Submissions: () => import('#controllers/submissions_controller'),
