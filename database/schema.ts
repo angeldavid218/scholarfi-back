@@ -32,6 +32,54 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class BudgetAllocationSchema extends BaseModel {
+  static $columns = ['allocatedBudget', 'createdAt', 'fundingProgramId', 'id', 'institutionId', 'status', 'updatedAt', 'utilizedBudget'] as const
+  $columns = BudgetAllocationSchema.$columns
+  @column()
+  declare allocatedBudget: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare fundingProgramId: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare utilizedBudget: number
+}
+
+export class FundingProgramSchema extends BaseModel {
+  static $columns = ['allocationType', 'createdAt', 'description', 'endDate', 'id', 'name', 'ngoInstitutionId', 'startDate', 'status', 'totalBudget', 'updatedAt'] as const
+  $columns = FundingProgramSchema.$columns
+  @column()
+  declare allocationType: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare description: string
+  @column.date()
+  declare endDate: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column()
+  declare ngoInstitutionId: number
+  @column.date()
+  declare startDate: DateTime
+  @column()
+  declare status: string
+  @column()
+  declare totalBudget: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class InstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'createdBy', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns

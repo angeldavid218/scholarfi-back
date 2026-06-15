@@ -5,7 +5,9 @@
 
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
+  BudgetAllocations: () => import('#controllers/budget_allocations_controller'),
   Dashboard: () => import('#controllers/dashboard_controller'),
+  FundingPrograms: () => import('#controllers/funding_programs_controller'),
   Institutions: () => import('#controllers/institutions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   NgoInstitutions: () => import('#controllers/ngo_institutions_controller'),

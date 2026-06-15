@@ -240,5 +240,53 @@ router
       })
       .prefix('dashboard')
       .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .get('/institutions/available', [
+            () => import('#controllers/funding_programs_controller'),
+            'availableInstitutions',
+          ])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .get('/', [() => import('#controllers/funding_programs_controller'), 'index'])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .post('/', [() => import('#controllers/funding_programs_controller'), 'store'])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .get('/:programId/budget-allocations', [
+            () => import('#controllers/budget_allocations_controller'),
+            'index',
+          ])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .post('/:programId/budget-allocations', [
+            () => import('#controllers/budget_allocations_controller'),
+            'store',
+          ])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .get('/:programId/budget-allocations/:id', [
+            () => import('#controllers/budget_allocations_controller'),
+            'show',
+          ])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .patch('/:programId/budget-allocations/:id', [
+            () => import('#controllers/budget_allocations_controller'),
+            'update',
+          ])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .get('/:id', [() => import('#controllers/funding_programs_controller'), 'show'])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+        router
+          .patch('/:id', [() => import('#controllers/funding_programs_controller'), 'update'])
+          .use(middleware.role({ roles: ['ngo_admin'] }))
+      })
+      .prefix('funding-programs')
+      .use(middleware.auth())
   })
   .prefix('/api/v1')
