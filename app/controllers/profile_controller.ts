@@ -1,4 +1,5 @@
 import Institution from '#models/institution'
+import NgoInstitution from '#models/ngo_institution'
 import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 
@@ -20,6 +21,15 @@ export default class ProfileController {
       institutionName = institution?.name ?? null
     }
 
+    let ngoInstitutionName: string | null = null
+    if (user.ngoInstitutionId) {
+      const ngo = await NgoInstitution.query()
+        .where('id', user.ngoInstitutionId)
+        .select('name')
+        .first()
+      ngoInstitutionName = ngo?.name ?? null
+    }
+
     return {
       data: {
         id: user.id,
@@ -30,6 +40,8 @@ export default class ProfileController {
         initials: user.initials,
         institutionId: user.institutionId,
         institutionName,
+        ngoInstitutionId: user.ngoInstitutionId,
+        ngoInstitutionName,
         roles: roleRows.map((row) => row.key),
       },
     }

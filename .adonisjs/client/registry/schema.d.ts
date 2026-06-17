@@ -427,4 +427,112 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/dashboard_controller').default['summary']>>>
     }
   }
+  'funding_programs.available_institutions': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/funding-programs/institutions/available'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['availableInstitutions']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['availableInstitutions']>>>
+    }
+  }
+  'funding_programs.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/funding-programs'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['index']>>>
+    }
+  }
+  'funding_programs.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/funding-programs'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/funding_program').createFundingProgramValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/funding_program').createFundingProgramValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'budget_allocations.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { programId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['index']>>>
+    }
+  }
+  'budget_allocations.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/budget_allocation').createBudgetAllocationsValidator)>>
+      paramsTuple: [ParamValue]
+      params: { programId: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/budget_allocation').createBudgetAllocationsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'budget_allocations.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { programId: ParamValue; id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['show']>>>
+    }
+  }
+  'budget_allocations.update': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/budget_allocation').updateBudgetAllocationValidator)>>
+      paramsTuple: [ParamValue, ParamValue]
+      params: { programId: ParamValue; id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/budget_allocation').updateBudgetAllocationValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/budget_allocations_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'funding_programs.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/funding-programs/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['show']>>>
+    }
+  }
+  'funding_programs.update': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/funding-programs/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/funding_program').updateFundingProgramValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/funding_program').updateFundingProgramValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/funding_programs_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
 }

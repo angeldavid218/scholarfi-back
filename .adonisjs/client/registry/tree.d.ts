@@ -51,4 +51,17 @@ export interface ApiDefinition {
   dashboard: {
     summary: typeof routes['dashboard.summary']
   }
+  fundingPrograms: {
+    availableInstitutions: typeof routes['funding_programs.available_institutions']
+    index: typeof routes['funding_programs.index']
+    store: typeof routes['funding_programs.store']
+    show: typeof routes['funding_programs.show']
+    update: typeof routes['funding_programs.update']
+  }
+  budgetAllocations: {
+    index: typeof routes['budget_allocations.index']
+    store: typeof routes['budget_allocations.store']
+    show: typeof routes['budget_allocations.show']
+    update: typeof routes['budget_allocations.update']
+  }
 }

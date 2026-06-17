@@ -216,6 +216,60 @@ const routes = {
     tokens: [{"old":"/api/v1/dashboard/summary","type":0,"val":"api","end":""},{"old":"/api/v1/dashboard/summary","type":0,"val":"v1","end":""},{"old":"/api/v1/dashboard/summary","type":0,"val":"dashboard","end":""},{"old":"/api/v1/dashboard/summary","type":0,"val":"summary","end":""}],
     types: placeholder as Registry['dashboard.summary']['types'],
   },
+  'funding_programs.available_institutions': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/funding-programs/institutions/available',
+    tokens: [{"old":"/api/v1/funding-programs/institutions/available","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/institutions/available","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/institutions/available","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/institutions/available","type":0,"val":"institutions","end":""},{"old":"/api/v1/funding-programs/institutions/available","type":0,"val":"available","end":""}],
+    types: placeholder as Registry['funding_programs.available_institutions']['types'],
+  },
+  'funding_programs.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/funding-programs',
+    tokens: [{"old":"/api/v1/funding-programs","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs","type":0,"val":"funding-programs","end":""}],
+    types: placeholder as Registry['funding_programs.index']['types'],
+  },
+  'funding_programs.store': {
+    methods: ["POST"],
+    pattern: '/api/v1/funding-programs',
+    tokens: [{"old":"/api/v1/funding-programs","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs","type":0,"val":"funding-programs","end":""}],
+    types: placeholder as Registry['funding_programs.store']['types'],
+  },
+  'budget_allocations.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations',
+    tokens: [{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":1,"val":"programId","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"budget-allocations","end":""}],
+    types: placeholder as Registry['budget_allocations.index']['types'],
+  },
+  'budget_allocations.store': {
+    methods: ["POST"],
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations',
+    tokens: [{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":1,"val":"programId","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations","type":0,"val":"budget-allocations","end":""}],
+    types: placeholder as Registry['budget_allocations.store']['types'],
+  },
+  'budget_allocations.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations/:id',
+    tokens: [{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":1,"val":"programId","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"budget-allocations","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['budget_allocations.show']['types'],
+  },
+  'budget_allocations.update': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/funding-programs/:programId/budget-allocations/:id',
+    tokens: [{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":1,"val":"programId","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":0,"val":"budget-allocations","end":""},{"old":"/api/v1/funding-programs/:programId/budget-allocations/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['budget_allocations.update']['types'],
+  },
+  'funding_programs.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/funding-programs/:id',
+    tokens: [{"old":"/api/v1/funding-programs/:id","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/:id","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['funding_programs.show']['types'],
+  },
+  'funding_programs.update': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/funding-programs/:id',
+    tokens: [{"old":"/api/v1/funding-programs/:id","type":0,"val":"api","end":""},{"old":"/api/v1/funding-programs/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/funding-programs/:id","type":0,"val":"funding-programs","end":""},{"old":"/api/v1/funding-programs/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['funding_programs.update']['types'],
+  },
 } as const satisfies Record<string, AdonisEndpoint>
 
 export { routes }
