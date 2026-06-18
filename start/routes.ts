@@ -69,6 +69,13 @@ router
           .as('assignUserRole')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
+          .get('/funding-balance', [
+            () => import('#controllers/institutions_controller'),
+            'fundingBalance',
+          ])
+          .as('fundingBalance')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
           .post('/teacher-students', [
             () => import('#controllers/institutions_controller'),
             'upsertTeacherStudentAssociation',

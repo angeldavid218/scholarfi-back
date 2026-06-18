@@ -18,6 +18,7 @@ export interface ApiDefinition {
   listInstitutionUsers: typeof routes['listInstitutionUsers']
   provisionUser: typeof routes['provisionUser']
   assignUserRole: typeof routes['assignUserRole']
+  fundingBalance: typeof routes['fundingBalance']
   upsertTeacherStudentAssociation: typeof routes['upsertTeacherStudentAssociation']
   listStudentAvailableTasks: typeof routes['listStudentAvailableTasks']
   teacherTasksSummary: typeof routes['teacherTasksSummary']

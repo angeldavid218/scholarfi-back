@@ -145,6 +145,18 @@ test.group('Funding programs', (group) => {
 
   test('ngo_admin can show and update own program', async ({ client, assert }) => {
     const ngoId = await createNgo(`NGO-FP-UPD-${Date.now()}`)
+    const schoolId = await db
+      .table('institutions')
+      .insert({
+        name: 'Activation School',
+        code: `SCH-ACT-${Date.now()}`,
+        status: 'active',
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+      .then((rows) => (typeof rows[0] === 'number' ? rows[0] : (rows[0] as any).id))
+
     const insertProgram = await db
       .table('funding_programs')
       .insert({
@@ -179,6 +191,17 @@ test.group('Funding programs', (group) => {
     showResponse.assertStatus(200)
     assert.equal((showResponse.body() as any).data.name, 'Original Program')
 
+    await db.table('budget_allocations').insert({
+      funding_program_id: programId,
+      institution_id: schoolId,
+      allocated_budget: 5000,
+      utilized_budget: 0,
+      status: 'active',
+      released_at: null,
+      created_at: new Date(),
+      updated_at: null,
+    })
+
     const updateResponse = await client
       .patch(`/api/v1/funding-programs/${programId}`)
       .header('authorization', `Bearer ${token}`)
@@ -191,6 +214,12 @@ test.group('Funding programs', (group) => {
     assert.equal(updated.name, 'Updated Program')
     assert.equal(updated.status, 'active')
     assert.equal(updated.totalBudget, 5000)
+
+    const allocation = await db
+      .from('budget_allocations')
+      .where('funding_program_id', programId)
+      .first()
+    assert.isNotNull(allocation.released_at)
   })
 
   test('ngo_admin cannot access another NGO program', async ({ client }) => {

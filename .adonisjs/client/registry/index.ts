@@ -66,6 +66,12 @@ const routes = {
     tokens: [{"old":"/api/v1/institutions/users/:userId/role","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/users/:userId/role","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/users/:userId/role","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/users/:userId/role","type":0,"val":"users","end":""},{"old":"/api/v1/institutions/users/:userId/role","type":1,"val":"userId","end":""},{"old":"/api/v1/institutions/users/:userId/role","type":0,"val":"role","end":""}],
     types: placeholder as Registry['assignUserRole']['types'],
   },
+  'fundingBalance': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions/funding-balance',
+    tokens: [{"old":"/api/v1/institutions/funding-balance","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/funding-balance","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/funding-balance","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/funding-balance","type":0,"val":"funding-balance","end":""}],
+    types: placeholder as Registry['fundingBalance']['types'],
+  },
   'upsertTeacherStudentAssociation': {
     methods: ["POST"],
     pattern: '/api/v1/institutions/teacher-students',

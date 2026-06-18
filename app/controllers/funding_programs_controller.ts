@@ -1,10 +1,16 @@
 import FundingProgram from '#models/funding_program'
 import Institution from '#models/institution'
 import {
+  countProgramAllocations,
+  releaseProgramAllocations,
+  sumProgramAllocatedBudget,
+} from '#services/school_funding_service'
+import {
   createFundingProgramValidator,
   updateFundingProgramValidator,
 } from '#validators/funding_program'
 import type { HttpContext } from '@adonisjs/core/http'
+import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 import { resolveNgoScope, sendScopeError } from '../utils/ngo_scope.ts'
 import { parsePositiveInt } from '../utils/parse_positive.ts'
@@ -160,6 +166,41 @@ export default class FundingProgramsController {
       })
     }
 
+    if (payload.status === 'draft' && program.status === 'active') {
+      return response.conflict({
+        error: {
+          code: 'FUNDING_PROGRAM_STATUS_LOCKED',
+          message: 'Active funding programs cannot be reverted to draft',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const activating = payload.status === 'active' && program.status === 'draft'
+    if (activating) {
+      const allocationCount = await countProgramAllocations(program.id)
+      if (allocationCount === 0) {
+        return response.conflict({
+          error: {
+            code: 'NO_ALLOCATIONS',
+            message: 'At least one school allocation is required before activation',
+            requestId: request.id(),
+          },
+        })
+      }
+
+      const totalAllocated = await sumProgramAllocatedBudget(program.id)
+      if (totalAllocated !== program.totalBudget) {
+        return response.conflict({
+          error: {
+            code: 'INCOMPLETE_ALLOCATION',
+            message: 'All program budget must be allocated to schools before activation',
+            requestId: request.id(),
+          },
+        })
+      }
+    }
+
     const startDate = payload.startDate ? parseDateOnly(payload.startDate) : program.startDate
     const endDate = payload.endDate ? parseDateOnly(payload.endDate) : program.endDate
 
@@ -177,16 +218,33 @@ export default class FundingProgramsController {
       })
     }
 
-    program.merge({
-      name: payload.name ?? program.name,
-      description: payload.description ?? program.description,
-      totalBudget: payload.totalBudget ?? program.totalBudget,
-      allocationType: payload.allocationType ?? program.allocationType,
-      startDate,
-      endDate,
-      status: payload.status ?? program.status,
-    })
-    await program.save()
+    if (activating) {
+      await db.transaction(async (trx) => {
+        program.useTransaction(trx)
+        program.merge({
+          name: payload.name ?? program.name,
+          description: payload.description ?? program.description,
+          totalBudget: payload.totalBudget ?? program.totalBudget,
+          allocationType: payload.allocationType ?? program.allocationType,
+          startDate,
+          endDate,
+          status: 'active',
+        })
+        await program.save()
+        await releaseProgramAllocations(program.id, trx)
+      })
+    } else {
+      program.merge({
+        name: payload.name ?? program.name,
+        description: payload.description ?? program.description,
+        totalBudget: payload.totalBudget ?? program.totalBudget,
+        allocationType: payload.allocationType ?? program.allocationType,
+        startDate,
+        endDate,
+        status: payload.status ?? program.status,
+      })
+      await program.save()
+    }
 
     return { data: serializeProgram(program) }
   }

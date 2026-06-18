@@ -14,6 +14,7 @@ export type ScannedRoutes = {
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'provisionUser': { paramsTuple?: []; params?: {} }
     'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
+    'fundingBalance': { paramsTuple?: []; params?: {} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
@@ -37,6 +38,7 @@ export type ScannedRoutes = {
   GET: {
     'index': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
+    'fundingBalance': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -52,6 +54,7 @@ export type ScannedRoutes = {
   HEAD: {
     'index': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
+    'fundingBalance': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }

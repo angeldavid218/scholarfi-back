@@ -132,6 +132,7 @@ test.group('Budget allocations', (group) => {
     assert.deepEqual(budgets, [10000, 15000])
     assert.isTrue(created.every((row: any) => row.utilizedBudget === 0))
     assert.isTrue(created.every((row: any) => row.status === 'active'))
+    assert.isTrue(created.every((row: any) => row.releasedAt !== null))
     assert.exists(created[0].institutionName)
 
     const listResponse = await client

@@ -2,6 +2,10 @@ import Submission from '#models/submission'
 import Task from '#models/task'
 import SubmissionValidation from '#models/submission_validation'
 import RewardTransaction from '#models/reward_transaction'
+import {
+  consumeFifo,
+  InsufficientFundingBalanceError,
+} from '#services/school_funding_service'
 import db from '@adonisjs/lucid/services/db'
 import {
   adminSubmissionDecisionValidator,
@@ -468,54 +472,74 @@ export default class SubmissionsController {
     const nextStatus = isApprove ? SUBMISSION_STATUS.approved : SUBMISSION_STATUS.rejectedByAdmin
     const task = isApprove ? await Task.findOrFail(submission.taskId) : null
     let rewardTransactionId: number | null = null
-    await db.transaction(async (trx) => {
-      submission.useTransaction(trx)
-      submission.status = nextStatus
-      await submission.save()
+    try {
+      await db.transaction(async (trx) => {
+        submission.useTransaction(trx)
+        submission.status = nextStatus
+        await submission.save()
 
-      await SubmissionValidation.create(
-        {
-          submissionId: submission.id,
-          teacherId: null,
-          schoolAdminId: user.id,
-          action: payload.decision,
-          comment: payload.reason ?? null,
-        },
-        { client: trx }
-      )
-
-      if (isApprove) {
-        const reward = await RewardTransaction.create(
+        await SubmissionValidation.create(
           {
-            institutionId: submission.institutionId,
             submissionId: submission.id,
-            studentId: submission.studentId,
-            amount: task!.rewardAmount,
-            type: 'credit',
-            status: 'posted',
-            postedAt: DateTime.now(),
+            teacherId: null,
+            schoolAdminId: user.id,
+            action: payload.decision,
+            comment: payload.reason ?? null,
           },
           { client: trx }
         )
-        rewardTransactionId = reward.id
 
-        await db
-          .table('simulated_balances')
-          .useTransaction(trx)
-          .insert({
-            institution_id: submission.institutionId,
-            student_id: submission.studentId,
-            balance: task!.rewardAmount,
-            created_at: new Date(),
-            updated_at: null,
-          })
-          .onConflict(['institution_id', 'student_id'])
-          .merge({
-            balance: db.raw('simulated_balances.balance + ?', [task!.rewardAmount]),
-            updated_at: new Date(),
-          })
+        if (isApprove) {
+          const { budgetAllocationId } = await consumeFifo(
+            submission.institutionId,
+            task!.rewardAmount,
+            trx
+          )
+
+          const reward = await RewardTransaction.create(
+            {
+              institutionId: submission.institutionId,
+              submissionId: submission.id,
+              studentId: submission.studentId,
+              amount: task!.rewardAmount,
+              type: 'credit',
+              status: 'posted',
+              postedAt: DateTime.now(),
+              budgetAllocationId,
+            },
+            { client: trx }
+          )
+          rewardTransactionId = reward.id
+
+          await db
+            .table('simulated_balances')
+            .useTransaction(trx)
+            .insert({
+              institution_id: submission.institutionId,
+              student_id: submission.studentId,
+              balance: task!.rewardAmount,
+              created_at: new Date(),
+              updated_at: null,
+            })
+            .onConflict(['institution_id', 'student_id'])
+            .merge({
+              balance: db.raw('simulated_balances.balance + ?', [task!.rewardAmount]),
+              updated_at: new Date(),
+            })
+        }
+      })
+    } catch (error) {
+      if (error instanceof InsufficientFundingBalanceError) {
+        return response.conflict({
+          error: {
+            code: error.code,
+            message: error.message,
+            requestId: request.id(),
+          },
+        })
       }
-    })
+      throw error
+    }
 
     return {
       data: {

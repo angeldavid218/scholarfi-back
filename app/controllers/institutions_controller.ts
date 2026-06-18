@@ -1,5 +1,6 @@
 import Institution from '#models/institution'
 import User from '#models/user'
+import { getSchoolFundingSummary } from '#services/school_funding_service'
 import db from '@adonisjs/lucid/services/db'
 import {
   bootstrapSchoolAdminValidator,
@@ -527,5 +528,21 @@ export default class InstitutionsController {
         studentId: payload.studentId,
       },
     }
+  }
+
+  async fundingBalance({ auth, response }: HttpContext) {
+    const actor = auth.getUserOrFail()
+
+    if (!actor.institutionId) {
+      return response.forbidden({
+        error: {
+          code: 'TENANT_SCOPE_VIOLATION',
+          message: 'School scope is required',
+        },
+      })
+    }
+
+    const summary = await getSchoolFundingSummary(actor.institutionId)
+    return { data: summary }
   }
 }

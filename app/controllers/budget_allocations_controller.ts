@@ -6,8 +6,10 @@ import {
 } from '#validators/budget_allocation'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
 import { resolveOwnedProgram, sendScopeError } from '../utils/ngo_scope.ts'
 import { parsePositiveInt } from '../utils/parse_positive.ts'
+import { toIsoDateTime } from '../utils/parse_datetime.ts'
 
 type AllocationRow = {
   id: number
@@ -18,6 +20,7 @@ type AllocationRow = {
   allocatedBudget: number
   utilizedBudget: number
   status: string
+  releasedAt: Date | null
   createdAt: Date
   updatedAt: Date | null
 }
@@ -33,6 +36,7 @@ function serializeAllocation(row: AllocationRow) {
     utilizedBudget: row.utilizedBudget,
     remainingBudget: row.allocatedBudget - row.utilizedBudget,
     status: row.status,
+    releasedAt: toIsoDateTime(row.releasedAt),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
@@ -58,6 +62,7 @@ async function fetchAllocationRows(programId: number): Promise<AllocationRow[]> 
       'budget_allocations.allocated_budget as allocatedBudget',
       'budget_allocations.utilized_budget as utilizedBudget',
       'budget_allocations.status as status',
+      'budget_allocations.released_at as releasedAt',
       'budget_allocations.created_at as createdAt',
       'budget_allocations.updated_at as updatedAt'
     )
@@ -256,6 +261,7 @@ export default class BudgetAllocationsController {
       })
     }
 
+    const shouldRelease = owned.program.status === 'active'
     const created = await db.transaction(async (trx) => {
       const inserted = []
       for (const item of plannedAllocations) {
@@ -266,6 +272,7 @@ export default class BudgetAllocationsController {
             allocatedBudget: item.allocatedBudget,
             utilizedBudget: 0,
             status: 'active',
+            releasedAt: shouldRelease ? DateTime.now() : null,
           },
           { client: trx }
         )

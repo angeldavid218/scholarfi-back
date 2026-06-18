@@ -33,7 +33,7 @@ export class AuthAccessTokenSchema extends BaseModel {
 }
 
 export class BudgetAllocationSchema extends BaseModel {
-  static $columns = ['allocatedBudget', 'createdAt', 'fundingProgramId', 'id', 'institutionId', 'status', 'updatedAt', 'utilizedBudget'] as const
+  static $columns = ['allocatedBudget', 'createdAt', 'fundingProgramId', 'id', 'institutionId', 'releasedAt', 'status', 'updatedAt', 'utilizedBudget'] as const
   $columns = BudgetAllocationSchema.$columns
   @column()
   declare allocatedBudget: number
@@ -45,6 +45,8 @@ export class BudgetAllocationSchema extends BaseModel {
   declare id: number
   @column()
   declare institutionId: number
+  @column.dateTime()
+  declare releasedAt: DateTime | null
   @column()
   declare status: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -117,10 +119,12 @@ export class NgoInstitutionSchema extends BaseModel {
 }
 
 export class RewardTransactionSchema extends BaseModel {
-  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
+  static $columns = ['amount', 'budgetAllocationId', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
   $columns = RewardTransactionSchema.$columns
   @column()
   declare amount: number
+  @column()
+  declare budgetAllocationId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })

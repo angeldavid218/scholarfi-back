@@ -127,6 +127,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['assignUserRole']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'fundingBalance': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/funding-balance'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['fundingBalance']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['fundingBalance']>>>
+    }
+  }
   'upsertTeacherStudentAssociation': {
     methods: ["POST"]
     pattern: '/api/v1/institutions/teacher-students'
