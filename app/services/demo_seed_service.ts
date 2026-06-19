@@ -1,4 +1,7 @@
+import BudgetAllocation from '#models/budget_allocation'
+import FundingProgram from '#models/funding_program'
 import Institution from '#models/institution'
+import NgoInstitution from '#models/ngo_institution'
 import RewardTransaction from '#models/reward_transaction'
 import SimulatedBalance from '#models/simulated_balance'
 import Submission from '#models/submission'
@@ -51,6 +54,8 @@ async function assignRole(userId: number, roleId: number, trx: any) {
     })
 }
 
+const DEMO_FUNDING_BUDGET = 50_000
+
 async function insertUser(
   trx: any,
   input: {
@@ -58,6 +63,7 @@ async function insertUser(
     fullName: string
     /** `null` for platform-wide roles (e.g. super admin). */
     institutionId: number | null
+    ngoInstitutionId?: number | null
   }
 ) {
   const dbModule = await import('@adonisjs/lucid/services/db')
@@ -73,6 +79,7 @@ async function insertUser(
       full_name: input.fullName,
       password: hashedPassword,
       institution_id: input.institutionId ?? null,
+      ngo_institution_id: input.ngoInstitutionId ?? null,
       is_active: true,
       created_at: ts(0).toJSDate(),
       updated_at: null,
@@ -94,6 +101,8 @@ async function clearDemoTables() {
       submissions,
       tasks,
       teacher_students,
+      budget_allocations,
+      funding_programs,
       user_roles,
       roles,
       users,
@@ -139,7 +148,50 @@ export async function seedDemoBaseline(options: {
     const schoolAdminRole = await ensureRole('school_admin', 'School Admin', trx)
     const teacherRole = await ensureRole('teacher', 'Teacher', trx)
     const studentRole = await ensureRole('student', 'Student', trx)
-    await ensureRole('ngo_admin', 'NGO Admin', trx)
+    const ngoAdminRole = await ensureRole('ngo_admin', 'NGO Admin', trx)
+
+    const ngo = await NgoInstitution.create(
+      {
+        name: 'ScholarFi Demo Foundation',
+        code: 'NGO-DEMO',
+        status: true,
+      },
+      { client: trx }
+    )
+
+    const fundingProgram = await FundingProgram.create(
+      {
+        ngoInstitutionId: ngo.id,
+        name: 'Demo Scholarship Program 2026',
+        description: 'Presupuesto de demostracion para recompensas estudiantiles en la academia demo.',
+        totalBudget: DEMO_FUNDING_BUDGET,
+        allocationType: 'manual',
+        startDate: DateTime.fromISO('2026-01-01', { zone: 'utc' }),
+        endDate: DateTime.fromISO('2026-12-31', { zone: 'utc' }),
+        status: 'active',
+      },
+      { client: trx }
+    )
+
+    const schoolFunding = await BudgetAllocation.create(
+      {
+        fundingProgramId: fundingProgram.id,
+        institutionId: institution.id,
+        allocatedBudget: DEMO_FUNDING_BUDGET,
+        utilizedBudget: 0,
+        status: 'active',
+        releasedAt: ts(0),
+      },
+      { client: trx }
+    )
+
+    const ngoAdminId = await insertUser(trx, {
+      email: 'demo.ngo@scholarfi.test',
+      fullName: 'Demo NGO Admin',
+      institutionId: null,
+      ngoInstitutionId: ngo.id,
+    })
+    await assignRole(ngoAdminId, ngoAdminRole, trx)
 
     const superAdminId = await insertUser(trx, {
       email: 'demo.super@scholarfi.test',
@@ -260,9 +312,14 @@ export async function seedDemoBaseline(options: {
           type: 'credit',
           status: 'posted',
           postedAt: ts(20),
+          budgetAllocationId: schoolFunding.id,
         },
         { client: trx }
       )
+
+      schoolFunding.utilizedBudget = starterTask.rewardAmount
+      schoolFunding.useTransaction(trx)
+      await schoolFunding.save()
 
       await SimulatedBalance.create(
         {
@@ -483,6 +540,11 @@ export async function seedDemoBaseline(options: {
 
     return {
       institutionId: institution.id,
+      ngoId: ngo.id,
+      ngoAdminId,
+      fundingProgramId: fundingProgram.id,
+      budgetAllocationId: schoolFunding.id,
+      schoolFundingBudget: DEMO_FUNDING_BUDGET,
       superAdminId,
       schoolAdminId,
       teacherId,

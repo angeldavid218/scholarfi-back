@@ -59,7 +59,8 @@ Default API URL: `http://localhost:3333`
 | Area | Prefix | Roles (high level) |
 |------|--------|-------------------|
 | Auth | `/auth` | signup, login, logout |
-| Institutions | `/institutions` | super admin: list/create/status/bootstrap; school admin: users, roles, teacher–student links |
+| Institutions | `/institutions` | super admin: list/create/status/bootstrap; school admin: users, roles, teacher–student links, funding balance |
+| Funding programs | `/funding-programs` | NGO admin: programs and school budget allocations |
 | Tasks | `/tasks` | teacher CRUD/summary; student available tasks |
 | Submissions | `/submissions` | student submit; teacher/admin queues and actions |
 | Rewards | `/rewards` | student balance; school admin post/history |
@@ -91,23 +92,31 @@ node ace demo:seed --starter
 Default rich dataset (without `--starter`):
 
 - `1` active institution (`SFA-DEMO`)
+- `1` NGO (`NGO-DEMO` — ScholarFi Demo Foundation) with NGO admin user
+- `1` active funding program (`Demo Scholarship Program 2026`) with **50,000** credits fully allocated and **released** to `SFA-DEMO` (school can approve rewards immediately)
 - `1` school admin, `1` teacher, `2` students (with associations)
-- **8** teacher tasks (7 active, 1 closed), **4** submissions in teacher queue (`pending`), **2** in school-admin queue (`validated`), **2** open tasks without submission; includes approved submission + posted reward + balance for student 1
+- **8** teacher tasks (7 active, 1 closed), **4** submissions in teacher queue (`pending`), **2** in school-admin queue (`validated`), **2** open tasks without submission; includes approved submission + posted reward + balance for student 1 (50 credits already debited from school funding)
 
 After seed/reset, confirm:
 
 1. Institution code `SFA-DEMO`
-2. Users below (password `DemoPass123!`)
+2. NGO code `NGO-DEMO`
+3. Users below (password `DemoPass123!`)
 
 ### Demo seed users
 
-| Role | Email | Password | Institution |
-|------|-------|----------|-------------|
-| Super Admin | `demo.super@scholarfi.test` | `DemoPass123!` | — (platform; `/super` in frontend) |
-| School Admin | `demo.admin@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+| Role | Email | Password | Scope |
+|------|-------|----------|-------|
+| Super Admin | `demo.super@scholarfi.test` | `DemoPass123!` | Platform (`/super` in frontend) |
+| NGO Admin | `demo.ngo@scholarfi.test` | `DemoPass123!` | `NGO-DEMO` (`/ngo` in frontend) |
+| School Admin | `demo.admin@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` (`/admin` in frontend) |
 | Teacher | `demo.teacher@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
 | Student | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
 | Student | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+
+### Demo funding snapshot
+
+After `node ace demo:reset`, the school admin dashboard should show roughly **49,950** credits disponible (50,000 allocated minus 50 already used by the starter approved submission). The NGO dashboard shows the same program with utilization under budget distribution.
 
 ## Frontend pairing
 

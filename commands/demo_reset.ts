@@ -22,6 +22,9 @@ export default class DemoReset extends BaseCommand {
 
     this.logger.success('Demo baseline reset successfully')
     this.logger.info(`Institution: ${result.institutionId}`)
+    this.logger.info(`NGO: ${result.ngoId} (${result.schoolFundingBudget} credits released to school)`)
+    this.logger.info(`Funding program: ${result.fundingProgramId}`)
+    this.logger.info(`NGO admin user: ${result.ngoAdminId} (demo.ngo@scholarfi.test / DemoPass123!)`)
     this.logger.info(`Super admin user: ${result.superAdminId}`)
     this.logger.info(`School admin user: ${result.schoolAdminId}`)
     this.logger.info(`Teacher user: ${result.teacherId}`)

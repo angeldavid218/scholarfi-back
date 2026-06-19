@@ -8,11 +8,13 @@ export async function seedReleasedFunding(
   const releasedAt = options?.releasedAt ?? new Date()
   const programStatus = options?.programStatus ?? 'active'
 
+  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
   const ngoInsert = await db
     .table('ngo_institutions')
     .insert({
-      name: `NGO Seed ${Date.now()}`,
-      code: `NGO-SEED-${Date.now()}`,
+      name: `NGO Seed ${unique}`,
+      code: `NGO-SEED-${unique}`,
       status: true,
       created_at: new Date(),
       updated_at: null,
