@@ -234,6 +234,42 @@ const routes = {
     tokens: [{"old":"/api/v1/account/profile","type":0,"val":"api","end":""},{"old":"/api/v1/account/profile","type":0,"val":"v1","end":""},{"old":"/api/v1/account/profile","type":0,"val":"account","end":""},{"old":"/api/v1/account/profile","type":0,"val":"profile","end":""}],
     types: placeholder as Registry['profile.profile.show']['types'],
   },
+  'ngo_institutions.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/ngo-institutions',
+    tokens: [{"old":"/api/v1/ngo-institutions","type":0,"val":"api","end":""},{"old":"/api/v1/ngo-institutions","type":0,"val":"v1","end":""},{"old":"/api/v1/ngo-institutions","type":0,"val":"ngo-institutions","end":""}],
+    types: placeholder as Registry['ngo_institutions.index']['types'],
+  },
+  'ngo_institutions.store': {
+    methods: ["POST"],
+    pattern: '/api/v1/ngo-institutions',
+    tokens: [{"old":"/api/v1/ngo-institutions","type":0,"val":"api","end":""},{"old":"/api/v1/ngo-institutions","type":0,"val":"v1","end":""},{"old":"/api/v1/ngo-institutions","type":0,"val":"ngo-institutions","end":""}],
+    types: placeholder as Registry['ngo_institutions.store']['types'],
+  },
+  'ngo_institutions.update_status': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/ngo-institutions/:id/status',
+    tokens: [{"old":"/api/v1/ngo-institutions/:id/status","type":0,"val":"api","end":""},{"old":"/api/v1/ngo-institutions/:id/status","type":0,"val":"v1","end":""},{"old":"/api/v1/ngo-institutions/:id/status","type":0,"val":"ngo-institutions","end":""},{"old":"/api/v1/ngo-institutions/:id/status","type":1,"val":"id","end":""},{"old":"/api/v1/ngo-institutions/:id/status","type":0,"val":"status","end":""}],
+    types: placeholder as Registry['ngo_institutions.update_status']['types'],
+  },
+  'ngo_institutions.bootstrap_ngo_admin': {
+    methods: ["POST"],
+    pattern: '/api/v1/ngo-institutions/:id/bootstrap-ngo-admin',
+    tokens: [{"old":"/api/v1/ngo-institutions/:id/bootstrap-ngo-admin","type":0,"val":"api","end":""},{"old":"/api/v1/ngo-institutions/:id/bootstrap-ngo-admin","type":0,"val":"v1","end":""},{"old":"/api/v1/ngo-institutions/:id/bootstrap-ngo-admin","type":0,"val":"ngo-institutions","end":""},{"old":"/api/v1/ngo-institutions/:id/bootstrap-ngo-admin","type":1,"val":"id","end":""},{"old":"/api/v1/ngo-institutions/:id/bootstrap-ngo-admin","type":0,"val":"bootstrap-ngo-admin","end":""}],
+    types: placeholder as Registry['ngo_institutions.bootstrap_ngo_admin']['types'],
+  },
+  'ngo_institutions.assign_user': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/ngo-institutions/:id/assign-user',
+    tokens: [{"old":"/api/v1/ngo-institutions/:id/assign-user","type":0,"val":"api","end":""},{"old":"/api/v1/ngo-institutions/:id/assign-user","type":0,"val":"v1","end":""},{"old":"/api/v1/ngo-institutions/:id/assign-user","type":0,"val":"ngo-institutions","end":""},{"old":"/api/v1/ngo-institutions/:id/assign-user","type":1,"val":"id","end":""},{"old":"/api/v1/ngo-institutions/:id/assign-user","type":0,"val":"assign-user","end":""}],
+    types: placeholder as Registry['ngo_institutions.assign_user']['types'],
+  },
+  'dashboard.summary': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/dashboard/summary',
+    tokens: [{"old":"/api/v1/dashboard/summary","type":0,"val":"api","end":""},{"old":"/api/v1/dashboard/summary","type":0,"val":"v1","end":""},{"old":"/api/v1/dashboard/summary","type":0,"val":"dashboard","end":""},{"old":"/api/v1/dashboard/summary","type":0,"val":"summary","end":""}],
+    types: placeholder as Registry['dashboard.summary']['types'],
+  },
 } as const satisfies Record<string, AdonisEndpoint>
 
 export { routes }

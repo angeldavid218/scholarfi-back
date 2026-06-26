@@ -11,7 +11,7 @@ import {
 } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
-import { parsePositiveInt } from '../utils/parsePositive.ts'
+import { parsePositiveInt } from '../utils/parse_positive.ts'
 
 type DbErrorWithCode = Error & { code?: string }
 

@@ -6,7 +6,7 @@ const dbConfig = defineConfig({
   /**
    * Default connection used for all queries.
    */
-  connection: 'pg',
+  connection: env.get('DB_CONNECTION') || 'pg',
 
   connections: {
     /**
@@ -16,7 +16,7 @@ const dbConfig = defineConfig({
       client: 'better-sqlite3',
 
       connection: {
-        filename: app.tmpPath('db.sqlite3'),
+        filename: app.tmpPath(app.nodeEnvironment === 'test' ? 'db.test.sqlite3' : 'db.sqlite3'),
       },
 
       /**

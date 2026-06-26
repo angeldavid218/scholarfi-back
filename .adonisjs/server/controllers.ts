@@ -6,8 +6,10 @@
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
   CatalogRewards: () => import('#controllers/catalog_rewards_controller'),
+  Dashboard: () => import('#controllers/dashboard_controller'),
   Institutions: () => import('#controllers/institutions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
+  NgoInstitutions: () => import('#controllers/ngo_institutions_controller'),
   Profile: () => import('#controllers/profile_controller'),
   Redemptions: () => import('#controllers/redemptions_controller'),
   Rewards: () => import('#controllers/rewards_controller'),

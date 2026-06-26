@@ -14,6 +14,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 type DbErrorWithCode = Error & { code?: string }
 
+function isUniqueConstraintError(code: string | undefined): boolean {
+  return code === '23505' || code === 'SQLITE_CONSTRAINT_UNIQUE' || code === 'SQLITE_CONSTRAINT'
+}
+
 function parsePositiveInt(input: unknown, fallback: number): number {
   const parsed = Number(input)
   if (!Number.isInteger(parsed) || parsed <= 0) return fallback
@@ -39,6 +43,21 @@ export default class InstitutionsController {
   async store({ request, response }: HttpContext) {
     const payload = await request.validateUsing(createInstitutionValidator)
 
+    const existing = await Institution.findBy('code', payload.code)
+    if (existing) {
+      return response.conflict({
+        error: {
+          code: 'INSTITUTION_CODE_TAKEN',
+          message: 'Institution code already exists',
+          details: {
+            field: 'code',
+            value: payload.code,
+          },
+          requestId: request.id(),
+        },
+      })
+    }
+
     try {
       const institution = await Institution.create({
         name: payload.name,
@@ -58,7 +77,7 @@ export default class InstitutionsController {
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
-      if (dbError.code === '23505') {
+      if (isUniqueConstraintError(dbError.code)) {
         return response.conflict({
           error: {
             code: 'INSTITUTION_CODE_TAKEN',
@@ -121,6 +140,21 @@ export default class InstitutionsController {
       })
     }
 
+    const existingUser = await User.findBy('email', payload.email)
+    if (existingUser) {
+      return response.conflict({
+        error: {
+          code: 'EMAIL_TAKEN',
+          message: 'Email already exists',
+          details: {
+            field: 'email',
+            value: payload.email,
+          },
+          requestId: request.id(),
+        },
+      })
+    }
+
     try {
       const user = await db.transaction(async (trx) => {
         const createdUser = await User.create(
@@ -174,7 +208,7 @@ export default class InstitutionsController {
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
-      if (dbError.code === '23505') {
+      if (isUniqueConstraintError(dbError.code)) {
         return response.conflict({
           error: {
             code: 'EMAIL_TAKEN',
@@ -287,6 +321,21 @@ export default class InstitutionsController {
       })
     }
 
+    const existingUser = await User.findBy('email', payload.email)
+    if (existingUser) {
+      return response.conflict({
+        error: {
+          code: 'EMAIL_TAKEN',
+          message: 'Email already exists',
+          details: {
+            field: 'email',
+            value: payload.email,
+          },
+          requestId: request.id(),
+        },
+      })
+    }
+
     try {
       const user = await db.transaction(async (trx) => {
         const createdUser = await User.create(
@@ -344,7 +393,7 @@ export default class InstitutionsController {
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
-      if (dbError.code === '23505') {
+      if (isUniqueConstraintError(dbError.code)) {
         return response.conflict({
           error: {
             code: 'EMAIL_TAKEN',

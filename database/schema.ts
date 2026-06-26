@@ -75,6 +75,11 @@ export class RedemptionSchema extends BaseModel {
   $columns = RedemptionSchema.$columns
   @column()
   declare amount: number
+export class NgoInstitutionSchema extends BaseModel {
+  static $columns = ['code', 'createdAt', 'id', 'name', 'status', 'updatedAt'] as const
+  $columns = NgoInstitutionSchema.$columns
+  @column()
+  declare code: string
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
@@ -91,6 +96,11 @@ export class RedemptionSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare userId: number
+  declare name: string
+  @column()
+  declare status: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class RewardTransactionSchema extends BaseModel {
@@ -316,6 +326,8 @@ export class UserSchema extends BaseModel {
   declare institutionId: number | null
   @column()
   declare isActive: boolean
+  @column()
+  declare ngoInstitutionId: number | null
   @column({ serializeAs: null })
   declare password: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

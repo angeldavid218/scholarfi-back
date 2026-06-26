@@ -463,4 +463,76 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['show']>>>
     }
   }
+  'ngo_institutions.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/ngo-institutions'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['index']>>>
+    }
+  }
+  'ngo_institutions.store': {
+    methods: ["POST"]
+    pattern: '/api/v1/ngo-institutions'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/ngo_institution').createNgoInstitutionValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/ngo_institution').createNgoInstitutionValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'ngo_institutions.update_status': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/ngo-institutions/:id/status'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/ngo_institution').updateNgoStatusValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/ngo_institution').updateNgoStatusValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['updateStatus']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['updateStatus']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'ngo_institutions.bootstrap_ngo_admin': {
+    methods: ["POST"]
+    pattern: '/api/v1/ngo-institutions/:id/bootstrap-ngo-admin'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/ngo_institution').bootstrapNgoAdminValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/ngo_institution').bootstrapNgoAdminValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['bootstrapNgoAdmin']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['bootstrapNgoAdmin']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'ngo_institutions.assign_user': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/ngo-institutions/:id/assign-user'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/ngo_institution').assignNgoUserValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/ngo_institution').assignNgoUserValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['assignUser']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/ngo_institutions_controller').default['assignUser']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'dashboard.summary': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/dashboard/summary'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/dashboard_controller').default['summary']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/dashboard_controller').default['summary']>>>
+    }
+  }
 }

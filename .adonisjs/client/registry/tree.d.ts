@@ -50,4 +50,14 @@ export interface ApiDefinition {
       show: typeof routes['profile.profile.show']
     }
   }
+  ngoInstitutions: {
+    index: typeof routes['ngo_institutions.index']
+    store: typeof routes['ngo_institutions.store']
+    updateStatus: typeof routes['ngo_institutions.update_status']
+    bootstrapNgoAdmin: typeof routes['ngo_institutions.bootstrap_ngo_admin']
+    assignUser: typeof routes['ngo_institutions.assign_user']
+  }
+  dashboard: {
+    summary: typeof routes['dashboard.summary']
+  }
 }

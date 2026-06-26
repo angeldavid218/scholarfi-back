@@ -5,6 +5,9 @@ import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 import { makeTokenService } from '#services/tokens/factory'
 import { parsePositiveInt } from '../utils/parsePositive.ts'
+import { DateTime } from 'luxon'
+
+
 
 function parseId(input: unknown): number | null {
   const parsed = Number(input)
@@ -56,6 +59,60 @@ export default class RewardsController {
       institutionId: submission.institutionId,
       amount: task.rewardAmount,
       achievementId: submission.id,
+    const amount = task.rewardAmount
+
+    let rewardTransaction: RewardTransaction | null = null
+    let idempotent = false
+
+    await db.transaction(async (trx) => {
+      const existing = await RewardTransaction.query()
+        .useTransaction(trx)
+        .where('submission_id', submissionId)
+        .first()
+
+      if (existing) {
+        idempotent = true
+        rewardTransaction = existing
+      } else {
+        const inserted = await db
+          .table('reward_transactions')
+          .useTransaction(trx)
+          .insert({
+            institution_id: submission.institutionId,
+            submission_id: submission.id,
+            student_id: submission.studentId,
+            amount,
+            type: 'credit',
+            status: 'posted',
+            posted_at: DateTime.now().toJSDate(),
+            created_at: new Date(),
+            updated_at: null,
+          })
+          .returning('id')
+
+        const row = inserted[0] as any
+        const insertedRewardId = typeof row === 'number' ? row : row.id
+        rewardTransaction = await RewardTransaction.query()
+          .useTransaction(trx)
+          .where('id', insertedRewardId)
+          .firstOrFail()
+
+        await db
+          .table('simulated_balances')
+          .useTransaction(trx)
+          .insert({
+            institution_id: submission.institutionId,
+            student_id: submission.studentId,
+            balance: amount,
+            created_at: new Date(),
+            updated_at: null,
+          })
+          .onConflict(['institution_id', 'student_id'])
+          .merge({
+            balance: db.raw('simulated_balances.balance + ?', [amount]),
+            updated_at: new Date(),
+          })
+      }
     })
 
     return {
