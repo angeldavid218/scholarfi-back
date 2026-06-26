@@ -32,6 +32,15 @@ export type ScannedRoutes = {
     'showStudentBalance': { paramsTuple?: []; params?: {} }
     'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
+    'listCatalogRewards': { paramsTuple?: []; params?: {} }
+    'createCatalogReward': { paramsTuple?: []; params?: {} }
+    'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'createRedemption': { paramsTuple?: []; params?: {} }
+    'listRedemptions': { paramsTuple?: []; params?: {} }
+    'approveRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'rejectRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'tokenHealth': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   GET: {
@@ -47,6 +56,11 @@ export type ScannedRoutes = {
     'showStudentBalance': { paramsTuple?: []; params?: {} }
     'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
+    'listCatalogRewards': { paramsTuple?: []; params?: {} }
+    'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'listRedemptions': { paramsTuple?: []; params?: {} }
+    'tokenHealth': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
@@ -62,6 +76,11 @@ export type ScannedRoutes = {
     'showStudentBalance': { paramsTuple?: []; params?: {} }
     'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
+    'listCatalogRewards': { paramsTuple?: []; params?: {} }
+    'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
+    'listRedemptions': { paramsTuple?: []; params?: {} }
+    'tokenHealth': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
@@ -75,6 +94,8 @@ export type ScannedRoutes = {
     'createTask': { paramsTuple?: []; params?: {} }
     'createSubmission': { paramsTuple?: []; params?: {} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
+    'createCatalogReward': { paramsTuple?: []; params?: {} }
+    'createRedemption': { paramsTuple?: []; params?: {} }
   }
   PATCH: {
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -83,6 +104,8 @@ export type ScannedRoutes = {
     'teacherActionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'teacherRejectSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'adminDecisionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'approveRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'rejectRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {

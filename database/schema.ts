@@ -32,6 +32,25 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class CatalogRewardSchema extends BaseModel {
+  static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'title', 'updatedAt'] as const
+  $columns = CatalogRewardSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare creditCost: number
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class InstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'createdBy', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns
@@ -51,6 +70,11 @@ export class InstitutionSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class RedemptionSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'rewardId', 'status', 'transactionSignature', 'updatedAt', 'userId'] as const
+  $columns = RedemptionSchema.$columns
+  @column()
+  declare amount: number
 export class NgoInstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = NgoInstitutionSchema.$columns
@@ -61,6 +85,17 @@ export class NgoInstitutionSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
+  declare institutionId: number
+  @column()
+  declare rewardId: number
+  @column()
+  declare status: string
+  @column()
+  declare transactionSignature: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
   declare name: string
   @column()
   declare status: boolean
@@ -211,6 +246,54 @@ export class TeacherStudentSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class TokenBalanceSchema extends BaseModel {
+  static $columns = ['balance', 'id', 'updatedAt', 'userId'] as const
+  $columns = TokenBalanceSchema.$columns
+  @column()
+  declare balance: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+  @column()
+  declare userId: number
+}
+
+export class TokenTransactionSchema extends BaseModel {
+  static $columns = ['achievementId', 'amount', 'createdAt', 'errorMessage', 'id', 'institutionId', 'provider', 'redemptionId', 'status', 'tokenMint', 'transactionSignature', 'type', 'updatedAt', 'userId', 'walletPublicKey'] as const
+  $columns = TokenTransactionSchema.$columns
+  @column()
+  declare achievementId: number | null
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare provider: string
+  @column()
+  declare redemptionId: number | null
+  @column()
+  declare status: string
+  @column()
+  declare tokenMint: string | null
+  @column()
+  declare transactionSignature: string | null
+  @column()
+  declare type: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number
+  @column()
+  declare walletPublicKey: string | null
+}
+
 export class UserRoleSchema extends BaseModel {
   static $columns = ['createdAt', 'id', 'roleId', 'updatedAt', 'userId'] as const
   $columns = UserRoleSchema.$columns
@@ -227,12 +310,14 @@ export class UserRoleSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'updatedAt'] as const
+  static $columns = ['createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'id', 'institutionId', 'isActive', 'password', 'updatedAt', 'walletPublicKey'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
   declare email: string
+  @column()
+  declare encryptedWalletSecret: string | null
   @column()
   declare fullName: string | null
   @column({ isPrimary: true })
@@ -247,4 +332,6 @@ export class UserSchema extends BaseModel {
   declare password: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare walletPublicKey: string | null
 }

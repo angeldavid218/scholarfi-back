@@ -36,6 +36,15 @@ export interface ApiDefinition {
   showStudentBalance: typeof routes['showStudentBalance']
   rewardHistorySummary: typeof routes['rewardHistorySummary']
   listInstitutionRewardHistory: typeof routes['listInstitutionRewardHistory']
+  listCatalogRewards: typeof routes['listCatalogRewards']
+  createCatalogReward: typeof routes['createCatalogReward']
+  studentBalance: typeof routes['studentBalance']
+  studentTransactions: typeof routes['studentTransactions']
+  createRedemption: typeof routes['createRedemption']
+  listRedemptions: typeof routes['listRedemptions']
+  approveRedemption: typeof routes['approveRedemption']
+  rejectRedemption: typeof routes['rejectRedemption']
+  tokenHealth: typeof routes['tokenHealth']
   profile: {
     profile: {
       show: typeof routes['profile.profile.show']

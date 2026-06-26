@@ -135,13 +135,9 @@ test.group('Rewards and balance flows', (group) => {
     repostResponse.assertStatus(200)
     assert.equal((repostResponse.body() as any).data.idempotent, true)
 
-    const rewards = await db.from('reward_transactions').where('submission_id', submissionId)
+    const rewards = await db.from('token_transactions').where('achievement_id', submissionId)
     assert.lengthOf(rewards, 1)
-    const balance = await db
-      .from('simulated_balances')
-      .where('institution_id', institutionId)
-      .andWhere('student_id', student.id)
-      .first()
+    const balance = await db.from('token_balances').where('user_id', student.id).first()
     assert.equal(Number(balance.balance), 30)
   })
 
@@ -271,45 +267,51 @@ test.group('Rewards and balance flows', (group) => {
     const submissionB = submissionBInsert[0] as any
     const submissionBId = typeof submissionB === 'number' ? submissionB : submissionB.id
 
-    await db.table('simulated_balances').insert([
+    await db.table('token_balances').insert([
       {
-        institution_id: institutionA,
-        student_id: studentA.id,
+        user_id: studentA.id,
         balance: 45,
-        created_at: new Date(),
-        updated_at: null,
+        updated_at: new Date(),
       },
       {
-        institution_id: institutionB,
-        student_id: studentB.id,
+        user_id: studentB.id,
         balance: 999,
-        created_at: new Date(),
-        updated_at: null,
+        updated_at: new Date(),
       },
     ])
 
-    await db.table('reward_transactions').insert([
+    await db.table('token_transactions').insert([
       {
         institution_id: institutionA,
-        submission_id: submissionAId,
-        student_id: studentA.id,
+        user_id: studentA.id,
+        achievement_id: submissionAId,
+        redemption_id: null,
         amount: 25,
-        type: 'credit',
-        status: 'posted',
-        posted_at: new Date(),
+        type: 'mint',
+        status: 'confirmed',
+        provider: 'mock',
+        transaction_signature: null,
+        token_mint: null,
+        wallet_public_key: null,
+        error_message: null,
         created_at: new Date(),
-        updated_at: null,
+        updated_at: new Date(),
       },
       {
         institution_id: institutionB,
-        submission_id: submissionBId,
-        student_id: studentB.id,
+        user_id: studentB.id,
+        achievement_id: submissionBId,
+        redemption_id: null,
         amount: 50,
-        type: 'credit',
-        status: 'posted',
-        posted_at: new Date(),
+        type: 'mint',
+        status: 'confirmed',
+        provider: 'mock',
+        transaction_signature: null,
+        token_mint: null,
+        wallet_public_key: null,
+        error_message: null,
         created_at: new Date(),
-        updated_at: null,
+        updated_at: new Date(),
       },
     ])
 

@@ -1,6 +1,4 @@
 import Institution from '#models/institution'
-import RewardTransaction from '#models/reward_transaction'
-import SimulatedBalance from '#models/simulated_balance'
 import Submission from '#models/submission'
 import SubmissionValidation from '#models/submission_validation'
 import Task from '#models/task'
@@ -88,6 +86,10 @@ async function clearDemoTables() {
   await db.rawQuery(`
     TRUNCATE TABLE
       auth_access_tokens,
+      token_transactions,
+      redemptions,
+      catalog_rewards,
+      token_balances,
       reward_transactions,
       simulated_balances,
       submission_validations,
@@ -251,27 +253,28 @@ export async function seedDemoBaseline(options: {
         { client: trx }
       )
 
-      await RewardTransaction.create(
-        {
-          institutionId,
-          submissionId: starterSubmission.id,
-          studentId: studentOneId,
-          amount: starterTask.rewardAmount,
-          type: 'credit',
-          status: 'posted',
-          postedAt: ts(20),
-        },
-        { client: trx }
-      )
+      await trx.table('token_transactions').insert({
+        institution_id: institutionId,
+        user_id: studentOneId,
+        achievement_id: starterSubmission.id,
+        redemption_id: null,
+        amount: starterTask.rewardAmount,
+        type: 'mint',
+        status: 'confirmed',
+        provider: 'mock',
+        transaction_signature: null,
+        token_mint: null,
+        wallet_public_key: null,
+        error_message: null,
+        created_at: ts(20).toJSDate(),
+        updated_at: ts(20).toJSDate(),
+      })
 
-      await SimulatedBalance.create(
-        {
-          institutionId,
-          studentId: studentOneId,
-          balance: starterTask.rewardAmount,
-        },
-        { client: trx }
-      )
+      await trx.table('token_balances').insert({
+        user_id: studentOneId,
+        balance: starterTask.rewardAmount,
+        updated_at: ts(20).toJSDate(),
+      })
 
       // Task 2 — teacher queue: two pending submissions (same task, both students).
       const taskReflection = await Task.create(

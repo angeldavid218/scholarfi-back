@@ -343,6 +343,114 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/rewards_controller').default['listInstitutionHistory']>>>
     }
   }
+  'listCatalogRewards': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/rewards/catalog'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['index']>>>
+    }
+  }
+  'createCatalogReward': {
+    methods: ["POST"]
+    pattern: '/api/v1/rewards/catalog'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/catalog_reward').createCatalogRewardValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/catalog_reward').createCatalogRewardValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'studentBalance': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/students/:studentId/balance'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { studentId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/students_controller').default['showBalance']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/students_controller').default['showBalance']>>>
+    }
+  }
+  'studentTransactions': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/students/:studentId/transactions'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { studentId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/students_controller').default['listTransactions']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/students_controller').default['listTransactions']>>>
+    }
+  }
+  'createRedemption': {
+    methods: ["POST"]
+    pattern: '/api/v1/redemptions'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/redemption').createRedemptionValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/redemption').createRedemptionValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'listRedemptions': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/redemptions'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['index']>>>
+    }
+  }
+  'approveRedemption': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/redemptions/:id/approve'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['approve']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['approve']>>>
+    }
+  }
+  'rejectRedemption': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/redemptions/:id/reject'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/redemption').rejectRedemptionValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/redemption').rejectRedemptionValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['reject']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/redemptions_controller').default['reject']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'tokenHealth': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/token/health'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/token_health_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/token_health_controller').default['show']>>>
+    }
+  }
   'profile.profile.show': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/account/profile'

@@ -16,13 +16,15 @@ AdonisJS 7 + TypeScript API for the ScholarFi demo simulator. All app routes are
 npm install
 ```
 
-2. Copy the environment template:
+
+1. Copy environment template:
+
 
 ```bash
 cp .env.example .env
 ```
 
-3. Set required values in `.env`:
+1. Set required values in `.env`:
 
 - `APP_KEY` — generate with `node ace generate:key`
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE` (see CI in `.github/workflows/ci.yml` for a local example)
@@ -30,13 +32,13 @@ cp .env.example .env
 
   `CORS_ORIGIN=http://localhost:5173,https://scholarfi.netlify.app`
 
-4. Run migrations:
+1. Run migrations:
 
 ```bash
 node ace migration:run
 ```
 
-5. Start the API:
+1. Start the API:
 
 ```bash
 npm run dev
@@ -96,18 +98,28 @@ Default rich dataset (without `--starter`):
 
 After seed/reset, confirm:
 
-1. Institution code `SFA-DEMO`
-2. Users below (password `DemoPass123!`)
+1. Run `node ace demo:reset`
+2. Confirm deterministic users exist:
+  - `demo.super@scholarfi.test` (platform super admin — `/super` for institutions)
+  - `demo.admin@scholarfi.test`
+  - `demo.teacher@scholarfi.test`
+  - `demo.student1@scholarfi.test`
+  - `demo.student2@scholarfi.test`
+3. Confirm deterministic institution code exists: `SFA-DEMO`.
+
 
 ### Demo seed users
 
-| Role | Email | Password | Institution |
-|------|-------|----------|-------------|
-| Super Admin | `demo.super@scholarfi.test` | `DemoPass123!` | — (platform; `/super` in frontend) |
-| School Admin | `demo.admin@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
-| Teacher | `demo.teacher@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
-| Student | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
-| Student | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO` |
+
+| Role         | Email                          | Password       | Institution             |
+| ------------ | ------------------------------ | -------------- | ----------------------- |
+| Super Admin  | `demo.super@scholarfi.test`    | `DemoPass123!` | — (platform; no tenant) |
+| School Admin | `demo.admin@scholarfi.test`    | `DemoPass123!` | `SFA-DEMO`              |
+| Teacher      | `demo.teacher@scholarfi.test`  | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
+
+
 
 ## Frontend pairing
 

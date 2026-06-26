@@ -184,6 +184,14 @@ router
           ])
           .as('listInstitutionRewardHistory')
           .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .get('/catalog', [() => import('#controllers/catalog_rewards_controller'), 'index'])
+          .as('listCatalogRewards')
+          .use(middleware.role({ roles: ['student', 'school_admin', 'teacher'] }))
+        router
+          .post('/catalog', [() => import('#controllers/catalog_rewards_controller'), 'store'])
+          .as('createCatalogReward')
+          .use(middleware.role({ roles: ['school_admin'] }))
       })
       .prefix('rewards')
       .use(middleware.auth())
@@ -191,11 +199,59 @@ router
 
     router
       .group(() => {
-        router.get('/profile', [controllers.Profile, 'show']).use(
-          middleware.role({
-            roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
-          })
-        )
+        router
+          .get('/:studentId/balance', [
+            () => import('#controllers/students_controller'),
+            'showBalance',
+          ])
+          .as('studentBalance')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .get('/:studentId/transactions', [
+            () => import('#controllers/students_controller'),
+            'listTransactions',
+          ])
+          .as('studentTransactions')
+          .use(middleware.role({ roles: ['school_admin'] }))
+      })
+      .prefix('students')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .post('/', [() => import('#controllers/redemptions_controller'), 'store'])
+          .as('createRedemption')
+          .use(middleware.role({ roles: ['student'] }))
+        router
+          .get('/', [() => import('#controllers/redemptions_controller'), 'index'])
+          .as('listRedemptions')
+          .use(middleware.role({ roles: ['student', 'school_admin'] }))
+        router
+          .patch('/:id/approve', [() => import('#controllers/redemptions_controller'), 'approve'])
+          .as('approveRedemption')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .patch('/:id/reject', [() => import('#controllers/redemptions_controller'), 'reject'])
+          .as('rejectRedemption')
+          .use(middleware.role({ roles: ['school_admin'] }))
+      })
+      .prefix('redemptions')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .get('/token/health', [() => import('#controllers/token_health_controller'), 'show'])
+      .as('tokenHealth')
+      .use(middleware.auth())
+      .use(middleware.role({ roles: ['school_admin', 'super_admin'] }))
+
+    router
+      .group(() => {
+        router
+          .get('/profile', [controllers.Profile, 'show'])
+          .use(middleware.role({ roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'] }))
       })
       .prefix('account')
       .as('profile')

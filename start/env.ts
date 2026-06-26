@@ -24,4 +24,19 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   // Session
   SESSION_DRIVER: Env.schema.enum(['cookie', 'memory', 'database'] as const),
+
+  // Token / ledger execution (mock = demo, solana = devnet custodial)
+  TOKEN_MODE: Env.schema.enum.optional(['mock', 'solana'] as const),
+  SOLANA_RPC_URL: Env.schema.string.optional(),
+  SCHOLARFI_TOKEN_MINT: Env.schema.string.optional(),
+  MINT_AUTHORITY_SECRET: Env.schema.string.optional(),
+  TREASURY_WALLET_PUBLIC_KEY: Env.schema.string.optional(),
+  WALLET_ENCRYPTION_KEY: Env.schema.string.optional(),
+
+  // DB (validated when using pg in config)
+  DB_HOST: Env.schema.string.optional(),
+  DB_PORT: Env.schema.number.optional(),
+  DB_USER: Env.schema.string.optional(),
+  DB_PASSWORD: Env.schema.string.optional(),
+  DB_DATABASE: Env.schema.string.optional(),
 })
