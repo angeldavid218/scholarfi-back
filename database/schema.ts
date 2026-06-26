@@ -32,6 +32,29 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class BudgetAllocationSchema extends BaseModel {
+  static $columns = ['allocatedBudget', 'createdAt', 'fundingProgramId', 'id', 'institutionId', 'releasedAt', 'status', 'updatedAt', 'utilizedBudget'] as const
+  $columns = BudgetAllocationSchema.$columns
+  @column()
+  declare allocatedBudget: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare fundingProgramId: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column.dateTime()
+  declare releasedAt: DateTime | null
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare utilizedBudget: number
+}
+
 export class CatalogRewardSchema extends BaseModel {
   static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'title', 'updatedAt'] as const
   $columns = CatalogRewardSchema.$columns
@@ -47,6 +70,33 @@ export class CatalogRewardSchema extends BaseModel {
   declare institutionId: number
   @column()
   declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class FundingProgramSchema extends BaseModel {
+  static $columns = ['allocationType', 'createdAt', 'description', 'endDate', 'id', 'name', 'ngoInstitutionId', 'startDate', 'status', 'totalBudget', 'updatedAt'] as const
+  $columns = FundingProgramSchema.$columns
+  @column()
+  declare allocationType: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare description: string
+  @column.date()
+  declare endDate: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column()
+  declare ngoInstitutionId: number
+  @column.date()
+  declare startDate: DateTime
+  @column()
+  declare status: string
+  @column()
+  declare totalBudget: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -70,16 +120,28 @@ export class InstitutionSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
-export class RedemptionSchema extends BaseModel {
-  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'rewardId', 'status', 'transactionSignature', 'updatedAt', 'userId'] as const
-  $columns = RedemptionSchema.$columns
-  @column()
-  declare amount: number
 export class NgoInstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = NgoInstitutionSchema.$columns
   @column()
   declare code: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column()
+  declare status: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class RedemptionSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'rewardId', 'status', 'transactionSignature', 'updatedAt', 'userId'] as const
+  $columns = RedemptionSchema.$columns
+  @column()
+  declare amount: number
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
@@ -96,18 +158,15 @@ export class NgoInstitutionSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare userId: number
-  declare name: string
-  @column()
-  declare status: boolean
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
 }
 
 export class RewardTransactionSchema extends BaseModel {
-  static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
+  static $columns = ['amount', 'budgetAllocationId', 'createdAt', 'id', 'institutionId', 'postedAt', 'status', 'studentId', 'submissionId', 'type', 'updatedAt'] as const
   $columns = RewardTransactionSchema.$columns
   @column()
   declare amount: number
+  @column()
+  declare budgetAllocationId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column({ isPrimary: true })
@@ -310,7 +369,7 @@ export class UserRoleSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'id', 'institutionId', 'isActive', 'password', 'updatedAt', 'walletPublicKey'] as const
+  static $columns = ['createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'updatedAt', 'walletPublicKey'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
