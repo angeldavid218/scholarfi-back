@@ -30,13 +30,17 @@ async function assignRoleToUser(userId: number, roleKey: string, roleLabel: stri
   })
 }
 
-async function createInstitution(status: 'active' | 'inactive' | 'draft' = 'active') {
+async function createInstitution(
+  status: 'active' | 'inactive' | 'draft' = 'active',
+  cryptoWalletsEnabled = false
+) {
   const inserted = await db
     .table('institutions')
     .insert({
       name: `Provision Institution ${Date.now()}`,
       code: `PROV-${Date.now()}`,
       status,
+      crypto_wallets_enabled: cryptoWalletsEnabled,
       created_by: null,
       created_at: new Date(),
       updated_at: null,
@@ -84,7 +88,7 @@ test.group('Institutions provision users', (group) => {
   })
 
   test('school admin provisions student and creates ledger row', async ({ client, assert }) => {
-    const institutionId = await createInstitution('active')
+    const institutionId = await createInstitution('active', true)
 
     const schoolAdmin = await User.create({
       email: 'school-admin-student-wallet@example.com',

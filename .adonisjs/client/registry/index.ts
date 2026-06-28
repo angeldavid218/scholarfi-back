@@ -42,6 +42,12 @@ const routes = {
     tokens: [{"old":"/api/v1/institutions/:id/status","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/status","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/status","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/status","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/status","type":0,"val":"status","end":""}],
     types: placeholder as Registry['updateStatus']['types'],
   },
+  'updateCryptoWallets': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/institutions/:id/crypto-wallets',
+    tokens: [{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"crypto-wallets","end":""}],
+    types: placeholder as Registry['updateCryptoWallets']['types'],
+  },
   'bootstrapSchoolAdmin': {
     methods: ["POST"],
     pattern: '/api/v1/institutions/:id/bootstrap-school-admin',

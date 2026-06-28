@@ -2,6 +2,7 @@ import Institution from '#models/institution'
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import { makeTokenService } from '#services/tokens/factory'
+import { backfillInstitutionStudentWallets } from '#services/institution_wallet_backfill'
 import {
   bootstrapSchoolAdminValidator,
   createInstitutionValidator,
@@ -9,6 +10,7 @@ import {
   provisionInstitutionUserValidator,
   upsertTeacherStudentAssociationValidator,
   updateInstitutionStatusValidator,
+  updateInstitutionCryptoWalletsValidator,
 } from '#validators/institution'
 import type { HttpContext } from '@adonisjs/core/http'
 
@@ -24,19 +26,24 @@ function parsePositiveInt(input: unknown, fallback: number): number {
   return parsed
 }
 
+function institutionPayload(institution: Institution) {
+  return {
+    id: institution.id,
+    name: institution.name,
+    code: institution.code,
+    status: institution.status,
+    cryptoWalletsEnabled: institution.cryptoWalletsEnabled,
+    createdAt: institution.createdAt,
+    updatedAt: institution.updatedAt,
+  }
+}
+
 export default class InstitutionsController {
   async index() {
     const rows = await Institution.query().orderBy('created_at', 'desc').orderBy('id', 'desc')
 
     return {
-      data: rows.map((institution) => ({
-        id: institution.id,
-        name: institution.name,
-        code: institution.code,
-        status: institution.status,
-        createdAt: institution.createdAt,
-        updatedAt: institution.updatedAt,
-      })),
+      data: rows.map((institution) => institutionPayload(institution)),
     }
   }
 
@@ -66,14 +73,7 @@ export default class InstitutionsController {
       })
 
       return {
-        data: {
-          id: institution.id,
-          name: institution.name,
-          code: institution.code,
-          status: institution.status,
-          createdAt: institution.createdAt,
-          updatedAt: institution.updatedAt,
-        },
+        data: institutionPayload(institution),
       }
     } catch (error) {
       const dbError = error as DbErrorWithCode
@@ -114,13 +114,37 @@ export default class InstitutionsController {
     await institution.save()
 
     return {
+      data: institutionPayload(institution),
+    }
+  }
+
+  async updateCryptoWallets({ request, response, params }: HttpContext) {
+    const payload = await request.validateUsing(updateInstitutionCryptoWalletsValidator)
+    const institutionId = Number(params.id)
+    const institution = await Institution.find(institutionId)
+
+    if (!institution) {
+      return response.notFound({
+        error: {
+          code: 'INSTITUTION_NOT_FOUND',
+          message: 'Institution not found',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    institution.cryptoWalletsEnabled = payload.enabled
+    await institution.save()
+
+    let walletsBackfilled = 0
+    if (payload.enabled) {
+      walletsBackfilled = await backfillInstitutionStudentWallets(institution.id)
+    }
+
+    return {
       data: {
-        id: institution.id,
-        name: institution.name,
-        code: institution.code,
-        status: institution.status,
-        createdAt: institution.createdAt,
-        updatedAt: institution.updatedAt,
+        ...institutionPayload(institution),
+        walletsBackfilled,
       },
     }
   }
@@ -374,7 +398,7 @@ export default class InstitutionsController {
         return createdUser
       })
 
-      if (payload.role === 'student') {
+      if (payload.role === 'student' && institution.cryptoWalletsEnabled) {
         const tokenService = await makeTokenService()
         await tokenService.createWallet(String(user.id))
       }
@@ -436,6 +460,8 @@ export default class InstitutionsController {
       })
     }
 
+    const institution = await Institution.findOrFail(actor.institutionId)
+
     const result = await db.transaction(async (trx) => {
       let role = await trx.from('roles').where('key', payload.role).first()
       if (!role) {
@@ -468,7 +494,7 @@ export default class InstitutionsController {
       return payload.role
     })
 
-    if (result === 'student') {
+    if (result === 'student' && institution.cryptoWalletsEnabled) {
       const tokenService = await makeTokenService()
       await tokenService.createWallet(String(targetUser.id))
     }

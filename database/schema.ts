@@ -102,7 +102,7 @@ export class FundingProgramSchema extends BaseModel {
 }
 
 export class InstitutionSchema extends BaseModel {
-  static $columns = ['code', 'createdAt', 'createdBy', 'id', 'name', 'status', 'updatedAt'] as const
+  static $columns = ['code', 'createdAt', 'createdBy', 'cryptoWalletsEnabled', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns
   @column()
   declare code: string
@@ -110,6 +110,8 @@ export class InstitutionSchema extends BaseModel {
   declare createdAt: DateTime
   @column()
   declare createdBy: number | null
+  @column()
+  declare cryptoWalletsEnabled: boolean
   @column({ isPrimary: true })
   declare id: number
   @column()

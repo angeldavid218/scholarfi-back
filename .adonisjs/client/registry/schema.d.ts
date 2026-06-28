@@ -79,6 +79,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateStatus']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'updateCryptoWallets': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/institutions/:id/crypto-wallets'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/institution').updateInstitutionCryptoWalletsValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/institution').updateInstitutionCryptoWalletsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateCryptoWallets']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateCryptoWallets']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'bootstrapSchoolAdmin': {
     methods: ["POST"]
     pattern: '/api/v1/institutions/:id/bootstrap-school-admin'
