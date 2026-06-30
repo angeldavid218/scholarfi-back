@@ -151,6 +151,126 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['upsertTeacherStudentAssociation']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'listInstitutionSubjects': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/subjects'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/subjects_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/subjects_controller').default['index']>>>
+    }
+  }
+  'createInstitutionSubject': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/subjects'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/school_group').createSubjectValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/school_group').createSubjectValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/subjects_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/subjects_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'listInstitutionGroups': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/groups'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['indexForInstitution']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['indexForInstitution']>>>
+    }
+  }
+  'createInstitutionGroup': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/groups'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/school_group').createGroupValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/school_group').createGroupValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['storeForInstitution']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['storeForInstitution']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'syncInstitutionGroupTeachers': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/groups/:id/teachers'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['syncTeachers']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['syncTeachers']>>>
+    }
+  }
+  'syncInstitutionGroupStudents': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/groups/:id/students'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['syncStudents']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['syncStudents']>>>
+    }
+  }
+  'listMyGroups': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/groups/mine'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['mine']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['mine']>>>
+    }
+  }
+  'importGroupsCsv': {
+    methods: ["POST"]
+    pattern: '/api/v1/groups/import-csv'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['importCsv']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['importCsv']>>>
+    }
+  }
+  'listGroupImportRuns': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/groups/import-runs'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['listImportRuns']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['listImportRuns']>>>
+    }
+  }
+  'showGroupImportRun': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/groups/import-runs/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['showImportRun']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['showImportRun']>>>
+    }
+  }
   'listStudentAvailableTasks': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/tasks/available'

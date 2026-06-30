@@ -16,6 +16,16 @@ export type ScannedRoutes = {
     'provisionUser': { paramsTuple?: []; params?: {} }
     'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
+    'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
+    'createInstitutionSubject': { paramsTuple?: []; params?: {} }
+    'listInstitutionGroups': { paramsTuple?: []; params?: {} }
+    'createInstitutionGroup': { paramsTuple?: []; params?: {} }
+    'syncInstitutionGroupTeachers': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'syncInstitutionGroupStudents': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'listMyGroups': { paramsTuple?: []; params?: {} }
+    'importGroupsCsv': { paramsTuple?: []; params?: {} }
+    'listGroupImportRuns': { paramsTuple?: []; params?: {} }
+    'showGroupImportRun': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -47,6 +57,11 @@ export type ScannedRoutes = {
   GET: {
     'index': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
+    'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
+    'listInstitutionGroups': { paramsTuple?: []; params?: {} }
+    'listMyGroups': { paramsTuple?: []; params?: {} }
+    'listGroupImportRuns': { paramsTuple?: []; params?: {} }
+    'showGroupImportRun': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -67,6 +82,11 @@ export type ScannedRoutes = {
   HEAD: {
     'index': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
+    'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
+    'listInstitutionGroups': { paramsTuple?: []; params?: {} }
+    'listMyGroups': { paramsTuple?: []; params?: {} }
+    'listGroupImportRuns': { paramsTuple?: []; params?: {} }
+    'showGroupImportRun': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -92,6 +112,11 @@ export type ScannedRoutes = {
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'provisionUser': { paramsTuple?: []; params?: {} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }
+    'createInstitutionSubject': { paramsTuple?: []; params?: {} }
+    'createInstitutionGroup': { paramsTuple?: []; params?: {} }
+    'syncInstitutionGroupTeachers': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'syncInstitutionGroupStudents': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'importGroupsCsv': { paramsTuple?: []; params?: {} }
     'createTask': { paramsTuple?: []; params?: {} }
     'createSubmission': { paramsTuple?: []; params?: {} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }

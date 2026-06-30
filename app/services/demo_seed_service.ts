@@ -95,6 +95,11 @@ async function clearDemoTables() {
       submission_validations,
       submissions,
       tasks,
+      group_import_runs,
+      group_students,
+      group_teachers,
+      groups,
+      subjects,
       teacher_students,
       user_roles,
       roles,
@@ -198,6 +203,119 @@ export async function seedDemoBaseline(options: {
           updated_at: null,
         },
       ])
+
+    const mathSubject = await trx
+      .table('subjects')
+      .insert({
+        institution_id: institution.id,
+        name: 'Matemáticas',
+        code: null,
+        status: 'active',
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      })
+      .returning('id')
+    const mathSubjectId = typeof mathSubject[0] === 'number' ? mathSubject[0] : mathSubject[0].id
+
+    const historySubject = await trx
+      .table('subjects')
+      .insert({
+        institution_id: institution.id,
+        name: 'Historia',
+        code: null,
+        status: 'active',
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      })
+      .returning('id')
+    const historySubjectId =
+      typeof historySubject[0] === 'number' ? historySubject[0] : historySubject[0].id
+
+    const mathGroup = await trx
+      .table('groups')
+      .insert({
+        institution_id: institution.id,
+        subject_id: mathSubjectId,
+        name: 'Matemáticas 3°A',
+        section: '3°A',
+        code: null,
+        sync_metadata: null,
+        status: 'active',
+        external_source: 'manual',
+        external_id: null,
+        created_by_teacher_id: teacherId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      })
+      .returning('id')
+    const mathGroupId = typeof mathGroup[0] === 'number' ? mathGroup[0] : mathGroup[0].id
+
+    const historyGroup = await trx
+      .table('groups')
+      .insert({
+        institution_id: institution.id,
+        subject_id: historySubjectId,
+        name: 'Historia 3°A',
+        section: '3°A',
+        code: null,
+        sync_metadata: null,
+        status: 'active',
+        external_source: 'manual',
+        external_id: null,
+        created_by_teacher_id: teacherId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      })
+      .returning('id')
+    const historyGroupId = typeof historyGroup[0] === 'number' ? historyGroup[0] : historyGroup[0].id
+
+    await trx.table('group_teachers').insert([
+      {
+        institution_id: institution.id,
+        group_id: mathGroupId,
+        teacher_id: teacherId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      },
+      {
+        institution_id: institution.id,
+        group_id: historyGroupId,
+        teacher_id: teacherId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      },
+    ])
+
+    await trx.table('group_students').insert([
+      {
+        institution_id: institution.id,
+        group_id: mathGroupId,
+        student_id: studentOneId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      },
+      {
+        institution_id: institution.id,
+        group_id: mathGroupId,
+        student_id: studentTwoId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      },
+      {
+        institution_id: institution.id,
+        group_id: historyGroupId,
+        student_id: studentOneId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      },
+      {
+        institution_id: institution.id,
+        group_id: historyGroupId,
+        student_id: studentTwoId,
+        created_at: ts(1).toJSDate(),
+        updated_at: null,
+      },
+    ])
 
     let starterTask: Task | null = null
     let starterSubmission: Submission | null = null
