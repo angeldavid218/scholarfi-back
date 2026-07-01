@@ -115,6 +115,58 @@ test.group('School groups and CSV import', (group) => {
     assert.equal(mineBody.data[0].studentCount, 1)
   })
 
+  test('teacher imports CSV and provisions new students', async ({ client, assert }) => {
+    const institutionId = await createInstitution(String(Date.now()))
+
+    const teacher = await User.create({
+      email: `teacher-provision-${Date.now()}@example.com`,
+      password: 'Secret123!',
+      fullName: 'Provision Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: teacher.email,
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as { data: { token: string } }).data.token
+
+    const newStudentEmail = `new-student-${Date.now()}@example.com`
+    const csv = [
+      'student_email,student_name,subject,section',
+      `${newStudentEmail},Nuevo Estudiante,Matemáticas,3°A`,
+    ].join('\n')
+
+    const importResponse = await client
+      .post('/api/v1/groups/import-csv')
+      .header('Authorization', `Bearer ${token}`)
+      .file('file', Buffer.from(csv), { filename: 'classes.csv', contentType: 'text/csv' })
+
+    importResponse.assertStatus(200)
+    const importBody = importResponse.body() as any
+    assert.equal(importBody.data.summary.studentsCreated, 1)
+    assert.equal(importBody.data.summary.enrollmentsUpserted, 1)
+    assert.lengthOf(importBody.data.summary.errors, 0)
+
+    const student = await db
+      .from('users')
+      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
+      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .where('users.institution_id', institutionId)
+      .where('roles.key', 'student')
+      .where('users.email', newStudentEmail)
+      .select('users.id as id', 'users.full_name as fullName')
+      .first()
+
+    assert.isDefined(student)
+    assert.equal(student.fullName, 'Nuevo Estudiante')
+
+    const wallet = await db.from('token_balances').where('user_id', student.id).first()
+    assert.isDefined(wallet)
+  })
+
   test('school admin lists subjects and creates group with members', async ({ client, assert }) => {
     const institutionId = await createInstitution(`admin-${Date.now()}`)
 

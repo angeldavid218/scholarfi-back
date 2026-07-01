@@ -1,3 +1,5 @@
+import Papa from 'papaparse'
+
 export type ParsedCsv = {
   headers: string[]
   rows: Record<string, string>[]
@@ -25,57 +27,23 @@ function normalizeHeader(raw: string): string {
   return HEADER_ALIASES[key] ?? key
 }
 
-function parseCsvLine(line: string): string[] {
-  const values: string[] = []
-  let current = ''
-  let inQuotes = false
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
-      continue
-    }
-    if (char === ',' && !inQuotes) {
-      values.push(current.trim())
-      current = ''
-      continue
-    }
-    current += char
+function trimRowValues(row: Record<string, unknown>): Record<string, string> {
+  const trimmed: Record<string, string> = {}
+  for (const [key, value] of Object.entries(row)) {
+    trimmed[key] = String(value ?? '').trim()
   }
-
-  values.push(current.trim())
-  return values
+  return trimmed
 }
 
 export function parseCsvContent(content: string): ParsedCsv {
-  const lines = content
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+  const result = Papa.parse<Record<string, unknown>>(content, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: normalizeHeader,
+  })
 
-  if (lines.length === 0) {
-    return { headers: [], rows: [] }
-  }
-
-  const rawHeaders = parseCsvLine(lines[0])
-  const headers = rawHeaders.map(normalizeHeader)
-  const rows: Record<string, string>[] = []
-
-  for (let lineIndex = 1; lineIndex < lines.length; lineIndex++) {
-    const values = parseCsvLine(lines[lineIndex])
-    const row: Record<string, string> = {}
-    for (let i = 0; i < headers.length; i++) {
-      row[headers[i]] = (values[i] ?? '').trim()
-    }
-    rows.push(row)
-  }
+  const headers = result.meta.fields ?? []
+  const rows = result.data.map(trimRowValues)
 
   return { headers, rows }
 }

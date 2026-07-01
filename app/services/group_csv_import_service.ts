@@ -1,8 +1,8 @@
 import db from '@adonisjs/lucid/services/db'
 import { parseCsvContent } from '#services/csv_parser_service'
 import {
-  findInstitutionStudentByEmail,
   findOrCreateGroup,
+  findOrCreateInstitutionStudent,
   findOrCreateSubject,
   upsertGroupStudent,
   upsertGroupTeacher,
@@ -27,6 +27,7 @@ export type CsvImportSummary = {
   dryRun: boolean
   subjectsCreated: number
   groupsCreated: number
+  studentsCreated: number
   enrollmentsUpserted: number
   teacherLinksUpserted: number
   rowResults: CsvImportRowResult[]
@@ -45,6 +46,7 @@ export async function importGroupsFromCsv(input: {
     dryRun: input.dryRun,
     subjectsCreated: 0,
     groupsCreated: 0,
+    studentsCreated: 0,
     enrollmentsUpserted: 0,
     teacherLinksUpserted: 0,
     rowResults: [],
@@ -70,6 +72,8 @@ export async function importGroupsFromCsv(input: {
 
   const createdSubjectKeys = new Set<string>()
   const createdGroupKeys = new Set<string>()
+  const createdStudentEmails = new Set<string>()
+  const pendingStudentEmails = new Set<string>()
 
   const processRows = async () => {
     for (let index = 0; index < parsed.rows.length; index++) {
@@ -97,12 +101,20 @@ export async function importGroupsFromCsv(input: {
       }
 
       const resolvedSubjectName = subjectName || className || 'General'
-      const student = await findInstitutionStudentByEmail(input.institutionId, studentEmail)
-      if (!student) {
+      const studentName = row.student_name?.trim() || null
+      const studentResult = await findOrCreateInstitutionStudent({
+        institutionId: input.institutionId,
+        email: studentEmail,
+        fullName: studentName,
+        dryRun: input.dryRun,
+        pendingCreatedEmails: pendingStudentEmails,
+      })
+
+      if (!studentResult.ok) {
         summary.errors.push({
           row: rowNumber,
           field: 'student_email',
-          message: `Student not found in institution: ${studentEmail}`,
+          message: studentResult.message,
         })
         summary.rowResults.push({
           row: rowNumber,
@@ -110,9 +122,14 @@ export async function importGroupsFromCsv(input: {
           studentEmail,
           subject: resolvedSubjectName,
           section,
-          message: `Student not found: ${studentEmail}`,
+          message: studentResult.message,
         })
         continue
+      }
+
+      const student = studentResult.student
+      if (studentResult.created) {
+        createdStudentEmails.add(studentEmail.trim().toLowerCase())
       }
 
       const subjectBefore = await db
@@ -195,6 +212,7 @@ export async function importGroupsFromCsv(input: {
 
   summary.subjectsCreated = createdSubjectKeys.size
   summary.groupsCreated = createdGroupKeys.size
+  summary.studentsCreated = createdStudentEmails.size
 
   if (input.dryRun) {
     return { runId: null, summary }
