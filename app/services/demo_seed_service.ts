@@ -132,6 +132,7 @@ export async function seedDemoBaseline(options: {
         name: 'ScholarFi Demo Academy',
         code: 'SFA-DEMO',
         status: 'active',
+        cryptoWalletsEnabled: true,
         createdBy: null,
       },
       { client: trx }

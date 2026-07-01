@@ -44,6 +44,13 @@ router
           .as('updateStatus')
           .use(middleware.role({ roles: ['super_admin'] }))
         router
+          .patch('/:id/crypto-wallets', [
+            () => import('#controllers/institutions_controller'),
+            'updateCryptoWallets',
+          ])
+          .as('updateCryptoWallets')
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
           .post('/:id/bootstrap-school-admin', [
             () => import('#controllers/institutions_controller'),
             'bootstrapSchoolAdmin',

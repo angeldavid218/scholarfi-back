@@ -14,6 +14,7 @@ export interface ApiDefinition {
   index: typeof routes['index']
   store: typeof routes['store']
   updateStatus: typeof routes['updateStatus']
+  updateCryptoWallets: typeof routes['updateCryptoWallets']
   bootstrapSchoolAdmin: typeof routes['bootstrapSchoolAdmin']
   listInstitutionUsers: typeof routes['listInstitutionUsers']
   provisionUser: typeof routes['provisionUser']

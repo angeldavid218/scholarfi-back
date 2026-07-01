@@ -9,6 +9,10 @@ export const updateInstitutionStatusValidator = vine.create({
   status: vine.enum(['active', 'inactive'] as const),
 })
 
+export const updateInstitutionCryptoWalletsValidator = vine.create({
+  enabled: vine.boolean(),
+})
+
 export const bootstrapSchoolAdminValidator = vine.create({
   fullName: vine.string().trim().minLength(2).maxLength(180),
   email: vine.string().trim().email().maxLength(254),
