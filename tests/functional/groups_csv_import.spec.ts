@@ -30,13 +30,17 @@ async function assignRoleToUser(userId: number, roleKey: string, roleLabel: stri
   })
 }
 
-async function createInstitution(codeSuffix: string) {
+async function createInstitution(
+  codeSuffix: string,
+  options: { cryptoWalletsEnabled?: boolean } = {}
+) {
   const inserted = await db
     .table('institutions')
     .insert({
       name: `Groups Institution ${codeSuffix}`,
       code: `GRP-${codeSuffix}`,
       status: 'active',
+      crypto_wallets_enabled: options.cryptoWalletsEnabled ?? false,
       created_by: null,
       created_at: new Date(),
       updated_at: null,
@@ -115,8 +119,56 @@ test.group('School groups and CSV import', (group) => {
     assert.equal(mineBody.data[0].studentCount, 1)
   })
 
-  test('teacher imports CSV and provisions new students', async ({ client, assert }) => {
-    const institutionId = await createInstitution(String(Date.now()))
+  test('teacher imports CSV and provisions new students without wallet when crypto disabled', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: false })
+
+    const teacher = await User.create({
+      email: `teacher-provision-off-${Date.now()}@example.com`,
+      password: 'Secret123!',
+      fullName: 'Provision Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: teacher.email,
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as { data: { token: string } }).data.token
+
+    const newStudentEmail = `new-student-off-${Date.now()}@example.com`
+    const csv = [
+      'student_email,student_name,subject,section',
+      `${newStudentEmail},Nuevo Estudiante,Matemáticas,3°A`,
+    ].join('\n')
+
+    const importResponse = await client
+      .post('/api/v1/groups/import-csv')
+      .header('Authorization', `Bearer ${token}`)
+      .file('file', Buffer.from(csv), { filename: 'classes.csv', contentType: 'text/csv' })
+
+    importResponse.assertStatus(200)
+    const importBody = importResponse.body() as any
+    assert.equal(importBody.data.summary.studentsCreated, 1)
+
+    const student = await db
+      .from('users')
+      .where('institution_id', institutionId)
+      .where('email', newStudentEmail)
+      .select('id')
+      .first()
+
+    assert.isDefined(student)
+    const wallet = await db.from('token_balances').where('user_id', student.id).first()
+    assert.isNull(wallet)
+  })
+
+  test('teacher imports CSV and creates wallet when crypto enabled', async ({ client, assert }) => {
+    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: true })
 
     const teacher = await User.create({
       email: `teacher-provision-${Date.now()}@example.com`,
@@ -165,6 +217,69 @@ test.group('School groups and CSV import', (group) => {
 
     const wallet = await db.from('token_balances').where('user_id', student.id).first()
     assert.isDefined(wallet)
+  })
+
+  test('teacher imports CSV with custom column mapping', async ({ client, assert }) => {
+    const institutionId = await createInstitution(String(Date.now()))
+
+    const teacher = await User.create({
+      email: `teacher-mapping-${Date.now()}@example.com`,
+      password: 'Secret123!',
+      fullName: 'Mapping Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const student = await User.create({
+      email: `student-mapping-${Date.now()}@example.com`,
+      password: 'Secret123!',
+      fullName: 'Mapping Student',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(student.id, 'student', 'Student')
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: teacher.email,
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as { data: { token: string } }).data.token
+
+    const csv = [
+      'ID interno,Correo electrónico,Apellidos y nombres,Asignatura,Grupo,Notas,Teléfono tutor',
+      `001,${student.email},Mapping Student,Matemáticas,3°A,10,555-0100`,
+    ].join('\n')
+
+    const columnMapping = JSON.stringify({
+      student_email: 'Correo electrónico',
+      student_name: 'Apellidos y nombres',
+      subject: 'Asignatura',
+      section: 'Grupo',
+    })
+
+    const importResponse = await client
+      .post('/api/v1/groups/import-csv')
+      .header('Authorization', `Bearer ${token}`)
+      .file('file', Buffer.from(csv), { filename: 'classes.csv', contentType: 'text/csv' })
+      .fields({ columnMapping })
+
+    importResponse.assertStatus(200)
+    const importBody = importResponse.body() as any
+    assert.equal(importBody.data.summary.enrollmentsUpserted, 1)
+    assert.equal(importBody.data.summary.groupsCreated, 1)
+    assert.lengthOf(importBody.data.summary.errors, 0)
+
+    const mineResponse = await client
+      .get('/api/v1/groups/mine')
+      .header('Authorization', `Bearer ${token}`)
+
+    mineResponse.assertStatus(200)
+    const mineBody = mineResponse.body() as any
+    assert.lengthOf(mineBody.data, 1)
+    assert.equal(mineBody.data[0].subjectName, 'Matemáticas')
+    assert.equal(mineBody.data[0].section, '3°A')
+    assert.equal(mineBody.data[0].studentCount, 1)
   })
 
   test('school admin lists subjects and creates group with members', async ({ client, assert }) => {

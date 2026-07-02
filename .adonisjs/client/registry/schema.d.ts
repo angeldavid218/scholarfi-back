@@ -239,12 +239,12 @@ export interface Registry {
     methods: ["POST"]
     pattern: '/api/v1/groups/import-csv'
     types: {
-      body: {}
+      body: ExtractBody<InferInput<(typeof import('#validators/school_group').groupImportColumnMappingValidator)>>
       paramsTuple: []
       params: {}
-      query: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/school_group').groupImportColumnMappingValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['importCsv']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['importCsv']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['importCsv']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'listGroupImportRuns': {

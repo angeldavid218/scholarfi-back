@@ -1,6 +1,6 @@
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
-import { makeTokenService } from '#services/tokens/factory'
+import { maybeCreateStudentWallet } from '#services/institution_crypto_wallets_service'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { randomBytes } from 'node:crypto'
 
@@ -301,8 +301,7 @@ export async function findOrCreateInstitutionStudent(input: {
     return user
   })
 
-  const tokenService = await makeTokenService()
-  await tokenService.createWallet(String(createdUser.id))
+  await maybeCreateStudentWallet(input.institutionId, createdUser.id)
 
   return {
     ok: true,

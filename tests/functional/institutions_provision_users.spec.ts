@@ -119,7 +119,7 @@ test.group('Institutions provision users', (group) => {
     const body = response.body() as any
     const studentId = body.data.id as number
     const row = await db.from('token_balances').where('user_id', studentId).first()
-    assert.isDefined(row)
+    assert.isNotNull(row)
     assert.equal(Number(row.balance), 0)
   })
 

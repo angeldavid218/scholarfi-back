@@ -1,3 +1,4 @@
+import { errors } from '@vinejs/vine'
 import Institution from '#models/institution'
 import User from '#models/user'
 import { importGroupsFromCsv } from '#services/group_csv_import_service'
@@ -7,7 +8,7 @@ import {
   upsertGroupTeacher,
 } from '#services/group_upsert_service'
 import { userHasRole } from '#services/role_query_service'
-import { createGroupValidator, syncGroupMembersValidator } from '#validators/school_group'
+import { createGroupValidator, groupImportColumnMappingValidator, syncGroupMembersValidator } from '#validators/school_group'
 import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 import { readFile } from 'node:fs/promises'
@@ -129,12 +130,40 @@ export default class GroupsController {
     const csvContent = await readFile(csvFile.tmpPath, 'utf-8')
     const dryRun = parseBooleanQuery(request.input('dryRun'))
 
+    let columnMapping: Record<string, string> | undefined
+    const mappingRaw = request.input('columnMapping')
+    if (mappingRaw !== undefined && mappingRaw !== null && mappingRaw !== '') {
+      let parsedMapping: unknown = mappingRaw
+      if (typeof mappingRaw === 'string') {
+        try {
+          parsedMapping = JSON.parse(mappingRaw)
+        } catch {
+          return response.badRequest({
+            error: {
+              code: 'INVALID_COLUMN_MAPPING',
+              message: 'columnMapping must be valid JSON',
+            },
+          })
+        }
+      }
+
+      try {
+        columnMapping = await groupImportColumnMappingValidator.validate(parsedMapping)
+      } catch (error) {
+        if (error instanceof errors.E_VALIDATION_ERROR) {
+          return response.unprocessableEntity(error.messages)
+        }
+        throw error
+      }
+    }
+
     const result = await importGroupsFromCsv({
       institutionId: teacher.institutionId,
       teacherId: teacher.id,
       filename: csvFile.clientName,
       csvContent,
       dryRun,
+      columnMapping,
     })
 
     return {

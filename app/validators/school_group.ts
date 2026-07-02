@@ -1,5 +1,15 @@
 import vine from '@vinejs/vine'
 
+const optionalMappedColumn = vine.string().trim().minLength(1).optional()
+
+export const groupImportColumnMappingValidator = vine.create({
+  student_email: optionalMappedColumn,
+  student_name: optionalMappedColumn,
+  subject: optionalMappedColumn,
+  section: optionalMappedColumn,
+  class_name: optionalMappedColumn,
+})
+
 export const createSubjectValidator = vine.create({
   name: vine.string().trim().minLength(2).maxLength(120),
   code: vine.string().trim().minLength(1).maxLength(50).optional(),

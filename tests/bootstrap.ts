@@ -55,9 +55,7 @@ export const configureSuite: Config['configureSuite'] = (suite) => {
       await testUtils.db().migrate()
       await testUtils.httpServer().start()
     })
-    suite.teardown(async () => {
-      await testUtils.httpServer().stop()
-    })
+
     return
   }
 }

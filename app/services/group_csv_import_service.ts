@@ -1,5 +1,10 @@
 import db from '@adonisjs/lucid/services/db'
-import { parseCsvContent } from '#services/csv_parser_service'
+import {
+  type GroupImportColumnMapping,
+  parseCsvContentWithMapping,
+  validateGroupImportColumnMapping,
+  validateGroupImportParsed,
+} from '#services/csv_parser_service'
 import {
   findOrCreateGroup,
   findOrCreateInstitutionStudent,
@@ -40,8 +45,9 @@ export async function importGroupsFromCsv(input: {
   filename: string
   csvContent: string
   dryRun: boolean
+  columnMapping?: GroupImportColumnMapping
 }): Promise<{ runId: number | null; summary: CsvImportSummary }> {
-  const parsed = parseCsvContent(input.csvContent)
+  const { parsed, mapping } = parseCsvContentWithMapping(input.csvContent, input.columnMapping)
   const summary: CsvImportSummary = {
     dryRun: input.dryRun,
     subjectsCreated: 0,
@@ -53,21 +59,16 @@ export async function importGroupsFromCsv(input: {
     errors: [],
   }
 
-  if (parsed.rows.length === 0) {
-    summary.errors.push({ row: 0, field: 'file', message: 'CSV file is empty or has no data rows' })
+  const mappingError = validateGroupImportColumnMapping(mapping)
+  if (mappingError) {
+    summary.errors.push({ row: 0, field: 'columnMapping', message: mappingError })
     return { runId: null, summary }
   }
 
-  const requiredHeaders = ['student_email', 'subject']
-  for (const header of requiredHeaders) {
-    if (!parsed.headers.includes(header)) {
-      summary.errors.push({
-        row: 0,
-        field: 'header',
-        message: `Missing required column: ${header}`,
-      })
-      return { runId: null, summary }
-    }
+  const parsedError = validateGroupImportParsed(parsed)
+  if (parsedError) {
+    summary.errors.push({ row: 0, field: 'file', message: parsedError })
+    return { runId: null, summary }
   }
 
   const createdSubjectKeys = new Set<string>()

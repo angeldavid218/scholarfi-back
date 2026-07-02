@@ -49,6 +49,7 @@ new Ignitor(APP_ROOT, { importer: IMPORTER })
     configure({
       ...app.rcFile.tests,
       ...config,
+      forceExit: true,
       ...{
         setup: runnerHooks.setup,
         teardown: runnerHooks.teardown.concat([() => app.terminate()]),
