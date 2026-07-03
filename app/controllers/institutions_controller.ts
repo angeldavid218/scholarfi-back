@@ -459,8 +459,6 @@ export default class InstitutionsController {
       })
     }
 
-    const institution = await Institution.findOrFail(actor.institutionId)
-
     const result = await db.transaction(async (trx) => {
       let role = await trx.from('roles').where('key', payload.role).first()
       if (!role) {
