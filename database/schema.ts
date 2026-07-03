@@ -101,6 +101,92 @@ export class FundingProgramSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class GroupImportRunSchema extends BaseModel {
+  static $columns = ['createdAt', 'filename', 'id', 'institutionId', 'status', 'summaryJson', 'updatedAt', 'uploadedByTeacherId'] as const
+  $columns = GroupImportRunSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare filename: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare status: string
+  @column()
+  declare summaryJson: any | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uploadedByTeacherId: number
+}
+
+export class GroupStudentSchema extends BaseModel {
+  static $columns = ['createdAt', 'groupId', 'id', 'institutionId', 'studentId', 'updatedAt'] as const
+  $columns = GroupStudentSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare groupId: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare studentId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class GroupTeacherSchema extends BaseModel {
+  static $columns = ['createdAt', 'groupId', 'id', 'institutionId', 'teacherId', 'updatedAt'] as const
+  $columns = GroupTeacherSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare groupId: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare teacherId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class GroupSchema extends BaseModel {
+  static $columns = ['code', 'createdAt', 'createdByTeacherId', 'externalId', 'externalSource', 'id', 'institutionId', 'name', 'section', 'status', 'subjectId', 'syncMetadata', 'updatedAt'] as const
+  $columns = GroupSchema.$columns
+  @column()
+  declare code: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare createdByTeacherId: number | null
+  @column()
+  declare externalId: string | null
+  @column()
+  declare externalSource: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare name: string
+  @column()
+  declare section: string | null
+  @column()
+  declare status: string
+  @column()
+  declare subjectId: number
+  @column()
+  declare syncMetadata: any | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class InstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'createdBy', 'cryptoWalletsEnabled', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns
@@ -217,6 +303,25 @@ export class SimulatedBalanceSchema extends BaseModel {
   declare institutionId: number
   @column()
   declare studentId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class SubjectSchema extends BaseModel {
+  static $columns = ['code', 'createdAt', 'id', 'institutionId', 'name', 'status', 'updatedAt'] as const
+  $columns = SubjectSchema.$columns
+  @column()
+  declare code: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare name: string
+  @column()
+  declare status: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }

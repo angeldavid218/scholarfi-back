@@ -82,9 +82,65 @@ router
           ])
           .as('upsertTeacherStudentAssociation')
           .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .get('/subjects', [() => import('#controllers/subjects_controller'), 'index'])
+          .as('listInstitutionSubjects')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/subjects', [() => import('#controllers/subjects_controller'), 'store'])
+          .as('createInstitutionSubject')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .get('/groups', [() => import('#controllers/groups_controller'), 'indexForInstitution'])
+          .as('listInstitutionGroups')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/groups', [() => import('#controllers/groups_controller'), 'storeForInstitution'])
+          .as('createInstitutionGroup')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/groups/:id/teachers', [
+            () => import('#controllers/groups_controller'),
+            'syncTeachers',
+          ])
+          .as('syncInstitutionGroupTeachers')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/groups/:id/students', [
+            () => import('#controllers/groups_controller'),
+            'syncStudents',
+          ])
+          .as('syncInstitutionGroupStudents')
+          .use(middleware.role({ roles: ['school_admin'] }))
       })
       .prefix('institutions')
       .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .get('/mine', [() => import('#controllers/groups_controller'), 'mine'])
+          .as('listMyGroups')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/import-csv', [() => import('#controllers/groups_controller'), 'importCsv'])
+          .as('importGroupsCsv')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/import-runs', [() => import('#controllers/groups_controller'), 'listImportRuns'])
+          .as('listGroupImportRuns')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/import-runs/:id', [
+            () => import('#controllers/groups_controller'),
+            'showImportRun',
+          ])
+          .as('showGroupImportRun')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('groups')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
 
     router
       .group(() => {

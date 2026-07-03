@@ -1,8 +1,8 @@
 import Institution from '#models/institution'
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
-import { makeTokenService } from '#services/tokens/factory'
 import { backfillInstitutionStudentWallets } from '#services/institution_wallet_backfill'
+import { maybeCreateStudentWallet } from '#services/institution_crypto_wallets_service'
 import {
   bootstrapSchoolAdminValidator,
   createInstitutionValidator,
@@ -395,13 +395,12 @@ export default class InstitutionsController {
           updated_at: null,
         })
 
+        if (payload.role === 'student') {
+          await maybeCreateStudentWallet(institution.id, createdUser.id, trx)
+        }
+
         return createdUser
       })
-
-      if (payload.role === 'student' && institution.cryptoWalletsEnabled) {
-        const tokenService = await makeTokenService()
-        await tokenService.createWallet(String(user.id))
-      }
 
       return {
         data: {
@@ -494,9 +493,8 @@ export default class InstitutionsController {
       return payload.role
     })
 
-    if (result === 'student' && institution.cryptoWalletsEnabled) {
-      const tokenService = await makeTokenService()
-      await tokenService.createWallet(String(targetUser.id))
+    if (result === 'student') {
+      await maybeCreateStudentWallet(actor.institutionId, targetUser.id)
     }
 
     return {

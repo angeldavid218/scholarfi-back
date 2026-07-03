@@ -171,7 +171,7 @@ test.group('Institutions crypto wallets toggle', (group) => {
     response.assertStatus(200)
     const studentId = (response.body() as any).data.id as number
     const row = await db.from('token_balances').where('user_id', studentId).first()
-    assert.isDefined(row)
+    assert.isNotNull(row)
     assert.equal(Number(row.balance), 0)
   })
 
@@ -194,7 +194,7 @@ test.group('Institutions crypto wallets toggle', (group) => {
     roleResponse.assertStatus(200)
 
     const row = await db.from('token_balances').where('user_id', teacher.id).first()
-    assert.isDefined(row)
+    assert.isNotNull(row)
   })
 
   test('enabling crypto wallets backfills wallets for existing students', async ({ client, assert }) => {
