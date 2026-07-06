@@ -5,6 +5,8 @@ export const createTaskValidator = vine.create({
   description: vine.string().trim().minLength(2),
   rewardAmount: vine.number().positive(),
   dueAt: vine.string().optional(),
+  /** Optional group link; required for Google Classroom sync tasks in a later epic */
+  groupId: vine.number().positive().optional(),
 })
 
 export const closeTaskValidator = vine.create({})

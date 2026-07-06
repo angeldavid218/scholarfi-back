@@ -11,6 +11,9 @@ export type ScannedRoutes = {
     'store': { paramsTuple?: []; params?: {} }
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'updateCryptoWallets': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'allocateInstitutionCredits': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'provisionUser': { paramsTuple?: []; params?: {} }
@@ -56,6 +59,8 @@ export type ScannedRoutes = {
   }
   GET: {
     'index': { paramsTuple?: []; params?: {} }
+    'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
     'listInstitutionGroups': { paramsTuple?: []; params?: {} }
@@ -81,6 +86,8 @@ export type ScannedRoutes = {
   }
   HEAD: {
     'index': { paramsTuple?: []; params?: {} }
+    'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
     'listInstitutionGroups': { paramsTuple?: []; params?: {} }
@@ -109,6 +116,7 @@ export type ScannedRoutes = {
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
     'store': { paramsTuple?: []; params?: {} }
+    'allocateInstitutionCredits': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'provisionUser': { paramsTuple?: []; params?: {} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }

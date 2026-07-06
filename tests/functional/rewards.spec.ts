@@ -1,6 +1,7 @@
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import testUtils from '@adonisjs/core/services/test_utils'
+import { seedInstitutionCredits } from '../helpers/institution_credits.js'
 import { test } from '@japa/runner'
 
 async function ensureRole(roleKey: string, roleLabel: string) {
@@ -61,6 +62,7 @@ test.group('Rewards and balance flows', (group) => {
     assert,
   }) => {
     const institutionId = await createInstitution('RW-IDP')
+    await seedInstitutionCredits(institutionId, 10_000)
 
     const teacher = await User.create({
       email: 'rw-teacher-1@example.com',

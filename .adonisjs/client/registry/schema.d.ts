@@ -91,6 +91,42 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateCryptoWallets']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'showInstitutionCreditPool': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/:id/credit-pool'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['show']>>>
+    }
+  }
+  'allocateInstitutionCredits': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/:id/credit-pool/allocate'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/institution_credit').allocateInstitutionCreditsValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/institution_credit').allocateInstitutionCreditsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['allocate']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['allocate']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'showMyInstitutionCreditPool': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/credit-pool'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['showMine']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['showMine']>>>
+    }
+  }
   'bootstrapSchoolAdmin': {
     methods: ["POST"]
     pattern: '/api/v1/institutions/:id/bootstrap-school-admin'

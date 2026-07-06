@@ -1,5 +1,7 @@
 import Institution from '#models/institution'
 import Task from '#models/task'
+import { assertInstitutionCanFundTaskReward } from '#services/credits/institution_credit_pool_service'
+import { InsufficientInstitutionCreditsError } from '#services/credits/types'
 import { closeTaskValidator, createTaskValidator } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
@@ -42,6 +44,25 @@ export default class TasksController {
       })
     }
 
+    try {
+      await assertInstitutionCanFundTaskReward(user.institutionId, payload.rewardAmount)
+    } catch (error) {
+      if (error instanceof InsufficientInstitutionCreditsError) {
+        return response.unprocessableEntity({
+          error: {
+            code: error.code,
+            message: 'La recompensa supera el presupuesto disponible de la institución',
+            details: {
+              remainingCredits: error.remaining,
+              requestedCredits: error.requested,
+            },
+            requestId: request.id(),
+          },
+        })
+      }
+      throw error
+    }
+
     const task = await Task.create({
       institutionId: user.institutionId,
       createdByTeacherId: user.id,
@@ -50,6 +71,10 @@ export default class TasksController {
       rewardAmount: payload.rewardAmount,
       dueAt: payload.dueAt ? DateTime.fromISO(payload.dueAt) : null,
       status: 'active',
+      groupId: payload.groupId ?? null,
+      externalSource: 'manual',
+      externalId: null,
+      syncMetadata: null,
     })
 
     return {
