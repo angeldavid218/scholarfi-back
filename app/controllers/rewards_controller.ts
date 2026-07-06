@@ -3,7 +3,12 @@ import Task from '#models/task'
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
-import { makeTokenService } from '#services/tokens/factory'
+import { getInstitutionCreditPoolSummary } from '#services/credits/institution_credit_pool_service'
+import {
+  InsufficientInstitutionCreditsError,
+  issueRewardForSubmission,
+} from '#services/credits/reward_issuance_service'
+import { makeTokenServiceForInstitution } from '#services/tokens/factory'
 import { parsePositiveInt } from '../utils/parse_positive.ts'
 
 function parseId(input: unknown): number | null {
@@ -50,27 +55,46 @@ export default class RewardsController {
     }
 
     const task = await Task.findOrFail(submission.taskId)
-    const tokenService = await makeTokenService()
-    const result = await tokenService.mintTokens({
-      userId: submission.studentId,
-      institutionId: submission.institutionId,
-      amount: task.rewardAmount,
-      achievementId: submission.id,
-    })
 
-    return {
-      data: {
-        submissionId: submission.id,
-        rewardTransactionId: result.transactionId,
+    try {
+      const result = await issueRewardForSubmission({
+        institutionId: submission.institutionId,
+        studentId: submission.studentId,
         amount: task.rewardAmount,
-        idempotent: result.idempotent ?? false,
-      },
+        submissionId: submission.id,
+        actorUserId: user.id,
+      })
+
+      return {
+        data: {
+          submissionId: submission.id,
+          rewardTransactionId: result.transactionId,
+          amount: task.rewardAmount,
+          idempotent: result.idempotent,
+        },
+      }
+    } catch (error) {
+      if (error instanceof InsufficientInstitutionCreditsError) {
+        return response.unprocessableEntity({
+          error: {
+            code: error.code,
+            message: 'La institución no tiene créditos suficientes para esta recompensa',
+            details: {
+              remainingCredits: error.remaining,
+              requestedCredits: error.requested,
+            },
+            requestId: request.id(),
+          },
+        })
+      }
+      throw error
     }
   }
 
   async showStudentBalance({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
-    const tokenService = await makeTokenService()
+    const institutionId = user.institutionId ?? -1
+    const tokenService = await makeTokenServiceForInstitution(institutionId)
     const balance = await tokenService.getBalance(String(user.id))
 
     return {
@@ -93,6 +117,10 @@ export default class RewardsController {
       .sum('amount as credits_total')
       .first()
 
+    const pool = user.institutionId
+      ? await getInstitutionCreditPoolSummary(user.institutionId)
+      : null
+
     const total = row?.total as string | number | undefined
     const creditsTotal = row?.credits_total as string | number | null | undefined
 
@@ -103,6 +131,7 @@ export default class RewardsController {
           creditsTotal === null || creditsTotal === undefined || creditsTotal === ''
             ? 0
             : Number(creditsTotal),
+        creditPool: pool,
       },
     }
   }
@@ -111,12 +140,13 @@ export default class RewardsController {
     const user = auth.getUserOrFail()
     const page = parsePositiveInt(request.input('page'), 1)
     const perPage = Math.min(parsePositiveInt(request.input('perPage'), 10), 100)
+    const institutionId = user.institutionId ?? -1
 
-    const tokenService = await makeTokenService()
-    const { items, meta } = await tokenService.getInstitutionTransactionHistory(
-      user.institutionId ?? -1,
-      { page, perPage }
-    )
+    const tokenService = await makeTokenServiceForInstitution(institutionId)
+    const { items, meta } = await tokenService.getInstitutionTransactionHistory(institutionId, {
+      page,
+      perPage,
+    })
 
     const studentIds = [...new Set(items.map((i) => i.userId))]
     const namesById = new Map<number, string>()

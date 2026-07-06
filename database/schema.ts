@@ -187,6 +187,46 @@ export class GroupSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class InstitutionCreditEntrySchema extends BaseModel {
+  static $columns = ['actorUserId', 'amount', 'createdAt', 'entryType', 'id', 'institutionId', 'notes', 'submissionId', 'tokenTransactionId'] as const
+  $columns = InstitutionCreditEntrySchema.$columns
+  @column()
+  declare actorUserId: number | null
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare entryType: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare notes: string | null
+  @column()
+  declare submissionId: number | null
+  @column()
+  declare tokenTransactionId: number | null
+}
+
+export class InstitutionCreditPoolSchema extends BaseModel {
+  static $columns = ['allocatedCredits', 'createdAt', 'id', 'institutionId', 'updatedAt', 'utilizedCredits'] as const
+  $columns = InstitutionCreditPoolSchema.$columns
+  @column()
+  declare allocatedCredits: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare utilizedCredits: number
+}
+
 export class InstitutionSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'createdBy', 'cryptoWalletsEnabled', 'id', 'name', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns
@@ -371,7 +411,7 @@ export class SubmissionSchema extends BaseModel {
 }
 
 export class TaskSchema extends BaseModel {
-  static $columns = ['createdAt', 'createdByTeacherId', 'description', 'dueAt', 'id', 'institutionId', 'rewardAmount', 'status', 'title', 'updatedAt'] as const
+  static $columns = ['createdAt', 'createdByTeacherId', 'description', 'dueAt', 'externalId', 'externalSource', 'groupId', 'id', 'institutionId', 'rewardAmount', 'status', 'syncMetadata', 'title', 'updatedAt'] as const
   $columns = TaskSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -381,6 +421,12 @@ export class TaskSchema extends BaseModel {
   declare description: string
   @column.dateTime()
   declare dueAt: DateTime | null
+  @column()
+  declare externalId: string | null
+  @column()
+  declare externalSource: string
+  @column()
+  declare groupId: number | null
   @column({ isPrimary: true })
   declare id: number
   @column()
@@ -389,6 +435,8 @@ export class TaskSchema extends BaseModel {
   declare rewardAmount: number
   @column()
   declare status: string
+  @column()
+  declare syncMetadata: any | null
   @column()
   declare title: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

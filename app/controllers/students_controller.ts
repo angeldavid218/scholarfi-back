@@ -1,5 +1,5 @@
 import User from '#models/user'
-import { makeTokenService } from '#services/tokens/factory'
+import { makeTokenServiceForInstitution } from '#services/tokens/factory'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 
@@ -65,7 +65,7 @@ export default class StudentsController {
       })
     }
 
-    const tokenService = await makeTokenService()
+    const tokenService = await makeTokenServiceForInstitution(actor.institutionId)
     const balance = await tokenService.getBalance(String(studentId))
 
     return {
@@ -115,7 +115,7 @@ export default class StudentsController {
       })
     }
 
-    const tokenService = await makeTokenService()
+    const tokenService = await makeTokenServiceForInstitution(actor.institutionId)
     const items = await tokenService.getTransactionHistory(String(studentId), actor.institutionId)
 
     return {

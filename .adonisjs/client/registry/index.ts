@@ -48,6 +48,24 @@ const routes = {
     tokens: [{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"crypto-wallets","end":""}],
     types: placeholder as Registry['updateCryptoWallets']['types'],
   },
+  'showInstitutionCreditPool': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions/:id/credit-pool',
+    tokens: [{"old":"/api/v1/institutions/:id/credit-pool","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/credit-pool","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/credit-pool","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/credit-pool","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/credit-pool","type":0,"val":"credit-pool","end":""}],
+    types: placeholder as Registry['showInstitutionCreditPool']['types'],
+  },
+  'allocateInstitutionCredits': {
+    methods: ["POST"],
+    pattern: '/api/v1/institutions/:id/credit-pool/allocate',
+    tokens: [{"old":"/api/v1/institutions/:id/credit-pool/allocate","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/credit-pool/allocate","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/credit-pool/allocate","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/credit-pool/allocate","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/credit-pool/allocate","type":0,"val":"credit-pool","end":""},{"old":"/api/v1/institutions/:id/credit-pool/allocate","type":0,"val":"allocate","end":""}],
+    types: placeholder as Registry['allocateInstitutionCredits']['types'],
+  },
+  'showMyInstitutionCreditPool': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions/credit-pool',
+    tokens: [{"old":"/api/v1/institutions/credit-pool","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"credit-pool","end":""}],
+    types: placeholder as Registry['showMyInstitutionCreditPool']['types'],
+  },
   'bootstrapSchoolAdmin': {
     methods: ["POST"],
     pattern: '/api/v1/institutions/:id/bootstrap-school-admin',

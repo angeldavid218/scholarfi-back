@@ -1,6 +1,7 @@
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import testUtils from '@adonisjs/core/services/test_utils'
+import { seedInstitutionCredits } from '../helpers/institution_credits.js'
 import { test } from '@japa/runner'
 
 async function ensureRole(roleKey: string, roleLabel: string) {
@@ -259,6 +260,7 @@ test.group('Submissions pipeline', (group) => {
 
   test('admin queue and decision enforce valid transitions', async ({ client, assert }) => {
     const institutionId = await createInstitution('PIPE-ADM')
+    await seedInstitutionCredits(institutionId, 10_000)
     const teacher = await User.create({
       email: 'pipe-teacher-4@example.com',
       password: 'Secret123!',

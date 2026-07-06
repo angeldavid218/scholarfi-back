@@ -86,6 +86,8 @@ async function clearDemoTables() {
   await db.rawQuery(`
     TRUNCATE TABLE
       auth_access_tokens,
+      institution_credit_entries,
+      institution_credit_pools,
       token_transactions,
       redemptions,
       catalog_rewards,
@@ -155,6 +157,31 @@ export async function seedDemoBaseline(options: {
       institutionId: null,
     })
     await assignRole(superAdminId, superAdminRole, trx)
+
+    await db
+      .table('institution_credit_pools')
+      .useTransaction(trx)
+      .insert({
+        institution_id: institution.id,
+        allocated_credits: 50_000,
+        utilized_credits: 0,
+        created_at: ts(0).toJSDate(),
+        updated_at: ts(0).toJSDate(),
+      })
+
+    await db
+      .table('institution_credit_entries')
+      .useTransaction(trx)
+      .insert({
+        institution_id: institution.id,
+        entry_type: 'platform_allocate',
+        amount: 50_000,
+        submission_id: null,
+        token_transaction_id: null,
+        actor_user_id: superAdminId,
+        notes: 'Demo seed allocation',
+        created_at: ts(0).toJSDate(),
+      })
 
     const schoolAdminId = await insertUser(trx, {
       email: 'demo.admin@scholarfi.test',

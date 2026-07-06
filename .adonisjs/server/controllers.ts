@@ -8,6 +8,7 @@ export const controllers = {
   CatalogRewards: () => import('#controllers/catalog_rewards_controller'),
   Dashboard: () => import('#controllers/dashboard_controller'),
   Groups: () => import('#controllers/groups_controller'),
+  InstitutionCredits: () => import('#controllers/institution_credits_controller'),
   Institutions: () => import('#controllers/institutions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   NgoInstitutions: () => import('#controllers/ngo_institutions_controller'),

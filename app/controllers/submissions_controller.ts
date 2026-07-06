@@ -2,7 +2,10 @@ import Submission from '#models/submission'
 import Task from '#models/task'
 import SubmissionValidation from '#models/submission_validation'
 import db from '@adonisjs/lucid/services/db'
-import { makeTokenService } from '#services/tokens/factory'
+import {
+  InsufficientInstitutionCreditsError,
+  issueRewardForSubmission,
+} from '#services/credits/reward_issuance_service'
 import {
   adminSubmissionDecisionValidator,
   createSubmissionValidator,
@@ -468,34 +471,52 @@ export default class SubmissionsController {
     const nextStatus = isApprove ? SUBMISSION_STATUS.approved : SUBMISSION_STATUS.rejectedByAdmin
     const task = isApprove ? await Task.findOrFail(submission.taskId) : null
     let rewardTransactionId: number | null = null
-    await db.transaction(async (trx) => {
-      submission.useTransaction(trx)
-      submission.status = nextStatus
-      await submission.save()
 
-      await SubmissionValidation.create(
-        {
-          submissionId: submission.id,
-          teacherId: null,
-          schoolAdminId: user.id,
-          action: payload.decision,
-          comment: payload.reason ?? null,
-        },
-        { client: trx }
-      )
+    try {
+      await db.transaction(async (trx) => {
+        submission.useTransaction(trx)
+        submission.status = nextStatus
+        await submission.save()
 
-      if (isApprove) {
-        const tokenService = await makeTokenService()
-        const minted = await tokenService.mintTokens({
-          userId: submission.studentId,
-          institutionId: submission.institutionId,
-          amount: task!.rewardAmount,
-          achievementId: submission.id,
-          client: trx,
+        await SubmissionValidation.create(
+          {
+            submissionId: submission.id,
+            teacherId: null,
+            schoolAdminId: user.id,
+            action: payload.decision,
+            comment: payload.reason ?? null,
+          },
+          { client: trx }
+        )
+
+        if (isApprove) {
+          const issued = await issueRewardForSubmission({
+            institutionId: submission.institutionId,
+            studentId: submission.studentId,
+            amount: task!.rewardAmount,
+            submissionId: submission.id,
+            actorUserId: user.id,
+            client: trx,
+          })
+          rewardTransactionId = issued.transactionId
+        }
+      })
+    } catch (error) {
+      if (error instanceof InsufficientInstitutionCreditsError) {
+        return response.unprocessableEntity({
+          error: {
+            code: error.code,
+            message: 'La institución no tiene créditos suficientes para esta recompensa',
+            details: {
+              remainingCredits: error.remaining,
+              requestedCredits: error.requested,
+            },
+            requestId: request.id(),
+          },
         })
-        rewardTransactionId = minted.transactionId
       }
-    })
+      throw error
+    }
 
     return {
       data: {

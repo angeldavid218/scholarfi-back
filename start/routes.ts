@@ -51,6 +51,27 @@ router
           .as('updateCryptoWallets')
           .use(middleware.role({ roles: ['super_admin'] }))
         router
+          .get('/:id/credit-pool', [
+            () => import('#controllers/institution_credits_controller'),
+            'show',
+          ])
+          .as('showInstitutionCreditPool')
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
+          .post('/:id/credit-pool/allocate', [
+            () => import('#controllers/institution_credits_controller'),
+            'allocate',
+          ])
+          .as('allocateInstitutionCredits')
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
+          .get('/credit-pool', [
+            () => import('#controllers/institution_credits_controller'),
+            'showMine',
+          ])
+          .as('showMyInstitutionCreditPool')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
           .post('/:id/bootstrap-school-admin', [
             () => import('#controllers/institutions_controller'),
             'bootstrapSchoolAdmin',

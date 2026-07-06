@@ -1,7 +1,7 @@
 import CatalogReward from '#models/catalog_reward'
 import Redemption from '#models/redemption'
 import { createRedemptionValidator, rejectRedemptionValidator } from '#validators/redemption'
-import { makeTokenService } from '#services/tokens/factory'
+import { makeTokenServiceForInstitution } from '#services/tokens/factory'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
 import { parsePositiveInt } from '../utils/parse_positive.ts'
@@ -42,7 +42,7 @@ export default class RedemptionsController {
       })
     }
 
-    const tokenService = await makeTokenService()
+    const tokenService = await makeTokenServiceForInstitution(user.institutionId)
     const balance = await tokenService.getBalance(String(user.id))
     if (balance < catalog.creditCost) {
       return response.unprocessableEntity({
@@ -185,7 +185,7 @@ export default class RedemptionsController {
       })
     }
 
-    const tokenService = await makeTokenService()
+    const tokenService = await makeTokenServiceForInstitution(user.institutionId)
     const result = await tokenService.redeemTokens({
       userId: redemption.userId,
       institutionId: redemption.institutionId,
