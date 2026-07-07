@@ -19,5 +19,6 @@ export const controllers = {
   Subjects: () => import('#controllers/subjects_controller'),
   Submissions: () => import('#controllers/submissions_controller'),
   Tasks: () => import('#controllers/tasks_controller'),
+  TeacherCredits: () => import('#controllers/teacher_credits_controller'),
   TokenHealth: () => import('#controllers/token_health_controller'),
 }

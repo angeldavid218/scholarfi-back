@@ -3,8 +3,15 @@ import {
   debitInstitutionPoolForReward,
   linkCreditEntryToTokenTransaction,
 } from '#services/credits/institution_credit_pool_service'
-import type { DbTransaction } from '#services/credits/types'
-import { InsufficientInstitutionCreditsError } from '#services/credits/types'
+import {
+  debitTeacherPoolForReward,
+  linkTeacherCreditEntryToTokenTransaction,
+} from '#services/credits/teacher_credit_pool_service'
+import type { DbTransaction, RewardFundingSource } from '#services/credits/types'
+import {
+  InsufficientInstitutionCreditsError,
+  InsufficientTeacherCreditsError,
+} from '#services/credits/types'
 import {
   isInstitutionOnChainExecution,
   makeTokenServiceForInstitution,
@@ -16,6 +23,8 @@ export interface IssueRewardParams {
   amount: number
   submissionId: number
   actorUserId?: number | null
+  fundingSource?: RewardFundingSource
+  teacherId?: number | null
   client?: DbTransaction
 }
 
@@ -26,28 +35,55 @@ export interface IssueRewardResult {
   transactionSignature: string | null
   idempotent: boolean
   institutionCreditEntryId: number | null
-  executionProvider: 'mock' | 'solana' | string // temporary until we have a proper execution provider
+  teacherCreditEntryId: number | null
+  fundingSource: RewardFundingSource
+  executionProvider: 'mock' | 'solana' | string
 }
 
 /**
- * Orchestrates institution pool debit (simulated budget) + student credit execution.
- * Mock mode: DB ledger only. Devnet: same pool rules + on-chain mint when enabled.
+ * Orchestrates pool debit (teacher or institution) + student credit execution.
  */
 export async function issueRewardForSubmission(
   params: IssueRewardParams
 ): Promise<IssueRewardResult> {
+  const fundingSource: RewardFundingSource = params.fundingSource ?? 'institution'
+
   const exec = async (trx: DbTransaction) => {
     const onChain = await isInstitutionOnChainExecution(params.institutionId, trx)
     const tokenService = await makeTokenServiceForInstitution(params.institutionId, trx)
 
-    const poolDebit = await debitInstitutionPoolForReward({
-      institutionId: params.institutionId,
-      studentId: params.studentId,
-      amount: params.amount,
-      submissionId: params.submissionId,
-      actorUserId: params.actorUserId,
-      client: trx,
-    })
+    let institutionCreditEntryId: number | null = null
+    let teacherCreditEntryId: number | null = null
+    let idempotent = false
+
+    if (fundingSource === 'teacher') {
+      if (params.teacherId == null) {
+        throw new Error('teacherId is required when fundingSource is teacher')
+      }
+
+      const poolDebit = await debitTeacherPoolForReward({
+        institutionId: params.institutionId,
+        studentId: params.studentId,
+        amount: params.amount,
+        submissionId: params.submissionId,
+        actorUserId: params.actorUserId,
+        teacherId: params.teacherId,
+        client: trx,
+      })
+      teacherCreditEntryId = poolDebit.creditEntryId
+      idempotent = poolDebit.idempotent
+    } else {
+      const poolDebit = await debitInstitutionPoolForReward({
+        institutionId: params.institutionId,
+        studentId: params.studentId,
+        amount: params.amount,
+        submissionId: params.submissionId,
+        actorUserId: params.actorUserId,
+        client: trx,
+      })
+      institutionCreditEntryId = poolDebit.creditEntryId
+      idempotent = poolDebit.idempotent
+    }
 
     const minted = await tokenService.mintTokens({
       userId: params.studentId,
@@ -57,8 +93,20 @@ export async function issueRewardForSubmission(
       client: trx,
     })
 
-    if (poolDebit.creditEntryId && minted.transactionId) {
-      await linkCreditEntryToTokenTransaction(poolDebit.creditEntryId, minted.transactionId, trx)
+    if (institutionCreditEntryId && minted.transactionId) {
+      await linkCreditEntryToTokenTransaction(
+        institutionCreditEntryId,
+        minted.transactionId,
+        trx
+      )
+    }
+
+    if (teacherCreditEntryId && minted.transactionId) {
+      await linkTeacherCreditEntryToTokenTransaction(
+        teacherCreditEntryId,
+        minted.transactionId,
+        trx
+      )
     }
 
     return {
@@ -66,8 +114,10 @@ export async function issueRewardForSubmission(
       amount: minted.amount,
       status: minted.status,
       transactionSignature: minted.transactionSignature,
-      idempotent: (minted.idempotent ?? false) || poolDebit.idempotent,
-      institutionCreditEntryId: poolDebit.creditEntryId,
+      idempotent: (minted.idempotent ?? false) || idempotent,
+      institutionCreditEntryId,
+      teacherCreditEntryId,
+      fundingSource,
       executionProvider: onChain ? 'solana' : 'mock',
     }
   }
@@ -78,4 +128,4 @@ export async function issueRewardForSubmission(
   return db.transaction(exec)
 }
 
-export { InsufficientInstitutionCreditsError }
+export { InsufficientInstitutionCreditsError, InsufficientTeacherCreditsError }

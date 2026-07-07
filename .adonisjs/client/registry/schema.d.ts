@@ -127,6 +127,42 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['showMine']>>>
     }
   }
+  'listTeacherCreditPools': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/teacher-credit-pools'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['index']>>>
+    }
+  }
+  'allocateEqualTeacherCredits': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/teacher-credit-pools/allocate-equal'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/teacher_credit').allocateEqualTeacherCreditsValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/teacher_credit').allocateEqualTeacherCreditsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateEqual']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateEqual']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'allocateTeacherCredits': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/teacher-credit-pools/:teacherId/allocate'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/teacher_credit').allocateTeacherCreditsValidator)>>
+      paramsTuple: [ParamValue]
+      params: { teacherId: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/teacher_credit').allocateTeacherCreditsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateToTeacher']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateToTeacher']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'bootstrapSchoolAdmin': {
     methods: ["POST"]
     pattern: '/api/v1/institutions/:id/bootstrap-school-admin'
@@ -305,6 +341,18 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['showImportRun']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['showImportRun']>>>
+    }
+  }
+  'showMyTeacherCreditPool': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/teachers/credit-pool'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['showMine']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['showMine']>>>
     }
   }
   'listStudentAvailableTasks': {

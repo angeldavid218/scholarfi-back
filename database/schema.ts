@@ -443,6 +443,50 @@ export class TaskSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class TeacherCreditEntrySchema extends BaseModel {
+  static $columns = ['actorUserId', 'amount', 'createdAt', 'entryType', 'id', 'institutionId', 'notes', 'submissionId', 'teacherId', 'tokenTransactionId'] as const
+  $columns = TeacherCreditEntrySchema.$columns
+  @column()
+  declare actorUserId: number | null
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare entryType: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare notes: string | null
+  @column()
+  declare submissionId: number | null
+  @column()
+  declare teacherId: number
+  @column()
+  declare tokenTransactionId: number | null
+}
+
+export class TeacherCreditPoolSchema extends BaseModel {
+  static $columns = ['allocatedCredits', 'createdAt', 'id', 'institutionId', 'teacherId', 'updatedAt', 'utilizedCredits'] as const
+  $columns = TeacherCreditPoolSchema.$columns
+  @column()
+  declare allocatedCredits: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare teacherId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare utilizedCredits: number
+}
+
 export class TeacherStudentSchema extends BaseModel {
   static $columns = ['createdAt', 'id', 'institutionId', 'studentId', 'teacherId', 'updatedAt'] as const
   $columns = TeacherStudentSchema.$columns

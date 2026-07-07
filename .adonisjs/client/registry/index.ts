@@ -66,6 +66,24 @@ const routes = {
     tokens: [{"old":"/api/v1/institutions/credit-pool","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"credit-pool","end":""}],
     types: placeholder as Registry['showMyInstitutionCreditPool']['types'],
   },
+  'listTeacherCreditPools': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions/teacher-credit-pools',
+    tokens: [{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"teacher-credit-pools","end":""}],
+    types: placeholder as Registry['listTeacherCreditPools']['types'],
+  },
+  'allocateEqualTeacherCredits': {
+    methods: ["POST"],
+    pattern: '/api/v1/institutions/teacher-credit-pools/allocate-equal',
+    tokens: [{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"teacher-credit-pools","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"allocate-equal","end":""}],
+    types: placeholder as Registry['allocateEqualTeacherCredits']['types'],
+  },
+  'allocateTeacherCredits': {
+    methods: ["POST"],
+    pattern: '/api/v1/institutions/teacher-credit-pools/:teacherId/allocate',
+    tokens: [{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"teacher-credit-pools","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":1,"val":"teacherId","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"allocate","end":""}],
+    types: placeholder as Registry['allocateTeacherCredits']['types'],
+  },
   'bootstrapSchoolAdmin': {
     methods: ["POST"],
     pattern: '/api/v1/institutions/:id/bootstrap-school-admin',
@@ -155,6 +173,12 @@ const routes = {
     pattern: '/api/v1/groups/import-runs/:id',
     tokens: [{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"api","end":""},{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"groups","end":""},{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"import-runs","end":""},{"old":"/api/v1/groups/import-runs/:id","type":1,"val":"id","end":""}],
     types: placeholder as Registry['showGroupImportRun']['types'],
+  },
+  'showMyTeacherCreditPool': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/teachers/credit-pool',
+    tokens: [{"old":"/api/v1/teachers/credit-pool","type":0,"val":"api","end":""},{"old":"/api/v1/teachers/credit-pool","type":0,"val":"v1","end":""},{"old":"/api/v1/teachers/credit-pool","type":0,"val":"teachers","end":""},{"old":"/api/v1/teachers/credit-pool","type":0,"val":"credit-pool","end":""}],
+    types: placeholder as Registry['showMyTeacherCreditPool']['types'],
   },
   'listStudentAvailableTasks': {
     methods: ["GET","HEAD"],

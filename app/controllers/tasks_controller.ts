@@ -1,7 +1,14 @@
 import Institution from '#models/institution'
 import Task from '#models/task'
 import { assertInstitutionCanFundTaskReward } from '#services/credits/institution_credit_pool_service'
-import { InsufficientInstitutionCreditsError } from '#services/credits/types'
+import {
+  assertTeacherCanFundTaskReward,
+  getTeacherCreditPoolSummary,
+} from '#services/credits/teacher_credit_pool_service'
+import {
+  InsufficientInstitutionCreditsError,
+  InsufficientTeacherCreditsError,
+} from '#services/credits/types'
 import { closeTaskValidator, createTaskValidator } from '#validators/task'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
@@ -45,8 +52,26 @@ export default class TasksController {
     }
 
     try {
-      await assertInstitutionCanFundTaskReward(user.institutionId, payload.rewardAmount)
+      const teacherPool = await getTeacherCreditPoolSummary(user.id)
+      if (teacherPool && teacherPool.allocatedCredits > 0) {
+        await assertTeacherCanFundTaskReward(user.id, payload.rewardAmount)
+      } else {
+        await assertInstitutionCanFundTaskReward(user.institutionId, payload.rewardAmount)
+      }
     } catch (error) {
+      if (error instanceof InsufficientTeacherCreditsError) {
+        return response.unprocessableEntity({
+          error: {
+            code: error.code,
+            message: 'La recompensa supera tu presupuesto docente disponible',
+            details: {
+              remainingCredits: error.remaining,
+              requestedCredits: error.requested,
+            },
+            requestId: request.id(),
+          },
+        })
+      }
       if (error instanceof InsufficientInstitutionCreditsError) {
         return response.unprocessableEntity({
           error: {

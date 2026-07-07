@@ -14,6 +14,9 @@ export type ScannedRoutes = {
     'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'allocateInstitutionCredits': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
+    'listTeacherCreditPools': { paramsTuple?: []; params?: {} }
+    'allocateEqualTeacherCredits': { paramsTuple?: []; params?: {} }
+    'allocateTeacherCredits': { paramsTuple: [ParamValue]; params: {'teacherId': ParamValue} }
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'provisionUser': { paramsTuple?: []; params?: {} }
@@ -29,6 +32,7 @@ export type ScannedRoutes = {
     'importGroupsCsv': { paramsTuple?: []; params?: {} }
     'listGroupImportRuns': { paramsTuple?: []; params?: {} }
     'showGroupImportRun': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showMyTeacherCreditPool': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -61,12 +65,14 @@ export type ScannedRoutes = {
     'index': { paramsTuple?: []; params?: {} }
     'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
+    'listTeacherCreditPools': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
     'listInstitutionGroups': { paramsTuple?: []; params?: {} }
     'listMyGroups': { paramsTuple?: []; params?: {} }
     'listGroupImportRuns': { paramsTuple?: []; params?: {} }
     'showGroupImportRun': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showMyTeacherCreditPool': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -88,12 +94,14 @@ export type ScannedRoutes = {
     'index': { paramsTuple?: []; params?: {} }
     'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
+    'listTeacherCreditPools': { paramsTuple?: []; params?: {} }
     'listInstitutionUsers': { paramsTuple?: []; params?: {} }
     'listInstitutionSubjects': { paramsTuple?: []; params?: {} }
     'listInstitutionGroups': { paramsTuple?: []; params?: {} }
     'listMyGroups': { paramsTuple?: []; params?: {} }
     'listGroupImportRuns': { paramsTuple?: []; params?: {} }
     'showGroupImportRun': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showMyTeacherCreditPool': { paramsTuple?: []; params?: {} }
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
@@ -117,6 +125,8 @@ export type ScannedRoutes = {
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
     'store': { paramsTuple?: []; params?: {} }
     'allocateInstitutionCredits': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'allocateEqualTeacherCredits': { paramsTuple?: []; params?: {} }
+    'allocateTeacherCredits': { paramsTuple: [ParamValue]; params: {'teacherId': ParamValue} }
     'bootstrapSchoolAdmin': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'provisionUser': { paramsTuple?: []; params?: {} }
     'upsertTeacherStudentAssociation': { paramsTuple?: []; params?: {} }

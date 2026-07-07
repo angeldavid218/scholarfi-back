@@ -72,6 +72,27 @@ router
           .as('showMyInstitutionCreditPool')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
+          .get('/teacher-credit-pools', [
+            () => import('#controllers/teacher_credits_controller'),
+            'index',
+          ])
+          .as('listTeacherCreditPools')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/teacher-credit-pools/allocate-equal', [
+            () => import('#controllers/teacher_credits_controller'),
+            'allocateEqual',
+          ])
+          .as('allocateEqualTeacherCredits')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/teacher-credit-pools/:teacherId/allocate', [
+            () => import('#controllers/teacher_credits_controller'),
+            'allocateToTeacher',
+          ])
+          .as('allocateTeacherCredits')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
           .post('/:id/bootstrap-school-admin', [
             () => import('#controllers/institutions_controller'),
             'bootstrapSchoolAdmin',
@@ -160,6 +181,20 @@ router
           .use(middleware.role({ roles: ['teacher'] }))
       })
       .prefix('groups')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/credit-pool', [
+            () => import('#controllers/teacher_credits_controller'),
+            'showMine',
+          ])
+          .as('showMyTeacherCreditPool')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('teachers')
       .use(middleware.auth())
       .use(middleware.tenantScope())
 
