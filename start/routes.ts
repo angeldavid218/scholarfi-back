@@ -220,8 +220,75 @@ router
           .patch('/:id/close', [() => import('#controllers/tasks_controller'), 'close'])
           .as('closeTask')
           .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/from-classroom', [
+            () => import('#controllers/google_classroom_controller'),
+            'createTaskFromClassroom',
+          ])
+          .as('createTaskFromClassroom')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/:id/sync-classroom', [
+            () => import('#controllers/google_classroom_controller'),
+            'syncTask',
+          ])
+          .as('syncClassroomTask')
+          .use(middleware.role({ roles: ['teacher'] }))
       })
       .prefix('tasks')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/google-classroom/callback', [
+            () => import('#controllers/google_classroom_controller'),
+            'callback',
+          ])
+          .as('googleClassroomCallback')
+      })
+      .prefix('integrations')
+
+    router
+      .group(() => {
+        router
+          .post('/google-classroom/connect', [
+            () => import('#controllers/google_classroom_controller'),
+            'connect',
+          ])
+          .as('connectGoogleClassroom')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/google-classroom/status', [
+            () => import('#controllers/google_classroom_controller'),
+            'status',
+          ])
+          .as('googleClassroomStatus')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .delete('/google-classroom/disconnect', [
+            () => import('#controllers/google_classroom_controller'),
+            'disconnect',
+          ])
+          .as('disconnectGoogleClassroom')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/google-classroom/courses', [
+            () => import('#controllers/google_classroom_controller'),
+            'listCourses',
+          ])
+          .as('listGoogleClassroomCourses')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/google-classroom/courses/:courseId/coursework', [
+            () => import('#controllers/google_classroom_controller'),
+            'listCourseWork',
+          ])
+          .as('listGoogleClassroomCourseWork')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('integrations')
       .use(middleware.auth())
       .use(middleware.tenantScope())
 

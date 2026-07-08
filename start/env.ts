@@ -33,6 +33,15 @@ export default await Env.create(new URL('../', import.meta.url), {
   TREASURY_WALLET_PUBLIC_KEY: Env.schema.string.optional(),
   WALLET_ENCRYPTION_KEY: Env.schema.string.optional(),
 
+  // Google Classroom integration
+  GOOGLE_CLIENT_ID: Env.schema.string.optional(),
+  GOOGLE_CLIENT_SECRET: Env.schema.string.optional(),
+  GOOGLE_REDIRECT_URI: Env.schema.string.optional({ format: 'url', tld: false }),
+  GOOGLE_OAUTH_SCOPES: Env.schema.string.optional(),
+  INTEGRATION_TOKEN_ENCRYPTION_KEY: Env.schema.string.optional(),
+  FRONTEND_URL: Env.schema.string.optional({ format: 'url', tld: false }),
+  GOOGLE_CLASSROOM_MOCK: Env.schema.string.optional(),
+
   // DB (validated when using pg in config)
   DB_HOST: Env.schema.string.optional(),
   DB_PORT: Env.schema.number.optional(),

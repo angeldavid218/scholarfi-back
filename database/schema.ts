@@ -386,7 +386,7 @@ export class SubmissionValidationSchema extends BaseModel {
 }
 
 export class SubmissionSchema extends BaseModel {
-  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'id', 'institutionId', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'externalGrade', 'gradeCheckedAt', 'id', 'institutionId', 'rewardSkippedReason', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
   $columns = SubmissionSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -394,10 +394,16 @@ export class SubmissionSchema extends BaseModel {
   declare evidenceText: string
   @column()
   declare evidenceUrl: string | null
+  @column()
+  declare externalGrade: string | null
+  @column.dateTime()
+  declare gradeCheckedAt: DateTime | null
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare institutionId: number
+  @column()
+  declare rewardSkippedReason: string | null
   @column()
   declare status: string
   @column()
@@ -485,6 +491,35 @@ export class TeacherCreditPoolSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare utilizedCredits: number
+}
+
+export class TeacherIntegrationSchema extends BaseModel {
+  static $columns = ['connectedAt', 'createdAt', 'encryptedRefreshToken', 'externalEmail', 'externalUserId', 'id', 'institutionId', 'lastSyncAt', 'provider', 'scopes', 'teacherId', 'updatedAt'] as const
+  $columns = TeacherIntegrationSchema.$columns
+  @column.dateTime()
+  declare connectedAt: DateTime
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare encryptedRefreshToken: string
+  @column()
+  declare externalEmail: string
+  @column()
+  declare externalUserId: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column.dateTime()
+  declare lastSyncAt: DateTime | null
+  @column()
+  declare provider: string
+  @column()
+  declare scopes: string
+  @column()
+  declare teacherId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class TeacherStudentSchema extends BaseModel {

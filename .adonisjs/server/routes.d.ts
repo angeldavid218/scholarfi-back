@@ -38,6 +38,14 @@ export type ScannedRoutes = {
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
     'createTask': { paramsTuple?: []; params?: {} }
     'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'createTaskFromClassroom': { paramsTuple?: []; params?: {} }
+    'syncClassroomTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'googleClassroomCallback': { paramsTuple?: []; params?: {} }
+    'connectGoogleClassroom': { paramsTuple?: []; params?: {} }
+    'googleClassroomStatus': { paramsTuple?: []; params?: {} }
+    'disconnectGoogleClassroom': { paramsTuple?: []; params?: {} }
+    'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
+    'listGoogleClassroomCourseWork': { paramsTuple: [ParamValue]; params: {'courseId': ParamValue} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
@@ -76,6 +84,10 @@ export type ScannedRoutes = {
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'googleClassroomCallback': { paramsTuple?: []; params?: {} }
+    'googleClassroomStatus': { paramsTuple?: []; params?: {} }
+    'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
+    'listGoogleClassroomCourseWork': { paramsTuple: [ParamValue]; params: {'courseId': ParamValue} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
@@ -105,6 +117,10 @@ export type ScannedRoutes = {
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'googleClassroomCallback': { paramsTuple?: []; params?: {} }
+    'googleClassroomStatus': { paramsTuple?: []; params?: {} }
+    'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
+    'listGoogleClassroomCourseWork': { paramsTuple: [ParamValue]; params: {'courseId': ParamValue} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
@@ -136,6 +152,9 @@ export type ScannedRoutes = {
     'syncInstitutionGroupStudents': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'importGroupsCsv': { paramsTuple?: []; params?: {} }
     'createTask': { paramsTuple?: []; params?: {} }
+    'createTaskFromClassroom': { paramsTuple?: []; params?: {} }
+    'syncClassroomTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'connectGoogleClassroom': { paramsTuple?: []; params?: {} }
     'createSubmission': { paramsTuple?: []; params?: {} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
     'createCatalogReward': { paramsTuple?: []; params?: {} }
@@ -151,6 +170,9 @@ export type ScannedRoutes = {
     'adminDecisionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'approveRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'rejectRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+  }
+  DELETE: {
+    'disconnectGoogleClassroom': { paramsTuple?: []; params?: {} }
   }
 }
 declare module '@adonisjs/core/types/http' {

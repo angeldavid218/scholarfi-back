@@ -56,7 +56,21 @@ Default API URL: `http://localhost:3333`
 - `npm run typecheck` — TypeScript (`tsc --noEmit`)
 - `npm run test` — Japa test suite
 
-## API overview (`/api/v1`)
+## Google Classroom connector
+
+See [docs/google-classroom-setup.md](docs/google-classroom-setup.md) for GCP OAuth setup and pilot checklist.
+
+Teacher endpoints (require `GOOGLE_*` env vars):
+
+- `POST /api/v1/integrations/google-classroom/connect` — start OAuth
+- `GET /api/v1/integrations/google-classroom/callback` — OAuth callback (no auth)
+- `GET /api/v1/integrations/google-classroom/status` — connection status
+- `DELETE /api/v1/integrations/google-classroom/disconnect`
+- `GET /api/v1/integrations/google-classroom/courses`
+- `GET /api/v1/integrations/google-classroom/courses/:courseId/coursework`
+- `POST /api/v1/tasks/from-classroom` — import rewarded GC assignment
+- `POST /api/v1/tasks/:id/sync-classroom` — sync grades and distribute rewards (FIFO until budget = 0)
+
 
 | Area | Prefix | Roles (high level) |
 |------|--------|-------------------|

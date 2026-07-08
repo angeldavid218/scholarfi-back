@@ -1,5 +1,11 @@
 import db from '@adonisjs/lucid/services/db'
 import {
+  csvImportLogDebug,
+  csvImportLogInfo,
+  csvImportLogWarn,
+  type GroupCsvImportLogContext,
+} from '#services/group_csv_import_logger'
+import {
   type GroupImportColumnMapping,
   parseCsvContentWithMapping,
   validateGroupImportColumnMapping,
@@ -46,8 +52,28 @@ export async function importGroupsFromCsv(input: {
   csvContent: string
   dryRun: boolean
   columnMapping?: GroupImportColumnMapping
+  requestId?: string | null
 }): Promise<{ runId: number | null; summary: CsvImportSummary }> {
+  const logCtx: GroupCsvImportLogContext = {
+    requestId: input.requestId,
+    institutionId: input.institutionId,
+    teacherId: input.teacherId,
+    filename: input.filename,
+    dryRun: input.dryRun,
+  }
+
+  csvImportLogInfo('CSV import started', logCtx, {
+    contentLength: input.csvContent.length,
+    hasColumnMapping: input.columnMapping != null,
+  })
+
   const { parsed, mapping } = parseCsvContentWithMapping(input.csvContent, input.columnMapping)
+
+  csvImportLogInfo('CSV parsed', logCtx, {
+    headerCount: parsed.headers.length,
+    rowCount: parsed.rows.length,
+    mappedFields: Object.keys(mapping),
+  })
   const summary: CsvImportSummary = {
     dryRun: input.dryRun,
     subjectsCreated: 0,
@@ -61,12 +87,14 @@ export async function importGroupsFromCsv(input: {
 
   const mappingError = validateGroupImportColumnMapping(mapping)
   if (mappingError) {
+    csvImportLogWarn('CSV import aborted: invalid column mapping', logCtx, { mappingError })
     summary.errors.push({ row: 0, field: 'columnMapping', message: mappingError })
     return { runId: null, summary }
   }
 
   const parsedError = validateGroupImportParsed(parsed)
   if (parsedError) {
+    csvImportLogWarn('CSV import aborted: invalid file content', logCtx, { parsedError })
     summary.errors.push({ row: 0, field: 'file', message: parsedError })
     return { runId: null, summary }
   }
@@ -86,12 +114,17 @@ export async function importGroupsFromCsv(input: {
       const className = row.class_name?.trim() || null
 
       if (!studentEmail) {
+        csvImportLogDebug('CSV row skipped: missing student email', logCtx, { row: rowNumber })
         summary.errors.push({ row: rowNumber, field: 'student_email', message: 'Student email is required' })
         summary.rowResults.push({ row: rowNumber, status: 'error', message: 'Student email is required' })
         continue
       }
 
       if (!subjectName && !className) {
+        csvImportLogDebug('CSV row skipped: missing subject and class_name', logCtx, {
+          row: rowNumber,
+          studentEmail,
+        })
         summary.errors.push({
           row: rowNumber,
           field: 'subject',
@@ -112,6 +145,11 @@ export async function importGroupsFromCsv(input: {
       })
 
       if (!studentResult.ok) {
+        csvImportLogWarn('CSV row failed: student upsert', logCtx, {
+          row: rowNumber,
+          studentEmail,
+          reason: studentResult.message,
+        })
         summary.errors.push({
           row: rowNumber,
           field: 'student_email',
@@ -206,6 +244,16 @@ export async function importGroupsFromCsv(input: {
         subject: (subject.name as string) ?? resolvedSubjectName,
         section,
       })
+
+      csvImportLogDebug('CSV row processed', logCtx, {
+        row: rowNumber,
+        status: groupBefore ? 'updated' : 'created',
+        studentEmail,
+        subject: resolvedSubjectName,
+        section,
+        studentCreated: studentResult.created,
+        groupId: input.dryRun ? null : (group.id as number),
+      })
     }
   }
 
@@ -216,6 +264,14 @@ export async function importGroupsFromCsv(input: {
   summary.studentsCreated = createdStudentEmails.size
 
   if (input.dryRun) {
+    csvImportLogInfo('CSV import dry-run completed', logCtx, {
+      subjectsCreated: summary.subjectsCreated,
+      groupsCreated: summary.groupsCreated,
+      studentsCreated: summary.studentsCreated,
+      enrollmentsUpserted: summary.enrollmentsUpserted,
+      teacherLinksUpserted: summary.teacherLinksUpserted,
+      errorCount: summary.errors.length,
+    })
     return { runId: null, summary }
   }
 
@@ -234,6 +290,17 @@ export async function importGroupsFromCsv(input: {
 
   const runRow = inserted[0] as { id: number } | number
   const runId = typeof runRow === 'number' ? runRow : runRow.id
+
+  csvImportLogInfo('CSV import completed', { ...logCtx, runId }, {
+    status: summary.errors.length > 0 ? 'completed_with_errors' : 'completed',
+    subjectsCreated: summary.subjectsCreated,
+    groupsCreated: summary.groupsCreated,
+    studentsCreated: summary.studentsCreated,
+    enrollmentsUpserted: summary.enrollmentsUpserted,
+    teacherLinksUpserted: summary.teacherLinksUpserted,
+    errorCount: summary.errors.length,
+    rowCount: parsed.rows.length,
+  })
 
   return { runId, summary }
 }

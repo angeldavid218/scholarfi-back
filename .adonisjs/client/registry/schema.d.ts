@@ -415,6 +415,102 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['close']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'createTaskFromClassroom': {
+    methods: ["POST"]
+    pattern: '/api/v1/tasks/from-classroom'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/google_classroom').createTaskFromClassroomValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/google_classroom').createTaskFromClassroomValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['createTaskFromClassroom']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['createTaskFromClassroom']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'syncClassroomTask': {
+    methods: ["POST"]
+    pattern: '/api/v1/tasks/:id/sync-classroom'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncTask']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncTask']>>>
+    }
+  }
+  'googleClassroomCallback': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/callback'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['callback']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['callback']>>>
+    }
+  }
+  'connectGoogleClassroom': {
+    methods: ["POST"]
+    pattern: '/api/v1/integrations/google-classroom/connect'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['connect']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['connect']>>>
+    }
+  }
+  'googleClassroomStatus': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/status'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['status']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['status']>>>
+    }
+  }
+  'disconnectGoogleClassroom': {
+    methods: ["DELETE"]
+    pattern: '/api/v1/integrations/google-classroom/disconnect'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['disconnect']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['disconnect']>>>
+    }
+  }
+  'listGoogleClassroomCourses': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/courses'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourses']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourses']>>>
+    }
+  }
+  'listGoogleClassroomCourseWork': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/courses/:courseId/coursework'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { courseId: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/google_classroom').listClassroomCourseWorkValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourseWork']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourseWork']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'listStudentSubmissions': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/submissions'
