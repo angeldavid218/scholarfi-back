@@ -2,6 +2,8 @@ import Institution from '#models/institution'
 import Submission from '#models/submission'
 import SubmissionValidation from '#models/submission_validation'
 import Task from '#models/task'
+import { DEMO_STUDENTS } from '#fixtures/demo_students'
+import { buildGroupDisplayName } from '#services/group_upsert_service'
 import { DateTime } from 'luxon'
 
 const BASE_TIME = DateTime.fromISO('2026-01-15T10:00:00.000Z')
@@ -139,7 +141,7 @@ export async function seedDemoBaseline(options: {
         name: 'ScholarFi Demo Academy',
         code: 'SFA-DEMO',
         status: 'active',
-        cryptoWalletsEnabled: true,
+        cryptoWalletsEnabled: false,
         createdBy: null,
       },
       { client: trx }
@@ -229,152 +231,117 @@ export async function seedDemoBaseline(options: {
       created_at: ts(1).toJSDate(),
     })
 
-    const studentOneId = await insertUser(trx, {
-      email: 'demo.student1@scholarfi.test',
-      fullName: 'Demo Student One',
-      institutionId: institution.id,
-    })
-    await assignRole(studentOneId, studentRole, trx)
+    const studentIdsByEmail = new Map<string, number>()
+    for (const student of DEMO_STUDENTS) {
+      const studentId = await insertUser(trx, {
+        email: student.email,
+        fullName: student.fullName,
+        institutionId: institution.id,
+      })
+      await assignRole(studentId, studentRole, trx)
+      studentIdsByEmail.set(student.email, studentId)
+    }
 
-    const studentTwoId = await insertUser(trx, {
-      email: 'demo.student2@scholarfi.test',
-      fullName: 'Demo Student Two',
-      institutionId: institution.id,
-    })
-    await assignRole(studentTwoId, studentRole, trx)
+    const studentOneId = studentIdsByEmail.get('demo.student1@scholarfi.test')!
+    const studentTwoId = studentIdsByEmail.get('demo.student2@scholarfi.test')!
 
     await db
       .table('teacher_students')
       .useTransaction(trx)
-      .insert([
-        {
+      .insert(
+        [...studentIdsByEmail.values()].map((studentId) => ({
           institution_id: institution.id,
           teacher_id: teacherId,
-          student_id: studentOneId,
+          student_id: studentId,
           created_at: ts(1).toJSDate(),
           updated_at: null,
-        },
-        {
-          institution_id: institution.id,
-          teacher_id: teacherId,
-          student_id: studentTwoId,
-          created_at: ts(1).toJSDate(),
-          updated_at: null,
-        },
-      ])
+        }))
+      )
 
-    const mathSubject = await trx
-      .table('subjects')
-      .insert({
-        institution_id: institution.id,
-        name: 'Matemáticas',
-        code: null,
-        status: 'active',
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      })
-      .returning('id')
-    const mathSubjectId = typeof mathSubject[0] === 'number' ? mathSubject[0] : mathSubject[0].id
+    const subjectIdsByName = new Map<string, number>()
+    for (const student of DEMO_STUDENTS) {
+      for (const group of student.seedGroups) {
+        if (subjectIdsByName.has(group.subject)) continue
 
-    const historySubject = await trx
-      .table('subjects')
-      .insert({
-        institution_id: institution.id,
-        name: 'Historia',
-        code: null,
-        status: 'active',
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      })
-      .returning('id')
-    const historySubjectId =
-      typeof historySubject[0] === 'number' ? historySubject[0] : historySubject[0].id
+        const inserted = await trx
+          .table('subjects')
+          .insert({
+            institution_id: institution.id,
+            name: group.subject,
+            code: null,
+            status: 'active',
+            created_at: ts(1).toJSDate(),
+            updated_at: null,
+          })
+          .returning('id')
 
-    const mathGroup = await trx
-      .table('groups')
-      .insert({
-        institution_id: institution.id,
-        subject_id: mathSubjectId,
-        name: 'Matemáticas 3°A',
-        section: '3°A',
-        code: null,
-        sync_metadata: null,
-        status: 'active',
-        external_source: 'manual',
-        external_id: null,
-        created_by_teacher_id: teacherId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      })
-      .returning('id')
-    const mathGroupId = typeof mathGroup[0] === 'number' ? mathGroup[0] : mathGroup[0].id
+        const subjectId = typeof inserted[0] === 'number' ? inserted[0] : inserted[0].id
+        subjectIdsByName.set(group.subject, subjectId)
+      }
+    }
 
-    const historyGroup = await trx
-      .table('groups')
-      .insert({
-        institution_id: institution.id,
-        subject_id: historySubjectId,
-        name: 'Historia 3°A',
-        section: '3°A',
-        code: null,
-        sync_metadata: null,
-        status: 'active',
-        external_source: 'manual',
-        external_id: null,
-        created_by_teacher_id: teacherId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      })
-      .returning('id')
-    const historyGroupId = typeof historyGroup[0] === 'number' ? historyGroup[0] : historyGroup[0].id
+    const groupIdsByKey = new Map<string, number>()
+    for (const student of DEMO_STUDENTS) {
+      for (const group of student.seedGroups) {
+        const groupKey = `${group.subject}|${group.section}|${group.className ?? ''}`
+        if (groupIdsByKey.has(groupKey)) continue
 
-    await trx.table('group_teachers').insert([
-      {
+        const inserted = await trx
+          .table('groups')
+          .insert({
+            institution_id: institution.id,
+            subject_id: subjectIdsByName.get(group.subject)!,
+            name: buildGroupDisplayName(group.subject, group.section, group.className ?? null),
+            section: group.section,
+            code: null,
+            sync_metadata: null,
+            status: 'active',
+            external_source: 'manual',
+            external_id: null,
+            created_by_teacher_id: teacherId,
+            created_at: ts(1).toJSDate(),
+            updated_at: null,
+          })
+          .returning('id')
+
+        const groupId = typeof inserted[0] === 'number' ? inserted[0] : inserted[0].id
+        groupIdsByKey.set(groupKey, groupId)
+      }
+    }
+
+    await trx.table('group_teachers').insert(
+      [...groupIdsByKey.values()].map((groupId) => ({
         institution_id: institution.id,
-        group_id: mathGroupId,
+        group_id: groupId,
         teacher_id: teacherId,
         created_at: ts(1).toJSDate(),
         updated_at: null,
-      },
-      {
-        institution_id: institution.id,
-        group_id: historyGroupId,
-        teacher_id: teacherId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      },
-    ])
+      }))
+    )
 
-    await trx.table('group_students').insert([
-      {
-        institution_id: institution.id,
-        group_id: mathGroupId,
-        student_id: studentOneId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      },
-      {
-        institution_id: institution.id,
-        group_id: mathGroupId,
-        student_id: studentTwoId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      },
-      {
-        institution_id: institution.id,
-        group_id: historyGroupId,
-        student_id: studentOneId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      },
-      {
-        institution_id: institution.id,
-        group_id: historyGroupId,
-        student_id: studentTwoId,
-        created_at: ts(1).toJSDate(),
-        updated_at: null,
-      },
-    ])
+    const groupStudentRows: Array<{
+      institution_id: number
+      group_id: number
+      student_id: number
+      created_at: Date
+      updated_at: null
+    }> = []
+
+    for (const student of DEMO_STUDENTS) {
+      const studentId = studentIdsByEmail.get(student.email)!
+      for (const group of student.seedGroups) {
+        const groupKey = `${group.subject}|${group.section}|${group.className ?? ''}`
+        groupStudentRows.push({
+          institution_id: institution.id,
+          group_id: groupIdsByKey.get(groupKey)!,
+          student_id: studentId,
+          created_at: ts(1).toJSDate(),
+          updated_at: null,
+        })
+      }
+    }
+
+    await trx.table('group_students').insert(groupStudentRows)
 
     let starterTask: Task | null = null
     let starterSubmission: Submission | null = null
@@ -667,7 +634,7 @@ export async function seedDemoBaseline(options: {
       superAdminId,
       schoolAdminId,
       teacherId,
-      studentIds: [studentOneId, studentTwoId],
+      studentIds: [...studentIdsByEmail.values()],
       starterTaskId: starterTask?.id ?? null,
       starterSubmissionId: starterSubmission?.id ?? null,
     }

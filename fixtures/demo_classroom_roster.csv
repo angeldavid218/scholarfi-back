@@ -1,0 +1,11 @@
+student_email,student_name,subject,section,class_name
+demo.student1@scholarfi.test,Demo Student One,Matematicas 3A,3A,Matematicas 3A
+demo.student1@scholarfi.test,Demo Student One,Ciencias 3A,3A,Ciencias 3A
+demo.student2@scholarfi.test,Demo Student Two,Matematicas 3A,3A,Matematicas 3A
+demo.student2@scholarfi.test,Demo Student Two,Ciencias 3A,3A,Ciencias 3A
+student-alpha@school.edu,Student Alpha,Matematicas 3A,3A,Matematicas 3A
+student-alpha@school.edu,Student Alpha,Ciencias 3A,3A,Ciencias 3A
+student-beta@school.edu,Student Beta,Matematicas 3A,3A,Matematicas 3A
+student-beta@school.edu,Student Beta,Ciencias 3A,3A,Ciencias 3A
+student-gamma@school.edu,Student Gamma,Matematicas 3A,3A,Matematicas 3A
+student-gamma@school.edu,Student Gamma,Ciencias 3A,3A,Ciencias 3A

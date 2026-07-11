@@ -18,6 +18,7 @@ import {
   getTeacherRefreshToken,
   markTeacherIntegrationSynced,
 } from '#services/integrations/google_classroom/oauth_service'
+import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
 import type {
   GoogleClassroomSyncMetadata,
   GoogleClassroomSyncResult,
@@ -117,7 +118,21 @@ export async function syncGoogleClassroomTask(input: {
       rewardAmount: Number(task.rewardAmount),
       minGrade: metadata.minGrade,
       maxPoints: metadata.maxPoints,
+      groupId: task.groupId,
     })
+
+    const rosterSubmissionsCreated = await ensureClassroomTaskGroupSubmissions({
+      institutionId: input.institutionId,
+      taskId: task.id,
+      groupId: task.groupId,
+    })
+
+    if (rosterSubmissionsCreated > 0) {
+      gcLogInfo('Created pending submissions for linked classroom roster', ctx, {
+        rosterSubmissionsCreated,
+        groupId: task.groupId,
+      })
+    }
 
     const refreshToken = await getTeacherRefreshToken(input.teacherId)
     if (!refreshToken) {

@@ -12,6 +12,7 @@ import {
   validateGroupImportParsed,
 } from '#services/csv_parser_service'
 import {
+  findInstitutionGroup,
   findOrCreateGroup,
   findOrCreateInstitutionStudent,
   findOrCreateSubject,
@@ -187,24 +188,17 @@ export async function importGroupsFromCsv(input: {
           }
         : await findOrCreateSubject(input.institutionId, resolvedSubjectName)
 
-      const groupLookupSection = section
       const groupBefore = subjectBefore
-        ? groupLookupSection
-          ? await db
-              .from('groups')
-              .where('institution_id', input.institutionId)
-              .where('subject_id', subjectBefore.id)
-              .where('section', groupLookupSection)
-              .first()
-          : await db
-              .from('groups')
-              .where('institution_id', input.institutionId)
-              .where('subject_id', subjectBefore.id)
-              .where('name', className ?? resolvedSubjectName)
-              .first()
+        ? await findInstitutionGroup({
+            institutionId: input.institutionId,
+            subjectId: subjectBefore.id as number,
+            subjectName: (subjectBefore.name as string) ?? resolvedSubjectName,
+            section,
+            className,
+          })
         : null
 
-      const groupKey = `${subjectKey}:${groupLookupSection ?? className ?? resolvedSubjectName}`
+      const groupKey = `${subjectKey}:${section ?? className ?? resolvedSubjectName}`
       if (!groupBefore) createdGroupKeys.add(groupKey)
 
       const group = input.dryRun

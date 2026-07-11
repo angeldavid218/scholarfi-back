@@ -216,6 +216,106 @@ test.group('Google Classroom connector', (group) => {
     assert.equal(resyncBody.data.skippedAlreadyRewarded, 1)
   })
 
+  test('mock sync rewards roster students imported via CSV without manual ScholarFi submissions', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution('GC-CSV-ROSTER')
+    await seedInstitutionCredits(institutionId, 1000)
+
+    const teacher = await User.create({
+      email: 'gc-csv-roster-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC CSV Roster Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const students = await Promise.all(
+      [
+        { email: 'student-alpha@school.edu', name: 'Alpha' },
+        { email: 'student-beta@school.edu', name: 'Beta' },
+        { email: 'student-gamma@school.edu', name: 'Gamma' },
+      ].map(async (s) => {
+        const student = await User.create({
+          email: s.email,
+          password: 'Secret123!',
+          fullName: s.name,
+          institutionId,
+          isActive: true,
+        })
+        await assignRoleToUser(student.id, 'student', 'Student')
+        return student
+      })
+    )
+
+    await db.table('teacher_credit_pools').insert({
+      institution_id: institutionId,
+      teacher_id: teacher.id,
+      allocated_credits: 100,
+      utilized_credits: 0,
+      created_at: new Date(),
+      updated_at: null,
+    })
+
+    await connectMockClassroom(teacher.id, institutionId)
+    const token = await loginToken(client, teacher.email)
+
+    const csv = [
+      'student_email,student_name,subject,section,class_name',
+      ...students.map(
+        (student) =>
+          `${student.email},${student.fullName},Matematicas 3A,3A,Matematicas 3A`
+      ),
+    ].join('\n')
+
+    const importCsvResponse = await client
+      .post('/api/v1/groups/import-csv')
+      .header('Authorization', `Bearer ${token}`)
+      .file('file', Buffer.from(csv), { filename: 'classes.csv', contentType: 'text/csv' })
+
+    importCsvResponse.assertStatus(200)
+
+    const importResponse = await client
+      .post('/api/v1/tasks/from-classroom')
+      .header('Authorization', `Bearer ${token}`)
+      .json({
+        courseId: 'gc-course-1',
+        courseWorkId: 'gc-work-1',
+        courseName: 'Matematicas 3A',
+        section: '3A',
+        title: 'Ecuaciones lineales',
+        description: 'Resolver ejercicios del capitulo 4',
+        rewardAmount: 10,
+        minGrade: 6,
+        maxPoints: 10,
+      })
+
+    importResponse.assertStatus(200)
+    const taskId = (importResponse.body() as any).data.id as number
+
+    const syncResponse = await client
+      .post(`/api/v1/tasks/${taskId}/sync-classroom`)
+      .header('Authorization', `Bearer ${token}`)
+
+    syncResponse.assertStatus(200)
+    const syncBody = syncResponse.body() as any
+    assert.equal(syncBody.data.rewarded, 1)
+    assert.equal(syncBody.data.skippedLowGrade, 1)
+    assert.equal(syncBody.data.skippedNoGrade, 1)
+
+    const rewardedSubmission = await db
+      .from('submissions')
+      .innerJoin('users', 'users.id', 'submissions.student_id')
+      .where('submissions.task_id', taskId)
+      .andWhere('submissions.status', 'approved')
+      .select('users.email as email')
+      .first()
+
+    assert.equal(rewardedSubmission?.email, 'student-alpha@school.edu')
+  })
+
   test('mock sync uses default grade fixtures for real-looking courseWork ids and demo student emails', async ({
     client,
     assert,

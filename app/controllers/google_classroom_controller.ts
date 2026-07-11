@@ -31,6 +31,7 @@ import {
 } from '#services/integrations/google_classroom/oauth_service'
 import { verifyOAuthState } from '#services/integrations/google_classroom/oauth_state'
 import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
+import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
 import type { GoogleClassroomSyncMetadata } from '#services/integrations/google_classroom/types'
 import {
   createTaskFromClassroomValidator,
@@ -298,6 +299,12 @@ export default class GoogleClassroomController {
       externalSource: 'google_classroom',
       externalId: payload.courseWorkId,
       syncMetadata,
+    })
+
+    await ensureClassroomTaskGroupSubmissions({
+      institutionId: user.institutionId,
+      taskId: task.id,
+      groupId,
     })
 
     return {

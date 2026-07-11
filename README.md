@@ -107,7 +107,7 @@ node ace demo:seed --starter
 Default rich dataset (without `--starter`):
 
 - `1` active institution (`SFA-DEMO`)
-- `1` school admin, `1` teacher, `2` students (with associations)
+- `1` school admin, `1` teacher, `5` students (with associations)
 - **8** teacher tasks (7 active, 1 closed), **4** submissions in teacher queue (`pending`), **2** in school-admin queue (`validated`), **2** open tasks without submission; includes approved submission + posted reward + balance for student 1
 
 After seed/reset, confirm:
@@ -119,6 +119,9 @@ After seed/reset, confirm:
   - `demo.teacher@scholarfi.test`
   - `demo.student1@scholarfi.test`
   - `demo.student2@scholarfi.test`
+  - `student-alpha@school.edu`
+  - `student-beta@school.edu`
+  - `student-gamma@school.edu`
 3. Confirm deterministic institution code exists: `SFA-DEMO`.
 
 
@@ -132,6 +135,11 @@ After seed/reset, confirm:
 | Teacher      | `demo.teacher@scholarfi.test`  | `DemoPass123!` | `SFA-DEMO`              |
 | Student      | `demo.student1@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
 | Student      | `demo.student2@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `student-alpha@school.edu`     | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `student-beta@school.edu`      | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | `student-gamma@school.edu`     | `DemoPass123!` | `SFA-DEMO`              |
+
+Classroom mock pilot roster CSV: `fixtures/demo_classroom_roster.csv` (see `docs/google-classroom-setup.md` pilot checklist).
 
 
 

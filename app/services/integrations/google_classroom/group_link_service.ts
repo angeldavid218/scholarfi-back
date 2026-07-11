@@ -1,10 +1,15 @@
 import db from '@adonisjs/lucid/services/db'
 import {
+  findInstitutionGroup,
   findOrCreateSubject,
   upsertGroupStudent,
   upsertGroupTeacher,
 } from '#services/group_upsert_service'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
+
+function classroomGroupSyncMetadata() {
+  return JSON.stringify({ source: 'google_classroom' })
+}
 
 export async function upsertGoogleClassroomGroup(input: {
   institutionId: number
@@ -47,6 +52,42 @@ export async function upsertGoogleClassroomGroup(input: {
     }
 
     const subject = await findOrCreateSubject(input.institutionId, subjectName, trx)
+    const existingBySubjectSection = await findInstitutionGroup(
+      {
+        institutionId: input.institutionId,
+        subjectId: subject.id as number,
+        subjectName,
+        section,
+        className: subjectName,
+      },
+      trx
+    )
+
+    if (existingBySubjectSection) {
+      await trx
+        .from('groups')
+        .where('id', existingBySubjectSection.id)
+        .update({
+          name: subjectName,
+          section,
+          external_source: 'google_classroom',
+          external_id: input.courseId,
+          sync_metadata: classroomGroupSyncMetadata(),
+          updated_at: new Date(),
+        })
+
+      await upsertGroupTeacher(
+        {
+          institutionId: input.institutionId,
+          groupId: existingBySubjectSection.id as number,
+          teacherId: input.teacherId,
+        },
+        trx
+      )
+
+      return existingBySubjectSection.id as number
+    }
+
     const groupId = await insertGoogleClassroomGroup(
       {
         institutionId: input.institutionId,
@@ -91,7 +132,7 @@ async function insertGoogleClassroomGroup(
       name: input.courseName,
       section: input.section,
       code: null,
-      sync_metadata: { source: 'google_classroom' },
+      sync_metadata: classroomGroupSyncMetadata(),
       status: 'active',
       external_source: 'google_classroom',
       external_id: input.courseId,

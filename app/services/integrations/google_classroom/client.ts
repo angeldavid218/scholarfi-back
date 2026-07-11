@@ -1,4 +1,5 @@
 import googleClassroomConfig from '#config/google_classroom'
+import { CLASSROOM_MOCK_STUDENT_GRADES } from '#fixtures/demo_students'
 import {
   gcLogDebug,
   gcLogError,
@@ -13,6 +14,8 @@ import type {
   GoogleClassroomStudentSubmission,
 } from '#services/integrations/google_classroom/types'
 
+export { CLASSROOM_MOCK_STUDENT_GRADES } from '#fixtures/demo_students'
+
 const CLASSROOM_BASE = 'https://classroom.googleapis.com/v1'
 
 type ClassroomListResponse<T> = {
@@ -23,14 +26,6 @@ type ClassroomListResponse<T> = {
   nextPageToken?: string
 }
 
-/** Default grade fixtures used when mock mode is on (any courseWorkId). */
-export const CLASSROOM_MOCK_STUDENT_GRADES = [
-  { email: 'student-alpha@school.edu', assignedGrade: 8 as number | null },
-  { email: 'student-beta@school.edu', assignedGrade: 5 as number | null },
-  { email: 'student-gamma@school.edu', assignedGrade: null as number | null },
-  { email: 'demo.student1@scholarfi.test', assignedGrade: 8 as number | null },
-  { email: 'demo.student2@scholarfi.test', assignedGrade: 5 as number | null },
-] as const
 
 const MOCK_COURSES: GoogleClassroomCourse[] = [
   { id: 'gc-course-1', name: 'Matematicas 3A', section: '3A', courseState: 'ACTIVE' },
