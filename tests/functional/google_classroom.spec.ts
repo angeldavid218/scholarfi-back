@@ -391,4 +391,63 @@ test.group('Google Classroom connector', (group) => {
     assert.equal(syncBody.data.rewarded, 1)
     assert.equal(syncBody.data.budgetRemaining, 10)
   })
+
+  test('persistClassroomUserIdsFromRoster links google ids by email and skips conflicts', async ({
+    assert,
+  }) => {
+    const { persistClassroomUserIdsFromRoster } = await import(
+      '#services/integrations/google_classroom/group_link_service'
+    )
+
+    const institutionId = await createInstitution('GC-USERID')
+    const student = await User.create({
+      email: 'scholarfi101@gmail.com',
+      password: 'Secret123!',
+      fullName: 'Student One',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(student.id, 'student', 'Student')
+
+    const other = await User.create({
+      email: 'other-student@school.edu',
+      password: 'Secret123!',
+      fullName: 'Other Student',
+      institutionId,
+      isActive: true,
+      googleClassroomUserId: '105161253921017540580',
+    })
+    await assignRoleToUser(other.id, 'student', 'Student')
+
+    const first = await persistClassroomUserIdsFromRoster({
+      institutionId,
+      emailByUserId: new Map([
+        ['100800854909300885323', 'scholarfi101@gmail.com'],
+        ['105161253921017540580', 'missing@school.edu'],
+      ]),
+    })
+
+    assert.equal(first.linked, 1)
+    assert.equal(first.notFound, 1)
+    assert.equal(first.conflicts, 0)
+    assert.equal(first.alreadySet, 0)
+
+    await student.refresh()
+    assert.equal(student.googleClassroomUserId, '100800854909300885323')
+
+    const second = await persistClassroomUserIdsFromRoster({
+      institutionId,
+      emailByUserId: new Map([
+        ['100800854909300885323', 'scholarfi101@gmail.com'],
+        ['105161253921017540580', 'scholarfi101@gmail.com'],
+      ]),
+    })
+
+    assert.equal(second.alreadySet, 1)
+    assert.equal(second.conflicts, 1)
+    assert.equal(second.linked, 0)
+
+    await student.refresh()
+    assert.equal(student.googleClassroomUserId, '100800854909300885323')
+  })
 })

@@ -4,9 +4,11 @@ import { issueRewardForSubmission } from '#services/credits/reward_issuance_serv
 import { getTeacherCreditPoolSummary } from '#services/credits/teacher_credit_pool_service'
 import { InsufficientTeacherCreditsError } from '#services/credits/types'
 import googleClassroomConfig from '#config/google_classroom'
+import { buildClassroomGradeMaps, resolveClassroomGradeForUser } from '#services/integrations/google_classroom/client'
 import {
-  buildClassroomGradeByEmailMap,
-} from '#services/integrations/google_classroom/client'
+  linkGroupStudentsByEmail,
+  persistClassroomUserIdsFromRoster,
+} from '#services/integrations/google_classroom/group_link_service'
 import {
   gcLogDebug,
   gcLogError,
@@ -32,6 +34,7 @@ type SubmissionRow = {
   status: string
   submitted_at: Date
   email: string
+  google_classroom_user_id: string | null
 }
 
 type SyncSkipReason =
@@ -85,6 +88,19 @@ function logCtx(
   }
 }
 
+function resolveSubmissionGradeFromMaps(
+  submission: SubmissionRow,
+  gradeByGoogleUserId: Map<string, number | null>,
+  gradeByEmail: Map<string, number | null>
+): { grade: number | null | undefined; gradeFound: boolean; lookupKey: string } {
+  return resolveClassroomGradeForUser({
+    email: submission.email,
+    googleClassroomUserId: submission.google_classroom_user_id,
+    gradeByEmail,
+    gradeByGoogleUserId,
+  })
+}
+
 export async function syncGoogleClassroomTask(input: {
   taskId: number
   teacherId: number
@@ -121,6 +137,45 @@ export async function syncGoogleClassroomTask(input: {
       groupId: task.groupId,
     })
 
+    const refreshToken = await getTeacherRefreshToken(input.teacherId)
+    if (!refreshToken) {
+      gcLogWarn('Classroom sync aborted: teacher not connected', ctx)
+      throw new Error('Teacher has not connected Google Classroom')
+    }
+
+    gcLogDebug('Classroom refresh token loaded for teacher', ctx)
+
+    gcLogInfo('Fetching student submissions from Google Classroom', ctx)
+    const { gradeByEmail, gradeByGoogleUserId, emailByUserId } = await buildClassroomGradeMaps({
+      refreshToken,
+      courseId: metadata.courseId,
+      courseWorkId: metadata.courseWorkId,
+      logCtx: ctx,
+    })
+
+    if (emailByUserId.size > 0) {
+      const persistResult = await persistClassroomUserIdsFromRoster({
+        institutionId: input.institutionId,
+        emailByUserId,
+      })
+      gcLogInfo('Classroom Google user ids persisted on ScholarFi users', ctx, persistResult)
+    }
+
+    // Classroom tasks use a GC-linked group that may be empty until roster emails are enrolled.
+    // Students often exist via CSV in a different group — link them here by email first.
+    if (task.groupId && emailByUserId.size > 0) {
+      const linked = await linkGroupStudentsByEmail(
+        input.institutionId,
+        task.groupId,
+        [...emailByUserId.values()]
+      )
+      gcLogInfo('Classroom roster students linked to task group', ctx, {
+        groupId: task.groupId,
+        rosterEmailCount: emailByUserId.size,
+        linked,
+      })
+    }
+
     const rosterSubmissionsCreated = await ensureClassroomTaskGroupSubmissions({
       institutionId: input.institutionId,
       taskId: task.id,
@@ -134,25 +189,11 @@ export async function syncGoogleClassroomTask(input: {
       })
     }
 
-    const refreshToken = await getTeacherRefreshToken(input.teacherId)
-    if (!refreshToken) {
-      gcLogWarn('Classroom sync aborted: teacher not connected', ctx)
-      throw new Error('Teacher has not connected Google Classroom')
-    }
-
-    gcLogDebug('Classroom refresh token loaded for teacher', ctx)
-
-    gcLogInfo('Fetching student submissions from Google Classroom', ctx)
-    const gradeByEmail = await buildClassroomGradeByEmailMap({
-      refreshToken,
-      courseId: metadata.courseId,
-      courseWorkId: metadata.courseWorkId,
-      logCtx: ctx,
-    })
-
-    gcLogInfo('Google Classroom grades loaded (by email)', ctx, {
+    gcLogInfo('Google Classroom grades loaded', ctx, {
       gradeEntryCount: gradeByEmail.size,
+      gradeByGoogleUserIdCount: gradeByGoogleUserId.size,
       gradeKeys: [...gradeByEmail.keys()],
+      googleUserIds: [...gradeByGoogleUserId.keys()],
       grades: Object.fromEntries(gradeByEmail.entries()),
     })
 
@@ -167,7 +208,8 @@ export async function syncGoogleClassroomTask(input: {
         'submissions.student_id as student_id',
         'submissions.status as status',
         'submissions.submitted_at as submitted_at',
-        'users.email as email'
+        'users.email as email',
+        'users.google_classroom_user_id as google_classroom_user_id'
       )) as SubmissionRow[]
 
     gcLogInfo('ScholarFi submissions loaded (FIFO order)', ctx, {
@@ -177,11 +219,20 @@ export async function syncGoogleClassroomTask(input: {
         submissionId: row.id,
         studentId: row.student_id,
         email: row.email,
+        googleClassroomUserId: row.google_classroom_user_id,
         submittedAt: row.submitted_at,
         status: row.status,
       })),
     })
 
+    if (scholarfiSubmissions.length === 0) {
+      gcLogWarn('Classroom sync has grades but no ScholarFi submissions to reward', ctx, {
+        groupId: task.groupId,
+        rosterEmailCount: emailByUserId.size,
+        gradeEntryCount: gradeByEmail.size,
+        hint: 'Ensure roster emails match ScholarFi student accounts in this institution',
+      })
+    }
     const result: GoogleClassroomSyncResult = {
       taskId: task.id,
       rewarded: 0,
@@ -206,16 +257,19 @@ export async function syncGoogleClassroomTask(input: {
     })
 
     for (const [index, submission] of scholarfiSubmissions.entries()) {
-      const userKey = submission.email.trim().toLowerCase()
-      const grade = gradeByEmail.get(userKey)
-      const gradeFound = gradeByEmail.has(userKey)
+      const { grade, gradeFound, lookupKey } = resolveSubmissionGradeFromMaps(
+        submission,
+        gradeByGoogleUserId,
+        gradeByEmail
+      )
 
       gcLogDebug('Evaluating submission for Classroom sync', ctx, {
         position: index + 1,
         submissionId: submission.id,
         studentId: submission.student_id,
         email: submission.email,
-        lookupKey: userKey,
+        googleClassroomUserId: submission.google_classroom_user_id,
+        lookupKey,
         gradeFound,
         grade: grade ?? null,
         minGrade: metadata.minGrade,
@@ -370,6 +424,7 @@ export async function syncGoogleClassroomTask(input: {
       ...result,
       scholarfiSubmissionCount: scholarfiSubmissions.length,
       gcGradeEntryCount: gradeByEmail.size,
+      gcGradeByGoogleUserIdCount: gradeByGoogleUserId.size,
     })
 
     return result

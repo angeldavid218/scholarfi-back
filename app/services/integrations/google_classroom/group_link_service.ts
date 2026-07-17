@@ -177,3 +177,75 @@ export async function linkGroupStudentsByEmail(
 
   return linked
 }
+
+export type PersistClassroomUserIdsResult = {
+  linked: number
+  alreadySet: number
+  notFound: number
+  conflicts: number
+}
+
+/**
+ * Persist Google Classroom profile ids onto matching ScholarFi students (by email).
+ * conflict = another user already owns that google_classroom_user_id.
+ */
+export async function persistClassroomUserIdsFromRoster(input: {
+  institutionId: number
+  emailByUserId: Map<string, string>
+}): Promise<PersistClassroomUserIdsResult> {
+  const result: PersistClassroomUserIdsResult = {
+    linked: 0,
+    alreadySet: 0,
+    notFound: 0,
+    conflicts: 0,
+  }
+
+  for (const [googleUserId, rawEmail] of input.emailByUserId) {
+    const email = rawEmail.trim().toLowerCase()
+
+    const owner = await db
+      .from('users')
+      .where('google_classroom_user_id', googleUserId)
+      .select('id', 'email', 'institution_id')
+      .first()
+
+    const student = await db
+      .from('users')
+      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
+      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .where('users.institution_id', input.institutionId)
+      .andWhere('roles.key', 'student')
+      .whereRaw('LOWER(users.email) = ?', [email])
+      .select(
+        'users.id as id',
+        'users.google_classroom_user_id as google_classroom_user_id'
+      )
+      .first()
+
+    if (!student) {
+      result.notFound += 1
+      continue
+    }
+
+    if (owner && Number(owner.id) !== Number(student.id)) {
+      result.conflicts += 1
+      continue
+    }
+
+    if (student.google_classroom_user_id === googleUserId) {
+      result.alreadySet += 1
+      continue
+    }
+
+    await db
+      .from('users')
+      .where('id', student.id)
+      .update({
+        google_classroom_user_id: googleUserId,
+        updated_at: new Date(),
+      })
+    result.linked += 1
+  }
+
+  return result
+}

@@ -17,6 +17,20 @@ import type {
 export { CLASSROOM_MOCK_STUDENT_GRADES } from '#fixtures/demo_students'
 
 const CLASSROOM_BASE = 'https://classroom.googleapis.com/v1'
+const ACCESS_TOKEN_EXPIRY_SKEW_MS = 60_000
+
+type CachedAccessToken = {
+  accessToken: string
+  expiresAtMs: number
+}
+
+const accessTokenCache = new Map<string, CachedAccessToken>()
+
+export type ClassroomGradeMaps = {
+  gradeByEmail: Map<string, number | null>
+  gradeByGoogleUserId: Map<string, number | null>
+  emailByUserId: Map<string, string>
+}
 
 type ClassroomListResponse<T> = {
   courseWork?: T[]
@@ -166,18 +180,37 @@ export async function getGoogleClassroomAccessToken(
   refreshToken: string,
   logCtx?: GoogleClassroomLogContext
 ): Promise<string> {
+  const cached = accessTokenCache.get(refreshToken)
+  const now = Date.now()
+  if (cached && now < cached.expiresAtMs - ACCESS_TOKEN_EXPIRY_SKEW_MS) {
+    gcLogDebug('Using cached Google access token', logCtx ?? {}, {
+      expiresInSeconds: Math.floor((cached.expiresAtMs - now) / 1000),
+    })
+    return cached.accessToken
+  }
+
   gcLogDebug('Refreshing Google access token', logCtx ?? {})
   try {
     const tokens = await refreshGoogleAccessToken(refreshToken)
+    const expiresIn = tokens.expires_in ?? 3600
+    accessTokenCache.set(refreshToken, {
+      accessToken: tokens.access_token,
+      expiresAtMs: Date.now() + expiresIn * 1000,
+    })
     gcLogDebug('Google access token refreshed', logCtx ?? {}, {
-      expiresIn: tokens.expires_in,
+      expiresIn,
       scopeCount: tokens.scope?.split(' ').length ?? 0,
     })
     return tokens.access_token
   } catch (error) {
+    accessTokenCache.delete(refreshToken)
     gcLogError('Google access token refresh failed', logCtx ?? {}, error)
     throw error
   }
+}
+
+export function clearGoogleClassroomAccessTokenCache(): void {
+  accessTokenCache.clear()
 }
 
 export async function listGoogleClassroomCourses(
@@ -284,12 +317,12 @@ export async function listGoogleClassroomCourseStudentEmails(
   return emailByUserId
 }
 
-export async function buildClassroomGradeByEmailMap(input: {
+export async function buildClassroomGradeMaps(input: {
   refreshToken: string
   courseId: string
   courseWorkId: string
   logCtx?: GoogleClassroomLogContext
-}): Promise<Map<string, number | null>> {
+}): Promise<ClassroomGradeMaps> {
   const submissions = await listGoogleClassroomStudentSubmissions(
     input.refreshToken,
     input.courseId,
@@ -298,19 +331,29 @@ export async function buildClassroomGradeByEmailMap(input: {
   )
 
   const gradeByEmail = new Map<string, number | null>()
+  const gradeByGoogleUserId = new Map<string, number | null>()
+  const emailByUserId = new Map<string, string>()
 
   if (googleClassroomConfig.mockMode) {
     for (const submission of submissions) {
-      gradeByEmail.set(normalizeClassroomUserKey(submission.userId), resolveSubmissionGrade(submission))
+      const grade = resolveSubmissionGrade(submission)
+      const key = normalizeClassroomUserKey(submission.userId)
+      gradeByEmail.set(key, grade)
+      if (/^\d+$/.test(submission.userId.trim())) {
+        gradeByGoogleUserId.set(submission.userId.trim(), grade)
+      }
     }
-    return gradeByEmail
+    return { gradeByEmail, gradeByGoogleUserId, emailByUserId }
   }
 
-  const emailByUserId = await listGoogleClassroomCourseStudentEmails(
+  const rosterEmails = await listGoogleClassroomCourseStudentEmails(
     input.refreshToken,
     input.courseId,
     input.logCtx
   )
+  for (const [userId, email] of rosterEmails) {
+    emailByUserId.set(userId, email)
+  }
 
   let unresolvedUserIds = 0
 
@@ -319,6 +362,7 @@ export async function buildClassroomGradeByEmailMap(input: {
     let email: string | undefined
 
     if (/^\d+$/.test(submission.userId.trim())) {
+      gradeByGoogleUserId.set(submission.userId.trim(), grade)
       email = emailByUserId.get(submission.userId)
       if (!email) unresolvedUserIds += 1
     } else {
@@ -337,7 +381,7 @@ export async function buildClassroomGradeByEmailMap(input: {
     })
   }
 
-  return gradeByEmail
+  return { gradeByEmail, gradeByGoogleUserId, emailByUserId }
 }
 
 export async function listGoogleClassroomStudentSubmissions(
@@ -410,4 +454,27 @@ export function resolveSubmissionGrade(
 /** Normalize GC userId (email or numeric id) to lowercase email when possible. */
 export function normalizeClassroomUserKey(userId: string): string {
   return userId.trim().toLowerCase()
+}
+
+export function resolveClassroomGradeForUser(input: {
+  email: string
+  googleClassroomUserId: string | null
+  gradeByEmail: Map<string, number | null>
+  gradeByGoogleUserId: Map<string, number | null>
+}): { grade: number | null | undefined; gradeFound: boolean; lookupKey: string } {
+  const googleId = input.googleClassroomUserId?.trim() || null
+  if (googleId && input.gradeByGoogleUserId.has(googleId)) {
+    return {
+      grade: input.gradeByGoogleUserId.get(googleId),
+      gradeFound: true,
+      lookupKey: `google:${googleId}`,
+    }
+  }
+
+  const userKey = input.email.trim().toLowerCase()
+  return {
+    grade: input.gradeByEmail.get(userKey),
+    gradeFound: input.gradeByEmail.has(userKey),
+    lookupKey: userKey,
+  }
 }

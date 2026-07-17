@@ -19,19 +19,21 @@ For a single Google Workspace for Education domain:
 2. User type: **Internal**
 3. Fill app name, support email, developer contact
 4. Add scopes:
-   - `https://www.googleapis.com/auth/classroom.courses.readonly`
-   - `https://www.googleapis.com/auth/classroom.rosters.readonly`
-   - `https://www.googleapis.com/auth/classroom.coursework.students.readonly`
-   - `https://www.googleapis.com/auth/userinfo.email`
+
+- `https://www.googleapis.com/auth/classroom.courses.readonly`
+- `https://www.googleapis.com/auth/classroom.rosters.readonly`
+- `https://www.googleapis.com/auth/classroom.coursework.students.readonly`
+- `https://www.googleapis.com/auth/classroom.profile.emails`
+- `https://www.googleapis.com/auth/userinfo.email`
 
 ## 4. OAuth client (Web application)
 
 **APIs & Services → Credentials → Create credentials → OAuth client ID → Web application**
 
-| Field | Development | Production |
-|-------|-------------|------------|
-| Authorized JavaScript origins | `http://localhost:5173` | Your frontend URL |
-| Authorized redirect URIs | `http://localhost:3333/api/v1/integrations/google-classroom/callback` | `https://<api-host>/api/v1/integrations/google-classroom/callback` |
+| Field                         | Development                                                           | Production                                                         |
+| ----------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Authorized JavaScript origins | `http://localhost:5173`                                               | Your frontend URL                                                  |
+| Authorized redirect URIs      | `http://localhost:3333/api/v1/integrations/google-classroom/callback` | `https://<api-host>/api/v1/integrations/google-classroom/callback` |
 
 Copy the **Client ID** and **Client secret** into `scholarfi-back/.env`.
 
@@ -41,7 +43,7 @@ Copy the **Client ID** and **Client secret** into `scholarfi-back/.env`.
 GOOGLE_CLIENT_ID=<from GCP>
 GOOGLE_CLIENT_SECRET=<from GCP>
 GOOGLE_REDIRECT_URI=http://localhost:3333/api/v1/integrations/google-classroom/callback
-GOOGLE_OAUTH_SCOPES=https://www.googleapis.com/auth/classroom.courses.readonly,https://www.googleapis.com/auth/classroom.rosters.readonly,https://www.googleapis.com/auth/classroom.coursework.students.readonly,https://www.googleapis.com/auth/userinfo.email
+GOOGLE_OAUTH_SCOPES=https://www.googleapis.com/auth/classroom.courses.readonly,https://www.googleapis.com/auth/classroom.rosters.readonly,https://www.googleapis.com/auth/classroom.coursework.students.readonly,https://www.googleapis.com/auth/classroom.profile.emails,https://www.googleapis.com/auth/userinfo.email
 INTEGRATION_TOKEN_ENCRYPTION_KEY=<32+ char secret>
 FRONTEND_URL=http://localhost:5173
 CORS_ORIGIN=http://localhost:5173
@@ -63,5 +65,6 @@ Before testing end-to-end:
 ## Notes
 
 - ScholarFi only **reads** grades from assignments created in the Classroom UI (no write scopes required).
+- `classroom.profile.emails` is required so roster responses include student `emailAddress` (used to link Classroom `profile.id` to ScholarFi users). After adding it, teachers must **disconnect and reconnect** Classroom so Google re-consents.
 - Rewards are issued in ScholarFi completion order (`submitted_at` ASC) until the teacher budget reaches zero.
 - Minimum grade is an absolute score (`assignedGrade >= minGrade`).
