@@ -43,6 +43,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_token_controller').default['destroy']>>>
     }
   }
+  'auth.registerStudent': {
+    methods: ["POST"]
+    pattern: '/api/v1/auth/register-student'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/user').registerStudentValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/user').registerStudentValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/student_registration_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/student_registration_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'index': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/institutions'

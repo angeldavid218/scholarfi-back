@@ -58,6 +58,7 @@ async function insertUser(
     fullName: string
     /** `null` for platform-wide roles (e.g. super admin). */
     institutionId: number | null
+    registrationNumber?: string | null
   }
 ) {
   const dbModule = await import('@adonisjs/lucid/services/db')
@@ -74,6 +75,8 @@ async function insertUser(
       password: hashedPassword,
       institution_id: input.institutionId ?? null,
       is_active: true,
+      account_status: 'active',
+      registration_number: input.registrationNumber ?? null,
       created_at: ts(0).toJSDate(),
       updated_at: null,
     })
@@ -237,6 +240,7 @@ export async function seedDemoBaseline(options: {
         email: student.email,
         fullName: student.fullName,
         institutionId: institution.id,
+        registrationNumber: student.registrationNumber,
       })
       await assignRole(studentId, studentRole, trx)
       studentIdsByEmail.set(student.email, studentId)

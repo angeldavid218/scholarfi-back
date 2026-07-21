@@ -10,6 +10,7 @@ export interface ApiDefinition {
       store: typeof routes['auth.access_token.store']
       destroy: typeof routes['auth.access_token.destroy']
     }
+    registerStudent: typeof routes['auth.registerStudent']
   }
   index: typeof routes['index']
   store: typeof routes['store']

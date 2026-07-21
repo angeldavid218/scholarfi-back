@@ -603,8 +603,10 @@ export class UserRoleSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'googleClassroomUserId', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'updatedAt', 'walletPublicKey'] as const
+  static $columns = ['accountStatus', 'createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'googleClassroomUserId', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'registrationNumber', 'updatedAt', 'walletPublicKey'] as const
   $columns = UserSchema.$columns
+  @column()
+  declare accountStatus: string
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
@@ -625,6 +627,8 @@ export class UserSchema extends BaseModel {
   declare ngoInstitutionId: number | null
   @column({ serializeAs: null })
   declare password: string
+  @column()
+  declare registrationNumber: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

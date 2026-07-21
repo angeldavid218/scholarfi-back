@@ -20,6 +20,17 @@ export default class AccessTokenController {
     } catch {
       return response.unauthorized(authFailurePayload)
     }
+
+    if (user.accountStatus !== 'active' || !user.isActive) {
+      return response.unauthorized({
+        error: {
+          code: 'ACCOUNT_PENDING_REGISTRATION',
+          message: 'Account must complete registration before login',
+          requestId,
+        },
+      })
+    }
+
     const token = await User.accessTokens.create(user)
 
     return serialize({

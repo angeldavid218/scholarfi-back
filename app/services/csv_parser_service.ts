@@ -8,6 +8,7 @@ export type ParsedCsv = {
 export type GroupImportField =
   | 'student_email'
   | 'student_name'
+  | 'registration_number'
   | 'subject'
   | 'section'
   | 'class_name'
@@ -17,6 +18,7 @@ export type GroupImportColumnMapping = Partial<Record<GroupImportField, string>>
 export const GROUP_IMPORT_FIELDS: GroupImportField[] = [
   'student_email',
   'student_name',
+  'registration_number',
   'subject',
   'section',
   'class_name',
@@ -43,6 +45,16 @@ const FIELD_ALIASES: Record<GroupImportField, string[]> = {
     'full_name',
     'alumno',
     'estudiante',
+  ],
+  registration_number: [
+    'registration_number',
+    'matricula',
+    'matricula',
+    'student_id',
+    'numero_de_control',
+    'numero_control',
+    'n_control',
+    'id_estudiante',
   ],
   subject: ['subject', 'materia', 'asignatura', 'disciplina', 'curso_materia'],
   section: ['section', 'grupo', 'seccion', 'sección', 'grupo_seccion', 'paralelo', 'salon', 'salón'],
@@ -124,6 +136,10 @@ export function validateGroupImportColumnMapping(mapping: GroupImportColumnMappi
     return 'Debes asignar la columna de correo del estudiante'
   }
 
+  if (!mapping.registration_number) {
+    return 'Debes asignar la columna de matrícula del estudiante'
+  }
+
   if (!mapping.subject && !mapping.class_name) {
     return 'Debes asignar la columna de materia o de nombre de clase'
   }
@@ -144,6 +160,10 @@ export function validateGroupImportParsed(parsed: ParsedCsv): string | null {
 
   if (!parsed.headers.includes('student_email')) {
     return 'Falta la columna requerida: student_email'
+  }
+
+  if (!parsed.headers.includes('registration_number')) {
+    return 'Falta la columna requerida: registration_number'
   }
 
   if (!parsed.headers.includes('subject') && !parsed.headers.includes('class_name')) {

@@ -263,10 +263,10 @@ test.group('Google Classroom connector', (group) => {
     const token = await loginToken(client, teacher.email)
 
     const csv = [
-      'student_email,student_name,subject,section,class_name',
+      'student_email,student_name,registration_number,subject,section,class_name',
       ...students.map(
-        (student) =>
-          `${student.email},${student.fullName},Matematicas 3A,3A,Matematicas 3A`
+        (student, index) =>
+          `${student.email},${student.fullName},MAT-GC-${index + 1},Matematicas 3A,3A,Matematicas 3A`
       ),
     ].join('\n')
 

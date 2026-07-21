@@ -16,6 +16,7 @@ export const controllers = {
   Profile: () => import('#controllers/profile_controller'),
   Redemptions: () => import('#controllers/redemptions_controller'),
   Rewards: () => import('#controllers/rewards_controller'),
+  StudentRegistration: () => import('#controllers/student_registration_controller'),
   Students: () => import('#controllers/students_controller'),
   Subjects: () => import('#controllers/subjects_controller'),
   Submissions: () => import('#controllers/submissions_controller'),

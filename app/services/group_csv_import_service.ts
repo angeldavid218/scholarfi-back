@@ -104,6 +104,7 @@ export async function importGroupsFromCsv(input: {
   const createdGroupKeys = new Set<string>()
   const createdStudentEmails = new Set<string>()
   const pendingStudentEmails = new Set<string>()
+  const pendingStudentRegistrationNumbers = new Set<string>()
 
   const processRows = async () => {
     for (let index = 0; index < parsed.rows.length; index++) {
@@ -113,6 +114,7 @@ export async function importGroupsFromCsv(input: {
       const subjectName = row.subject?.trim() ?? ''
       const section = row.section?.trim() || null
       const className = row.class_name?.trim() || null
+      const registrationNumber = row.registration_number?.trim() || null
 
       if (!studentEmail) {
         csvImportLogDebug('CSV row skipped: missing student email', logCtx, { row: rowNumber })
@@ -141,8 +143,10 @@ export async function importGroupsFromCsv(input: {
         institutionId: input.institutionId,
         email: studentEmail,
         fullName: studentName,
+        registrationNumber,
         dryRun: input.dryRun,
         pendingCreatedEmails: pendingStudentEmails,
+        pendingCreatedRegistrationNumbers: pendingStudentRegistrationNumbers,
       })
 
       if (!studentResult.ok) {

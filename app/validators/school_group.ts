@@ -5,6 +5,7 @@ const optionalMappedColumn = vine.string().trim().minLength(1).optional()
 export const groupImportColumnMappingValidator = vine.create({
   student_email: optionalMappedColumn,
   student_name: optionalMappedColumn,
+  registration_number: optionalMappedColumn,
   subject: optionalMappedColumn,
   section: optionalMappedColumn,
   class_name: optionalMappedColumn,

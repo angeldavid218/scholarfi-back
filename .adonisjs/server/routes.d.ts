@@ -7,6 +7,7 @@ export type ScannedRoutes = {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
+    'auth.registerStudent': { paramsTuple?: []; params?: {} }
     'index': { paramsTuple?: []; params?: {} }
     'store': { paramsTuple?: []; params?: {} }
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
@@ -139,6 +140,7 @@ export type ScannedRoutes = {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
+    'auth.registerStudent': { paramsTuple?: []; params?: {} }
     'store': { paramsTuple?: []; params?: {} }
     'allocateInstitutionCredits': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'allocateEqualTeacherCredits': { paramsTuple?: []; params?: {} }

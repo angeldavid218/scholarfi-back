@@ -15,6 +15,7 @@ export type DemoStudentGroupEnrollment = {
 export type DemoStudentFixture = {
   email: string
   fullName: string
+  registrationNumber: string
   /** Mock Classroom assignedGrade when GOOGLE_CLASSROOM_MOCK=true */
   classroomAssignedGrade: number | null
   /** Groups created and populated during demo:seed */
@@ -27,6 +28,7 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
     email: 'demo.student1@scholarfi.test',
     fullName: 'Demo Student One',
+    registrationNumber: 'MAT-001',
     classroomAssignedGrade: 8,
     seedGroups: [
       { subject: 'Matemáticas', section: '3°A' },
@@ -48,6 +50,7 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
     email: 'demo.student2@scholarfi.test',
     fullName: 'Demo Student Two',
+    registrationNumber: 'MAT-002',
     classroomAssignedGrade: 5,
     seedGroups: [
       { subject: 'Matemáticas', section: '3°A' },
@@ -69,6 +72,7 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
     email: 'student-alpha@school.edu',
     fullName: 'Student Alpha',
+    registrationNumber: 'MAT-ALPHA',
     classroomAssignedGrade: 8,
     seedGroups: [
       {
@@ -88,6 +92,7 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
     email: 'student-beta@school.edu',
     fullName: 'Student Beta',
+    registrationNumber: 'MAT-BETA',
     classroomAssignedGrade: 5,
     seedGroups: [
       {
@@ -107,6 +112,7 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
     email: 'student-gamma@school.edu',
     fullName: 'Student Gamma',
+    registrationNumber: 'MAT-GAMMA',
     classroomAssignedGrade: null,
     seedGroups: [
       {
@@ -132,7 +138,7 @@ export const CLASSROOM_MOCK_STUDENT_GRADES = DEMO_STUDENTS.map((student) => ({
 
 /** Rows for /teacher/clases CSV import aligned with mock Classroom courses. */
 export function buildDemoClassroomRosterCsv(): string {
-  const header = 'student_email,student_name,subject,section,class_name'
+  const header = 'student_email,student_name,registration_number,subject,section,class_name'
   const rows: string[] = []
 
   for (const student of DEMO_STUDENTS) {
@@ -140,7 +146,7 @@ export function buildDemoClassroomRosterCsv(): string {
       if (!group.classroomPilot) continue
       const className = group.className ?? group.subject
       rows.push(
-        `${student.email},${student.fullName},${group.subject},${group.section},${className}`
+        `${student.email},${student.fullName},${student.registrationNumber},${group.subject},${group.section},${className}`
       )
     }
   }

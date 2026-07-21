@@ -24,6 +24,12 @@ const routes = {
     tokens: [{"old":"/api/v1/auth/logout","type":0,"val":"api","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['auth.access_token.destroy']['types'],
   },
+  'auth.registerStudent': {
+    methods: ["POST"],
+    pattern: '/api/v1/auth/register-student',
+    tokens: [{"old":"/api/v1/auth/register-student","type":0,"val":"api","end":""},{"old":"/api/v1/auth/register-student","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/register-student","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/register-student","type":0,"val":"register-student","end":""}],
+    types: placeholder as Registry['auth.registerStudent']['types'],
+  },
   'index': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/institutions',
