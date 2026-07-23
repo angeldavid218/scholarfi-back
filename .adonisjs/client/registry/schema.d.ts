@@ -691,6 +691,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'updateCatalogReward': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/rewards/catalog/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/catalog_reward').updateCatalogRewardValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/catalog_reward').updateCatalogRewardValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'studentBalance': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/students/:studentId/balance'

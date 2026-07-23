@@ -56,7 +56,7 @@ export class BudgetAllocationSchema extends BaseModel {
 }
 
 export class CatalogRewardSchema extends BaseModel {
-  static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'title', 'updatedAt'] as const
+  static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'isActive', 'source', 'title', 'updatedAt'] as const
   $columns = CatalogRewardSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -68,6 +68,10 @@ export class CatalogRewardSchema extends BaseModel {
   declare id: number
   @column()
   declare institutionId: number
+  @column()
+  declare isActive: boolean
+  @column()
+  declare source: string
   @column()
   declare title: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

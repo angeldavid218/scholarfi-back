@@ -61,6 +61,7 @@ export type ScannedRoutes = {
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
     'createCatalogReward': { paramsTuple?: []; params?: {} }
+    'updateCatalogReward': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'createRedemption': { paramsTuple?: []; params?: {} }
@@ -170,6 +171,7 @@ export type ScannedRoutes = {
     'teacherActionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'teacherRejectSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'adminDecisionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'updateCatalogReward': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'approveRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'rejectRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
   }

@@ -384,6 +384,10 @@ router
           .post('/catalog', [() => import('#controllers/catalog_rewards_controller'), 'store'])
           .as('createCatalogReward')
           .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .patch('/catalog/:id', [() => import('#controllers/catalog_rewards_controller'), 'update'])
+          .as('updateCatalogReward')
+          .use(middleware.role({ roles: ['school_admin'] }))
       })
       .prefix('rewards')
       .use(middleware.auth())

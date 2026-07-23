@@ -65,6 +65,7 @@ export interface ApiDefinition {
   listInstitutionRewardHistory: typeof routes['listInstitutionRewardHistory']
   listCatalogRewards: typeof routes['listCatalogRewards']
   createCatalogReward: typeof routes['createCatalogReward']
+  updateCatalogReward: typeof routes['updateCatalogReward']
   studentBalance: typeof routes['studentBalance']
   studentTransactions: typeof routes['studentTransactions']
   createRedemption: typeof routes['createRedemption']

@@ -19,6 +19,12 @@ export default class CatalogReward extends BaseModel {
   @column()
   declare creditCost: number
 
+  @column()
+  declare isActive: boolean
+
+  @column()
+  declare source: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

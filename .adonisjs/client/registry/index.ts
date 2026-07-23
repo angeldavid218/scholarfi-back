@@ -348,6 +348,12 @@ const routes = {
     tokens: [{"old":"/api/v1/rewards/catalog","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/catalog","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/catalog","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/catalog","type":0,"val":"catalog","end":""}],
     types: placeholder as Registry['createCatalogReward']['types'],
   },
+  'updateCatalogReward': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/rewards/catalog/:id',
+    tokens: [{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"catalog","end":""},{"old":"/api/v1/rewards/catalog/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['updateCatalogReward']['types'],
+  },
   'studentBalance': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/students/:studentId/balance',
