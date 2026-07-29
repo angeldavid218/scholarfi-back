@@ -16,6 +16,10 @@ import {
   isInstitutionOnChainExecution,
   makeTokenServiceForInstitution,
 } from '#services/tokens/factory'
+import {
+  maybeIssueChainProofsAfterMint,
+  resolveStudentWalletAfterMint,
+} from '#services/attestation/chain_proofs_hook'
 
 export interface IssueRewardParams {
   institutionId: number
@@ -107,6 +111,18 @@ export async function issueRewardForSubmission(
         minted.transactionId,
         trx
       )
+    }
+
+    if (onChain && minted.status === 'confirmed') {
+      const wallet = await resolveStudentWalletAfterMint(params.studentId, null)
+      await maybeIssueChainProofsAfterMint({
+        institutionId: params.institutionId,
+        studentId: params.studentId,
+        submissionId: params.submissionId,
+        points: params.amount,
+        studentWalletPublicKey: wallet,
+        mintStatus: minted.status,
+      })
     }
 
     return {

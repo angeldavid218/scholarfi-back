@@ -370,6 +370,35 @@ export class SubjectSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class SubmissionChainProofSchema extends BaseModel {
+  static $columns = ['attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'leaderboardSignature', 'processedAchievementPda', 'schoolBoardPda', 'status', 'submissionHash', 'submissionId', 'updatedAt'] as const
+  $columns = SubmissionChainProofSchema.$columns
+  @column()
+  declare attestationPda: string | null
+  @column()
+  declare attestationSignature: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare leaderboardSignature: string | null
+  @column()
+  declare processedAchievementPda: string | null
+  @column()
+  declare schoolBoardPda: string | null
+  @column()
+  declare status: string
+  @column()
+  declare submissionHash: string
+  @column()
+  declare submissionId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class SubmissionValidationSchema extends BaseModel {
   static $columns = ['action', 'comment', 'createdAt', 'id', 'schoolAdminId', 'submissionId', 'teacherId'] as const
   $columns = SubmissionValidationSchema.$columns

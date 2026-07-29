@@ -124,6 +124,22 @@ After seed/reset, confirm:
   - `student-gamma@school.edu`
 3. Confirm deterministic institution code exists: `SFA-DEMO`.
 
+## Solana leaderboard + SAS attestation (Devnet POC)
+
+Requires `SOLANA_RPC_URL` and mint/oracle secrets. If `npm install sas-lib` fails (root-owned `node_modules`), keep `vendor-sas/` (local `npm install sas-lib` there) — the app loads it via `app/services/attestation/sas_sdk.ts`.
+
+```bash
+# Leaderboard PDAs
+node ace school-score:devnet --points=10
+
+# One-time SAS Credential + schema (pin PDAs into .env)
+node ace sas:setup
+
+# Issue attestation (+ optional leaderboard score with same submission_hash)
+node ace sas:attest --institution-id=1 --submission-id=900101 --points=10 --record-score
+```
+
+Set `SAS_ENABLED=true` so `issueRewardForSubmission` best-effort creates attestation + `record_score` after a confirmed on-chain mint.
 
 ### Demo seed users
 

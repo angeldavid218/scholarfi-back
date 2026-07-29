@@ -24,6 +24,8 @@
     "#mails/*": "./app/mails/*.js",
     "#services/*": "./app/services/*.js",
     "#services/tokens/*": "./app/services/tokens/*.js",
+    "#services/leaderboard/*": "./app/services/leaderboard/*.js",
+    "#services/attestation/*": "./app/services/attestation/*.js",
     "#listeners/*": "./app/listeners/*.js",
     "#events/*": "./app/events/*.js",
     "#generated/*": "./.adonisjs/server/*.js",
@@ -66,6 +68,7 @@
     "@adonisjs/lucid": "^22.4.2",
     "@adonisjs/session": "^8.1.0",
     "@adonisjs/shield": "^9.0.0",
+    "@coral-xyz/anchor": "^0.32.1",
     "@japa/api-client": "^3.2.1",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.4",
@@ -76,7 +79,8 @@
     "luxon": "^3.7.2",
     "papaparse": "^5.5.4",
     "pg": "^8.20.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "sas-lib": "^1.0.10"
   },
   "hotHook": {
     "boundaries": [

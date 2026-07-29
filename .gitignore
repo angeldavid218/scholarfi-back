@@ -1,5 +1,7 @@
 # Dependencies and AdonisJS build
 node_modules
+vendor-anchor
+vendor-sas
 build
 tmp/*
 !tmp/.gitkeep
