@@ -11,6 +11,7 @@ import {
   processedPda,
   schoolPda,
   sendIx,
+  studentScorePda,
 } from '#services/leaderboard/school_score_client'
 import { Connection, PublicKey } from '@solana/web3.js'
 
@@ -70,6 +71,7 @@ export async function recordScoreForSubmission(params: {
   signature: string | null
   schoolBoardPda: string
   processedAchievementPda: string
+  studentScorePda: string
   alreadyProcessed: boolean
 }> {
   const oracle = loadLeaderboardOracleKeypair()
@@ -79,13 +81,16 @@ export async function recordScoreForSubmission(params: {
     connection: params.connection,
     institutionId: params.institutionId,
   })
+  const student = new PublicKey(params.studentWallet)
   const [processedAchievement] = processedPda(programId, params.submissionHash)
+  const [studentScore] = studentScorePda(programId, schoolBoard, student)
 
   if (await accountExists(params.connection, processedAchievement)) {
     return {
       signature: null,
       schoolBoardPda: schoolBoard.toBase58(),
       processedAchievementPda: processedAchievement.toBase58(),
+      studentScorePda: studentScore.toBase58(),
       alreadyProcessed: true,
     }
   }
@@ -98,11 +103,12 @@ export async function recordScoreForSubmission(params: {
       globalConfig,
       schoolBoard,
       processedAchievement,
+      studentScore,
       oracle: oracle.publicKey,
       payer: oracle.publicKey,
       submissionHash: params.submissionHash,
       points: params.points,
-      student: new PublicKey(params.studentWallet),
+      student,
     })
   )
 
@@ -110,6 +116,7 @@ export async function recordScoreForSubmission(params: {
     signature,
     schoolBoardPda: schoolBoard.toBase58(),
     processedAchievementPda: processedAchievement.toBase58(),
+    studentScorePda: studentScore.toBase58(),
     alreadyProcessed: false,
   }
 }

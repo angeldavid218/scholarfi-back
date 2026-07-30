@@ -396,6 +396,31 @@ router
     router
       .group(() => {
         router
+          .get('/students', [
+            () => import('#controllers/leaderboard_controller'),
+            'students',
+          ])
+          .as('listStudentLeaderboard')
+          .use(middleware.role({ roles: ['student', 'teacher', 'school_admin'] }))
+      })
+      .prefix('leaderboard')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/me', [() => import('#controllers/achievements_controller'), 'me'])
+          .as('listMyAchievements')
+          .use(middleware.role({ roles: ['student'] }))
+      })
+      .prefix('achievements')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
           .get('/:studentId/balance', [
             () => import('#controllers/students_controller'),
             'showBalance',

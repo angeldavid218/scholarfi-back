@@ -9,6 +9,7 @@ import {
   decodeGlobalConfig,
   decodeProcessedAchievement,
   decodeSchoolBoard,
+  decodeStudentScore,
   explorerAddressUrl,
   explorerTxUrl,
   getLeaderboardProgramId,
@@ -19,6 +20,7 @@ import {
   processedPda,
   schoolPda,
   sendIx,
+  studentScorePda,
 } from '#services/leaderboard/school_score_client'
 
 export default class SchoolScoreDevnet extends BaseCommand {
@@ -74,6 +76,7 @@ export default class SchoolScoreDevnet extends BaseCommand {
     const [globalConfig] = configPda(programId)
     const [schoolBoard] = schoolPda(programId, institutionId)
     const [processedAchievement] = processedPda(programId, submissionHash)
+    const [studentScore] = studentScorePda(programId, schoolBoard, student)
 
     this.logger.info(`RPC: ${connection.rpcEndpoint}`)
     this.logger.info(`Program: ${programId.toBase58()}`)
@@ -143,6 +146,7 @@ export default class SchoolScoreDevnet extends BaseCommand {
         globalConfig,
         schoolBoard,
         processedAchievement,
+        studentScore,
         oracle: oracle.publicKey,
         payer: oracle.publicKey,
         submissionHash,
@@ -156,13 +160,15 @@ export default class SchoolScoreDevnet extends BaseCommand {
     const configInfo = await connection.getAccountInfo(globalConfig)
     const boardInfo = await connection.getAccountInfo(schoolBoard)
     const processedInfo = await connection.getAccountInfo(processedAchievement)
-    if (!configInfo || !boardInfo || !processedInfo) {
+    const studentScoreInfo = await connection.getAccountInfo(studentScore)
+    if (!configInfo || !boardInfo || !processedInfo || !studentScoreInfo) {
       throw new Error('Expected PDAs missing after transactions')
     }
 
     const config = decodeGlobalConfig(Buffer.from(configInfo.data))
     const board = decodeSchoolBoard(Buffer.from(boardInfo.data))
     const processed = decodeProcessedAchievement(Buffer.from(processedInfo.data))
+    const studentAcc = decodeStudentScore(Buffer.from(studentScoreInfo.data))
 
     this.logger.info('--- GlobalConfig ---')
     this.logger.info(`authority=${config.authority.toBase58()}`)
@@ -178,11 +184,17 @@ export default class SchoolScoreDevnet extends BaseCommand {
     this.logger.info('--- ProcessedAchievement ---')
     this.logger.info(`points=${processed.points} student=${processed.student.toBase58()}`)
 
+    this.logger.info('--- StudentScore ---')
+    this.logger.info(
+      `points=${studentAcc.points} contributions=${studentAcc.contributionCount} student=${studentAcc.student.toBase58()}`
+    )
+
     this.logger.info('--- Explorer ---')
     this.logger.info(`program: ${explorerAddressUrl(programId.toBase58())}`)
     this.logger.info(`GlobalConfig: ${explorerAddressUrl(globalConfig.toBase58())}`)
     this.logger.info(`SchoolBoard: ${explorerAddressUrl(schoolBoard.toBase58())}`)
     this.logger.info(`ProcessedAchievement: ${explorerAddressUrl(processedAchievement.toBase58())}`)
+    this.logger.info(`StudentScore: ${explorerAddressUrl(studentScore.toBase58())}`)
     for (const sig of signatures) {
       this.logger.info(`tx: ${explorerTxUrl(sig)}`)
     }

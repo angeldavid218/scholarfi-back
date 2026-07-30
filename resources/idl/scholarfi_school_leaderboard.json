@@ -224,6 +224,34 @@
           }
         },
         {
+          "name": "student_score",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  117,
+                  100,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "school_board"
+              },
+              {
+                "kind": "arg",
+                "path": "student"
+              }
+            ]
+          }
+        },
+        {
           "name": "oracle",
           "signer": true
         },
@@ -340,6 +368,19 @@
         31,
         254,
         188
+      ]
+    },
+    {
+      "name": "StudentScore",
+      "discriminator": [
+        64,
+        69,
+        64,
+        99,
+        5,
+        103,
+        81,
+        17
       ]
     }
   ],
@@ -478,6 +519,37 @@
           {
             "name": "last_updated",
             "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StudentScore",
+      "docs": [
+        "Per-student aggregate under one school (outstanding-student ranking)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "school",
+            "type": "pubkey"
+          },
+          {
+            "name": "student",
+            "type": "pubkey"
+          },
+          {
+            "name": "points",
+            "type": "u64"
+          },
+          {
+            "name": "contribution_count",
+            "type": "u64"
           },
           {
             "name": "bump",

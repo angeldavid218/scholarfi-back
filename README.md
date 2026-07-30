@@ -98,17 +98,15 @@ node ace demo:seed
 
 # Reset to deterministic baseline every time
 node ace demo:reset
-
-# Institution + users only (no tasks/submissions/rewards)
-node ace demo:reset --starter
-node ace demo:seed --starter
 ```
 
-Default rich dataset (without `--starter`):
+Baseline (no manual tasks — Classroom is the task/reward path):
 
 - `1` active institution (`SFA-DEMO`)
-- `1` school admin, `1` teacher, `5` students (with associations)
-- **8** teacher tasks (7 active, 1 closed), **4** submissions in teacher queue (`pending`), **2** in school-admin queue (`validated`), **2** open tasks without submission; includes approved submission + posted reward + balance for student 1
+- `1` school admin, `1` teacher, `5` students (with associations + groups)
+- Tasks/submissions/rewards come from mock Google Classroom after connect → import → sync
+
+**First-5 milestone demo:** with `GOOGLE_CLASSROOM_MOCK=true`, Matematicas 3A has **5** coursework items. `demo.student1@scholarfi.test` and `student-alpha@school.edu` have grade `8` (≥ default min grade). Import all + sync all rewards those students on all 5 tasks.
 
 After seed/reset, confirm:
 
@@ -129,17 +127,22 @@ After seed/reset, confirm:
 Requires `SOLANA_RPC_URL` and mint/oracle secrets. If `npm install sas-lib` fails (root-owned `node_modules`), keep `vendor-sas/` (local `npm install sas-lib` there) — the app loads it via `app/services/attestation/sas_sdk.ts`.
 
 ```bash
-# Leaderboard PDAs
+# Leaderboard PDAs (SchoolBoard + StudentScore)
 node ace school-score:devnet --points=10
 
-# One-time SAS Credential + schema (pin PDAs into .env)
+# One-time SAS Credential + achievement + milestone schemas (pin PDAs into .env)
 node ace sas:setup
 
-# Issue attestation (+ optional leaderboard score with same submission_hash)
+# Manual per-submission attestation smoke (optional; not used on reward path)
 node ace sas:attest --institution-id=1 --submission-id=900101 --points=10 --record-score
+
+# Off-sync milestone attestations (MVP: 5 primeras actividades)
+node ace sas:attest-milestones
+# node ace sas:attest-milestones --institution-id=1
+# node ace sas:attest-milestones --student=42
 ```
 
-Set `SAS_ENABLED=true` so `issueRewardForSubmission` best-effort creates attestation + `record_score` after a confirmed on-chain mint.
+With on-chain institutions, `issueRewardForSubmission` best-effort calls `record_score` after a confirmed mint (SchoolBoard + StudentScore). SAS milestone attestations are **not** issued on the sync/reward path — run `sas:attest-milestones` periodically (or after demos).
 
 ### Demo seed users
 

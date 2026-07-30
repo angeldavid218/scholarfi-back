@@ -10,12 +10,28 @@ export function taskHash(taskId: number | string): Buffer {
   return createHash('sha256').update(`scholarfi:task:${taskId}`).digest()
 }
 
-/** Unique nonce pubkey per achievement (not the student wallet). */
-export function nonceFromSubmissionHash(hash: Buffer): PublicKey {
+/** Unique nonce pubkey per achievement hash (not the student wallet). */
+export function nonceFromHash(hash: Buffer): PublicKey {
   if (hash.length !== 32) {
-    throw new Error('submission_hash must be 32 bytes')
+    throw new Error('hash must be 32 bytes')
   }
   return Keypair.fromSeed(hash).publicKey
+}
+
+/** @deprecated Prefer nonceFromHash */
+export function nonceFromSubmissionHash(hash: Buffer): PublicKey {
+  return nonceFromHash(hash)
+}
+
+/** Milestone achievement hash (e.g. first_5_activities for a student). */
+export function achievementHash(achievementKey: string, studentId: number | string): Buffer {
+  return createHash('sha256')
+    .update(`scholarfi:achievement:${achievementKey}:${studentId}`)
+    .digest()
+}
+
+export function studentIdHash(studentId: number | string): Buffer {
+  return createHash('sha256').update(`scholarfi:student:${studentId}`).digest()
 }
 
 export function hashToHex(hash: Buffer): string {

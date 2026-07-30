@@ -351,6 +351,35 @@ export class SimulatedBalanceSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class StudentAchievementAttestationSchema extends BaseModel {
+  static $columns = ['achievementHash', 'achievementKey', 'attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'institutionId', 'status', 'studentId', 'threshold', 'updatedAt'] as const
+  $columns = StudentAchievementAttestationSchema.$columns
+  @column()
+  declare achievementHash: string
+  @column()
+  declare achievementKey: string
+  @column()
+  declare attestationPda: string | null
+  @column()
+  declare attestationSignature: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare status: string
+  @column()
+  declare studentId: number
+  @column()
+  declare threshold: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class SubjectSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'id', 'institutionId', 'name', 'status', 'updatedAt'] as const
   $columns = SubjectSchema.$columns
@@ -371,7 +400,7 @@ export class SubjectSchema extends BaseModel {
 }
 
 export class SubmissionChainProofSchema extends BaseModel {
-  static $columns = ['attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'leaderboardSignature', 'processedAchievementPda', 'schoolBoardPda', 'status', 'submissionHash', 'submissionId', 'updatedAt'] as const
+  static $columns = ['attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'leaderboardSignature', 'processedAchievementPda', 'schoolBoardPda', 'status', 'studentScorePda', 'submissionHash', 'submissionId', 'updatedAt'] as const
   $columns = SubmissionChainProofSchema.$columns
   @column()
   declare attestationPda: string | null
@@ -391,6 +420,8 @@ export class SubmissionChainProofSchema extends BaseModel {
   declare schoolBoardPda: string | null
   @column()
   declare status: string
+  @column()
+  declare studentScorePda: string | null
   @column()
   declare submissionHash: string
   @column()

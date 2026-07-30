@@ -46,6 +46,14 @@ export type ProcessedAchievementAccount = {
   bump: number
 }
 
+export type StudentScoreAccount = {
+  school: PublicKey
+  student: PublicKey
+  points: bigint
+  contributionCount: bigint
+  bump: number
+}
+
 function loadKeypairFromSecret(secret: string): Keypair {
   const trimmed = secret.trim()
   if (trimmed.startsWith('[')) {
@@ -101,6 +109,17 @@ export function schoolPda(programId: PublicKey, institutionId: bigint | number):
 
 export function processedPda(programId: PublicKey, submissionHash: Buffer): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([Buffer.from('processed'), submissionHash], programId)
+}
+
+export function studentScorePda(
+  programId: PublicKey,
+  schoolBoard: PublicKey,
+  student: PublicKey
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('student'), schoolBoard.toBuffer(), student.toBuffer()],
+    programId
+  )
 }
 
 export function nameHashFromLabel(label: string): Buffer {
@@ -188,6 +207,20 @@ export function decodeProcessedAchievement(data: Buffer): ProcessedAchievementAc
   return { submissionHash, school, student, points, seasonId, bump }
 }
 
+export function decodeStudentScore(data: Buffer): StudentScoreAccount {
+  let o = 8
+  const school = new PublicKey(data.subarray(o, o + 32))
+  o += 32
+  const student = new PublicKey(data.subarray(o, o + 32))
+  o += 32
+  const points = readU64le(data, o)
+  o += 8
+  const contributionCount = readU64le(data, o)
+  o += 8
+  const bump = data[o]
+  return { school, student, points, contributionCount, bump }
+}
+
 export async function accountExists(connection: Connection, address: PublicKey): Promise<boolean> {
   const info = await connection.getAccountInfo(address)
   return info !== null
@@ -241,6 +274,7 @@ export function buildRecordScoreIx(params: {
   globalConfig: PublicKey
   schoolBoard: PublicKey
   processedAchievement: PublicKey
+  studentScore: PublicKey
   oracle: PublicKey
   payer: PublicKey
   submissionHash: Buffer
@@ -259,6 +293,7 @@ export function buildRecordScoreIx(params: {
       { pubkey: params.globalConfig, isSigner: false, isWritable: false },
       { pubkey: params.schoolBoard, isSigner: false, isWritable: true },
       { pubkey: params.processedAchievement, isSigner: false, isWritable: true },
+      { pubkey: params.studentScore, isSigner: false, isWritable: true },
       { pubkey: params.oracle, isSigner: true, isWritable: false },
       { pubkey: params.payer, isSigner: true, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },

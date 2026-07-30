@@ -354,6 +354,18 @@ const routes = {
     tokens: [{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"catalog","end":""},{"old":"/api/v1/rewards/catalog/:id","type":1,"val":"id","end":""}],
     types: placeholder as Registry['updateCatalogReward']['types'],
   },
+  'listStudentLeaderboard': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/leaderboard/students',
+    tokens: [{"old":"/api/v1/leaderboard/students","type":0,"val":"api","end":""},{"old":"/api/v1/leaderboard/students","type":0,"val":"v1","end":""},{"old":"/api/v1/leaderboard/students","type":0,"val":"leaderboard","end":""},{"old":"/api/v1/leaderboard/students","type":0,"val":"students","end":""}],
+    types: placeholder as Registry['listStudentLeaderboard']['types'],
+  },
+  'listMyAchievements': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/achievements/me',
+    tokens: [{"old":"/api/v1/achievements/me","type":0,"val":"api","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"v1","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"achievements","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"me","end":""}],
+    types: placeholder as Registry['listMyAchievements']['types'],
+  },
   'studentBalance': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/students/:studentId/balance',

@@ -1,11 +1,13 @@
 import { BaseCommand } from '@adonisjs/core/ace'
 import {
   createCredentialIfNeeded,
+  createMilestoneSchemaIfNeeded,
   createSchemaIfNeeded,
   createSasConnection,
   explorerAddressUrl,
   explorerTxUrl,
   getSasCredentialName,
+  getSasMilestoneSchemaName,
   getSasSchemaName,
   getSasSchemaVersion,
   loadSasAuthorityKeypair,
@@ -16,7 +18,7 @@ import {
 export default class SasSetup extends BaseCommand {
   static commandName = 'sas:setup'
   static description =
-    'Create SAS Credential + scholarfi.achievement.v1 schema on Devnet (idempotent)'
+    'Create SAS Credential + achievement + milestone schemas on Devnet (idempotent)'
   static options = {
     startApp: true,
   }
@@ -32,6 +34,7 @@ export default class SasSetup extends BaseCommand {
     this.logger.info(`Authorized signer: ${authorizedSigner.publicKey.toBase58()}`)
     this.logger.info(`Credential name: ${getSasCredentialName()}`)
     this.logger.info(`Schema: ${getSasSchemaName()} v${getSasSchemaVersion()}`)
+    this.logger.info(`Milestone schema: ${getSasMilestoneSchemaName()}`)
 
     const cred = await createCredentialIfNeeded({
       connection,
@@ -50,19 +53,33 @@ export default class SasSetup extends BaseCommand {
       credentialPda: cred.credentialPda,
     })
     if (schema.created) {
-      this.logger.success(`Schema created: ${schema.signature}`)
+      this.logger.success(`Achievement schema created: ${schema.signature}`)
     } else {
-      this.logger.info('Schema already exists')
+      this.logger.info('Achievement schema already exists')
+    }
+
+    const milestone = await createMilestoneSchemaIfNeeded({
+      connection,
+      authority,
+      credentialPda: cred.credentialPda,
+    })
+    if (milestone.created) {
+      this.logger.success(`Milestone schema created: ${milestone.signature}`)
+    } else {
+      this.logger.info('Milestone schema already exists')
     }
 
     this.logger.info('--- Pin these in .env ---')
     this.logger.info(`SAS_CREDENTIAL_PDA=${cred.credentialPda}`)
     this.logger.info(`SAS_SCHEMA_PDA=${schema.schemaPda}`)
+    this.logger.info(`SAS_MILESTONE_SCHEMA_PDA=${milestone.schemaPda}`)
 
     this.logger.info('--- Explorer ---')
     this.logger.info(`credential: ${explorerAddressUrl(cred.credentialPda)}`)
     this.logger.info(`schema: ${explorerAddressUrl(schema.schemaPda)}`)
+    this.logger.info(`milestone schema: ${explorerAddressUrl(milestone.schemaPda)}`)
     if (cred.signature) this.logger.info(`credential tx: ${explorerTxUrl(cred.signature)}`)
     if (schema.signature) this.logger.info(`schema tx: ${explorerTxUrl(schema.signature)}`)
+    if (milestone.signature) this.logger.info(`milestone tx: ${explorerTxUrl(milestone.signature)}`)
   }
 }

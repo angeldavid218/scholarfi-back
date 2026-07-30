@@ -26,6 +26,7 @@ export const DEMO_STUDENT_PASSWORD = 'DemoPass123!'
 
 export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
+    // Grade ≥ minGrade: import + sync all 5 Matematicas coursework → first_5_activities milestone.
     email: 'demo.student1@scholarfi.test',
     fullName: 'Demo Student One',
     registrationNumber: 'MAT-001',

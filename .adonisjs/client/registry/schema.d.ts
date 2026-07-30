@@ -703,6 +703,30 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'listStudentLeaderboard': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/leaderboard/students'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/leaderboard_controller').default['students']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/leaderboard_controller').default['students']>>>
+    }
+  }
+  'listMyAchievements': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/achievements/me'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
+    }
+  }
   'studentBalance': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/students/:studentId/balance'

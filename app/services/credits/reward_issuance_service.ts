@@ -17,7 +17,7 @@ import {
   makeTokenServiceForInstitution,
 } from '#services/tokens/factory'
 import {
-  maybeIssueChainProofsAfterMint,
+  maybeRecordLeaderboardAfterMint,
   resolveStudentWalletAfterMint,
 } from '#services/attestation/chain_proofs_hook'
 
@@ -115,7 +115,7 @@ export async function issueRewardForSubmission(
 
     if (onChain && minted.status === 'confirmed') {
       const wallet = await resolveStudentWalletAfterMint(params.studentId, null)
-      await maybeIssueChainProofsAfterMint({
+      await maybeRecordLeaderboardAfterMint({
         institutionId: params.institutionId,
         studentId: params.studentId,
         submissionId: params.submissionId,

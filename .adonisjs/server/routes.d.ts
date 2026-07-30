@@ -62,6 +62,8 @@ export type ScannedRoutes = {
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
     'createCatalogReward': { paramsTuple?: []; params?: {} }
     'updateCatalogReward': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
+    'listMyAchievements': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'createRedemption': { paramsTuple?: []; params?: {} }
@@ -98,6 +100,8 @@ export type ScannedRoutes = {
     'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
+    'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
+    'listMyAchievements': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'listRedemptions': { paramsTuple?: []; params?: {} }
@@ -131,6 +135,8 @@ export type ScannedRoutes = {
     'rewardHistorySummary': { paramsTuple?: []; params?: {} }
     'listInstitutionRewardHistory': { paramsTuple?: []; params?: {} }
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
+    'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
+    'listMyAchievements': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'listRedemptions': { paramsTuple?: []; params?: {} }
