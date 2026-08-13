@@ -81,4 +81,56 @@ test.group('Account profile', (group) => {
     assert.equal(payload.institutionName, 'Demo Institution')
     assert.deepEqual(payload.roles.sort(), ['school_admin', 'teacher'])
   })
+
+  test('authenticated user can change password with current password', async ({ client, assert }) => {
+    const user = await User.create({
+      email: 'change-password-user@example.com',
+      password: 'Secret123!',
+      fullName: 'Change Password User',
+      isActive: true,
+      accountStatus: 'active',
+    })
+    await assignRoleToUser(user.id, 'student', 'Student')
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: 'change-password-user@example.com',
+      password: 'Secret123!',
+    })
+    loginResponse.assertStatus(200)
+    const token = (loginResponse.body() as any).data.token as string
+
+    const badCurrent = await client
+      .patch('/api/v1/account/password')
+      .header('authorization', `Bearer ${token}`)
+      .json({
+        currentPassword: 'WrongPass1!',
+        password: 'NewSecret99!',
+        passwordConfirmation: 'NewSecret99!',
+      })
+    badCurrent.assertStatus(400)
+    assert.equal((badCurrent.body() as any).error.code, 'CURRENT_PASSWORD_INVALID')
+
+    const ok = await client
+      .patch('/api/v1/account/password')
+      .header('authorization', `Bearer ${token}`)
+      .json({
+        currentPassword: 'Secret123!',
+        password: 'NewSecret99!',
+        passwordConfirmation: 'NewSecret99!',
+      })
+    ok.assertStatus(200)
+    assert.equal((ok.body() as any).data.updated, true)
+
+    const oldLogin = await client.post('/api/v1/auth/login').json({
+      email: 'change-password-user@example.com',
+      password: 'Secret123!',
+    })
+    oldLogin.assertStatus(401)
+
+    const newLogin = await client.post('/api/v1/auth/login').json({
+      email: 'change-password-user@example.com',
+      password: 'NewSecret99!',
+    })
+    newLogin.assertStatus(200)
+  })
 })

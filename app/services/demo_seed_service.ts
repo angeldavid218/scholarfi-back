@@ -1,4 +1,5 @@
 import Institution from '#models/institution'
+import { DEMO_CATALOG_REWARDS } from '#fixtures/demo_catalog_rewards'
 import { DEMO_STUDENTS } from '#fixtures/demo_students'
 import { buildGroupDisplayName } from '#services/group_upsert_service'
 import { DateTime } from 'luxon'
@@ -343,12 +344,26 @@ export async function seedDemoBaseline(options: { forceReset: boolean }) {
 
     await trx.table('group_students').insert(groupStudentRows)
 
+    await trx.table('catalog_rewards').insert(
+      DEMO_CATALOG_REWARDS.map((reward, index) => ({
+        institution_id: institution.id,
+        title: reward.title,
+        description: reward.description,
+        credit_cost: reward.creditCost,
+        is_active: true,
+        source: 'internal',
+        created_at: ts(2 + index).toJSDate(),
+        updated_at: null,
+      }))
+    )
+
     return {
       institutionId: institution.id,
       superAdminId,
       schoolAdminId,
       teacherId,
       studentIds: [...studentIdsByEmail.values()],
+      catalogRewardCount: DEMO_CATALOG_REWARDS.length,
     }
   })
 }

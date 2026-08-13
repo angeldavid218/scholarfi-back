@@ -22,6 +22,15 @@ export type DemoStudentFixture = {
   seedGroups: DemoStudentGroupEnrollment[]
 }
 
+/** Roster-only mock student (not created by demo:seed) for Sync students create-path testing. */
+export type ClassroomMockRosterOnlyStudent = {
+  googleUserId: string
+  email: string
+  fullName: string
+  /** Mock course ids this student appears on */
+  courseIds: string[]
+}
+
 export const DEMO_STUDENT_PASSWORD = 'DemoPass123!'
 
 export const DEMO_STUDENTS: DemoStudentFixture[] = [
@@ -132,10 +141,85 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
   },
 ]
 
+/**
+ * Extra Classroom roster members used only when GOOGLE_CLASSROOM_MOCK=true.
+ * Not seeded by demo:seed so Sync students can exercise account creation.
+ */
+export const CLASSROOM_MOCK_ROSTER_ONLY_STUDENTS: ClassroomMockRosterOnlyStudent[] = [
+  {
+    googleUserId: 'gc-roster-delta',
+    email: 'student-delta@school.edu',
+    fullName: 'Student Delta',
+    courseIds: ['gc-course-1', 'gc-course-2'],
+  },
+  {
+    googleUserId: 'gc-roster-epsilon',
+    email: 'student-epsilon@school.edu',
+    fullName: 'Student Epsilon',
+    courseIds: ['gc-course-1'],
+  },
+]
+
 export const CLASSROOM_MOCK_STUDENT_GRADES = DEMO_STUDENTS.map((student) => ({
   email: student.email,
   assignedGrade: student.classroomAssignedGrade,
 }))
+
+export type ClassroomMockRosterMember = {
+  googleUserId: string
+  email: string
+  fullName: string
+}
+
+const COURSE_ID_BY_CLASS_NAME: Record<string, string> = {
+  'Matematicas 3A': 'gc-course-1',
+  'Ciencias 3A': 'gc-course-2',
+}
+
+/** Stable mock Google user ids for demo students (used by roster sync fixtures). */
+export function classroomMockGoogleUserIdForEmail(email: string): string {
+  return `gc-user-${email.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+}
+
+/**
+ * Mock Classroom roster for a course id when GOOGLE_CLASSROOM_MOCK=true.
+ * Includes pilot DEMO_STUDENTS plus roster-only fixtures.
+ */
+export function listClassroomMockRosterForCourse(courseId: string): ClassroomMockRosterMember[] {
+  const members: ClassroomMockRosterMember[] = []
+  const seen = new Set<string>()
+
+  for (const student of DEMO_STUDENTS) {
+    const onCourse = student.seedGroups.some((group) => {
+      if (!group.classroomPilot) return false
+      const className = group.className ?? group.subject
+      return COURSE_ID_BY_CLASS_NAME[className] === courseId
+    })
+    if (!onCourse) continue
+    const email = student.email.trim().toLowerCase()
+    if (seen.has(email)) continue
+    seen.add(email)
+    members.push({
+      googleUserId: classroomMockGoogleUserIdForEmail(email),
+      email,
+      fullName: student.fullName,
+    })
+  }
+
+  for (const student of CLASSROOM_MOCK_ROSTER_ONLY_STUDENTS) {
+    if (!student.courseIds.includes(courseId)) continue
+    const email = student.email.trim().toLowerCase()
+    if (seen.has(email)) continue
+    seen.add(email)
+    members.push({
+      googleUserId: student.googleUserId,
+      email,
+      fullName: student.fullName,
+    })
+  }
+
+  return members
+}
 
 /** Rows for /teacher/clases CSV import aligned with mock Classroom courses. */
 export function buildDemoClassroomRosterCsv(): string {

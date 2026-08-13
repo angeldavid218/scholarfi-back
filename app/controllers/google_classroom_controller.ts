@@ -20,6 +20,7 @@ import {
   listGoogleClassroomCourses,
 } from '#services/integrations/google_classroom/client'
 import { upsertGoogleClassroomGroup } from '#services/integrations/google_classroom/group_link_service'
+import { syncClassroomStudentsForTeacher } from '#services/integrations/google_classroom/student_roster_sync_service'
 import {
   buildGoogleAuthUrl,
   deleteTeacherIntegration,
@@ -30,7 +31,11 @@ import {
   fetchGoogleUserInfo,
 } from '#services/integrations/google_classroom/oauth_service'
 import { verifyOAuthState } from '#services/integrations/google_classroom/oauth_state'
-import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
+import ClassroomSyncRun from '#models/classroom_sync_run'
+import {
+  enqueueClassroomSyncTask,
+  serializeClassroomSyncRun,
+} from '#services/integrations/google_classroom/sync_job_service'
 import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
 import type { GoogleClassroomSyncMetadata } from '#services/integrations/google_classroom/types'
 import {
@@ -166,6 +171,57 @@ export default class GoogleClassroomController {
 
     const courseWork = await listGoogleClassroomCourseWork(refreshToken, params.courseId)
     return { data: courseWork }
+  }
+
+  async syncStudents({ auth, response, request }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    if (!user.institutionId) {
+      return response.forbidden({
+        error: {
+          code: 'INSTITUTION_SCOPE_REQUIRED',
+          message: 'Teacher must belong to an institution',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const refreshToken = await getTeacherRefreshToken(user.id)
+    if (!refreshToken) {
+      return response.unprocessableEntity({
+        error: {
+          code: 'GOOGLE_CLASSROOM_NOT_CONNECTED',
+          message: 'Connect Google Classroom before syncing students',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    try {
+      const summary = await syncClassroomStudentsForTeacher({
+        teacherId: user.id,
+        institutionId: user.institutionId,
+        refreshToken,
+      })
+      return { data: summary }
+    } catch (error) {
+      gcLogError(
+        'Classroom student roster sync failed',
+        {
+          requestId: request.id(),
+          teacherId: user.id,
+          institutionId: user.institutionId,
+        },
+        error
+      )
+      return response.badRequest({
+        error: {
+          code: 'CLASSROOM_STUDENT_SYNC_FAILED',
+          message: error instanceof Error ? error.message : 'Failed to sync Classroom students',
+          requestId: request.id(),
+        },
+      })
+    }
   }
 
   async createTaskFromClassroom({ auth, request, response }: HttpContext) {
@@ -347,35 +403,32 @@ export default class GoogleClassroomController {
     }
 
     try {
-      gcLogInfo('Classroom sync HTTP request received', {
+      gcLogInfo('Classroom sync HTTP enqueue received', {
         requestId: request.id(),
         taskId,
         teacherId: user.id,
         institutionId: user.institutionId,
       })
 
-      const result = await syncGoogleClassroomTask({
+      const enqueued = await enqueueClassroomSyncTask({
         taskId,
         teacherId: user.id,
         institutionId: user.institutionId,
         requestId: request.id(),
       })
 
-      gcLogInfo('Classroom sync HTTP request completed', {
-        requestId: request.id(),
-        taskId,
-        teacherId: user.id,
-        institutionId: user.institutionId,
-      }, {
-        rewarded: result.rewarded,
-        budgetRemaining: result.budgetRemaining,
+      return response.accepted({
+        data: {
+          runId: enqueued.runId,
+          taskId: enqueued.taskId,
+          status: enqueued.status,
+          deduped: enqueued.deduped,
+        },
       })
-
-      return { data: result }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'sync_failed'
       gcLogError(
-        'Classroom sync HTTP request failed',
+        'Classroom sync HTTP enqueue failed',
         {
           requestId: request.id(),
           taskId,
@@ -392,5 +445,47 @@ export default class GoogleClassroomController {
         },
       })
     }
+  }
+
+  async showSyncRun({ auth, request, response, params }: HttpContext) {
+    const user = auth.getUserOrFail()
+    if (!user.institutionId) {
+      return response.forbidden({
+        error: {
+          code: 'INSTITUTION_SCOPE_REQUIRED',
+          message: 'Teacher must belong to an institution',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const runId = Number(params.runId)
+    if (!Number.isFinite(runId)) {
+      return response.badRequest({
+        error: {
+          code: 'INVALID_RUN_ID',
+          message: 'Invalid sync run id',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const run = await ClassroomSyncRun.query()
+      .where('id', runId)
+      .andWhere('teacher_id', user.id)
+      .andWhere('institution_id', user.institutionId)
+      .first()
+
+    if (!run) {
+      return response.notFound({
+        error: {
+          code: 'SYNC_RUN_NOT_FOUND',
+          message: 'Classroom sync run not found',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    return { data: serializeClassroomSyncRun(run) }
   }
 }

@@ -49,6 +49,7 @@ Default API URL: `http://localhost:3333`
 ## Script matrix
 
 - `npm run dev` — API with HMR
+- `npm run queue:work` — `@adonisjs/queue` worker (`node ace queue:work`)
 - `npm run build` — production build (`node ace build`)
 - `npm start` — run built app (`node bin/server.js` after `build`)
 - `npm run lint` — ESLint
@@ -69,7 +70,20 @@ Teacher endpoints (require `GOOGLE_*` env vars):
 - `GET /api/v1/integrations/google-classroom/courses`
 - `GET /api/v1/integrations/google-classroom/courses/:courseId/coursework`
 - `POST /api/v1/tasks/from-classroom` — import rewarded GC assignment
-- `POST /api/v1/tasks/:id/sync-classroom` — sync grades and distribute rewards (FIFO until budget = 0)
+- `POST /api/v1/tasks/:id/sync-classroom` — enqueue Classroom sync (202 + `runId`; rewards run in a worker)
+- `GET /api/v1/classroom-sync-runs/:runId` — poll sync job status/result
+
+### Classroom sync worker (`@adonisjs/queue`)
+
+Sync no longer blocks the HTTP request. Grades/rewards run via `SyncClassroomTaskJob` on `@adonisjs/queue` (Database adapter by default):
+
+1. Start the API: `npm run dev` (or `npm start`)
+2. Start the worker in a second terminal: `npm run queue:work` (`node ace queue:work --queue=classroom`)
+
+| `QUEUE_DRIVER` | Behavior |
+|----------------|----------|
+| `database` (default outside tests) | Enqueue to DB queue tables; requires `npm run queue:work` |
+| `sync` (default in tests) | Process the job inline in the API process (no worker) |
 
 
 | Area | Prefix | Roles (high level) |
@@ -104,9 +118,12 @@ Baseline (no manual tasks — Classroom is the task/reward path):
 
 - `1` active institution (`SFA-DEMO`)
 - `1` school admin, `1` teacher, `5` students (with associations + groups)
+- `3` internal marketplace rewards (entrada al cine 500, beca de transporte ONG, kit de útiles)
 - Tasks/submissions/rewards come from mock Google Classroom after connect → import → sync
 
 **First-5 milestone demo:** with `GOOGLE_CLASSROOM_MOCK=true`, Matematicas 3A has **5** coursework items. `demo.student1@scholarfi.test` and `student-alpha@school.edu` have grade `8` (≥ default min grade). Import all + sync all rewards those students on all 5 tasks.
+
+**Sync students:** with mock Classroom connected, teacher **Sincronizar estudiantes** provisions roster emails (including fixture-only `student-delta@school.edu` / `student-epsilon@school.edu`) as active accounts with default password `scholarfi-pass` (`CLASSROOM_STUDENT_DEFAULT_PASSWORD`).
 
 After seed/reset, confirm:
 

@@ -34,3 +34,12 @@ export const loginValidator = vine.create({
   email: email(),
   password: vine.string(),
 })
+
+/**
+ * Validator for authenticated password change
+ */
+export const changePasswordValidator = vine.create({
+  currentPassword: vine.string().minLength(1).maxLength(32),
+  password: password(),
+  passwordConfirmation: password().sameAs('password'),
+})

@@ -41,12 +41,14 @@ export type ScannedRoutes = {
     'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'createTaskFromClassroom': { paramsTuple?: []; params?: {} }
     'syncClassroomTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'showClassroomSyncRun': { paramsTuple: [ParamValue]; params: {'runId': ParamValue} }
     'googleClassroomCallback': { paramsTuple?: []; params?: {} }
     'connectGoogleClassroom': { paramsTuple?: []; params?: {} }
     'googleClassroomStatus': { paramsTuple?: []; params?: {} }
     'disconnectGoogleClassroom': { paramsTuple?: []; params?: {} }
     'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
     'listGoogleClassroomCourseWork': { paramsTuple: [ParamValue]; params: {'courseId': ParamValue} }
+    'syncGoogleClassroomStudents': { paramsTuple?: []; params?: {} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
@@ -72,6 +74,7 @@ export type ScannedRoutes = {
     'rejectRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'tokenHealth': { paramsTuple?: []; params?: {} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
+    'profile.changePassword': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'index': { paramsTuple?: []; params?: {} }
@@ -88,6 +91,7 @@ export type ScannedRoutes = {
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'showClassroomSyncRun': { paramsTuple: [ParamValue]; params: {'runId': ParamValue} }
     'googleClassroomCallback': { paramsTuple?: []; params?: {} }
     'googleClassroomStatus': { paramsTuple?: []; params?: {} }
     'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
@@ -123,6 +127,7 @@ export type ScannedRoutes = {
     'listStudentAvailableTasks': { paramsTuple?: []; params?: {} }
     'teacherTasksSummary': { paramsTuple?: []; params?: {} }
     'listTeacherTasks': { paramsTuple?: []; params?: {} }
+    'showClassroomSyncRun': { paramsTuple: [ParamValue]; params: {'runId': ParamValue} }
     'googleClassroomCallback': { paramsTuple?: []; params?: {} }
     'googleClassroomStatus': { paramsTuple?: []; params?: {} }
     'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
@@ -164,6 +169,7 @@ export type ScannedRoutes = {
     'createTaskFromClassroom': { paramsTuple?: []; params?: {} }
     'syncClassroomTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'connectGoogleClassroom': { paramsTuple?: []; params?: {} }
+    'syncGoogleClassroomStudents': { paramsTuple?: []; params?: {} }
     'createSubmission': { paramsTuple?: []; params?: {} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
     'createCatalogReward': { paramsTuple?: []; params?: {} }
@@ -180,6 +186,7 @@ export type ScannedRoutes = {
     'updateCatalogReward': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'approveRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'rejectRedemption': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'profile.changePassword': { paramsTuple?: []; params?: {} }
   }
   DELETE: {
     'disconnectGoogleClassroom': { paramsTuple?: []; params?: {} }

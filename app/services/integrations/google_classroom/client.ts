@@ -1,5 +1,8 @@
 import googleClassroomConfig from '#config/google_classroom'
-import { CLASSROOM_MOCK_STUDENT_GRADES } from '#fixtures/demo_students'
+import {
+  CLASSROOM_MOCK_STUDENT_GRADES,
+  listClassroomMockRosterForCourse,
+} from '#fixtures/demo_students'
 import {
   gcLogDebug,
   gcLogError,
@@ -318,35 +321,76 @@ export async function getGoogleClassroomCourseWork(
   return items.find((item) => item.id === courseWorkId) ?? null
 }
 
+export type ClassroomRosterMember = {
+  googleUserId: string
+  email: string
+  fullName: string | null
+}
+
+export async function listGoogleClassroomCourseRoster(
+  refreshToken: string,
+  courseId: string,
+  logCtx?: GoogleClassroomLogContext
+): Promise<ClassroomRosterMember[]> {
+  if (googleClassroomConfig.mockMode) {
+    const members = listClassroomMockRosterForCourse(courseId).map((row) => ({
+      googleUserId: row.googleUserId,
+      email: row.email,
+      fullName: row.fullName,
+    }))
+    gcLogInfo('Using mock Classroom course roster', logCtx ?? {}, {
+      courseId,
+      rosterCount: members.length,
+      emails: members.map((row) => row.email),
+    })
+    return members
+  }
+
+  const accessToken = await getGoogleClassroomAccessToken(refreshToken, logCtx)
+  const path = `/courses/${encodeURIComponent(courseId)}/students`
+
+  gcLogInfo('Listing Classroom course students for roster sync', logCtx ?? {}, { path })
+
+  const rows = await listAllPages<{
+    profile?: {
+      id?: string
+      emailAddress?: string
+      name?: { fullName?: string }
+    }
+  }>(accessToken, path, 'students', logCtx)
+
+  const members: ClassroomRosterMember[] = []
+  for (const row of rows) {
+    const userId = row.profile?.id
+    const email = row.profile?.emailAddress
+    if (!userId || !email) continue
+    const fullName = row.profile?.name?.fullName?.trim() || null
+    members.push({
+      googleUserId: userId,
+      email: email.trim().toLowerCase(),
+      fullName,
+    })
+  }
+
+  gcLogInfo('Classroom course roster resolved', logCtx ?? {}, {
+    rosterCount: rows.length,
+    resolvedEmailCount: members.length,
+    emails: members.map((row) => row.email),
+  })
+
+  return members
+}
+
 export async function listGoogleClassroomCourseStudentEmails(
   refreshToken: string,
   courseId: string,
   logCtx?: GoogleClassroomLogContext
 ): Promise<Map<string, string>> {
-  const accessToken = await getGoogleClassroomAccessToken(refreshToken, logCtx)
-  const path = `/courses/${encodeURIComponent(courseId)}/students`
-
-  gcLogInfo('Listing Classroom course students for email resolution', logCtx ?? {}, { path })
-
-  const rows = await listAllPages<{
-    profile?: { id?: string; emailAddress?: string }
-  }>(accessToken, path, 'students', logCtx)
-
+  const roster = await listGoogleClassroomCourseRoster(refreshToken, courseId, logCtx)
   const emailByUserId = new Map<string, string>()
-  for (const row of rows) {
-    const userId = row.profile?.id
-    const email = row.profile?.emailAddress
-    if (userId && email) {
-      emailByUserId.set(userId, email.trim().toLowerCase())
-    }
+  for (const member of roster) {
+    emailByUserId.set(member.googleUserId, member.email)
   }
-
-  gcLogInfo('Classroom course student emails resolved', logCtx ?? {}, {
-    rosterCount: rows.length,
-    resolvedEmailCount: emailByUserId.size,
-    emails: [...emailByUserId.values()],
-  })
-
   return emailByUserId
 }
 

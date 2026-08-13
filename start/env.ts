@@ -59,6 +59,10 @@ export default await Env.create(new URL('../', import.meta.url), {
   INTEGRATION_TOKEN_ENCRYPTION_KEY: Env.schema.string.optional(),
   FRONTEND_URL: Env.schema.string.optional({ format: 'url', tld: false }),
   GOOGLE_CLASSROOM_MOCK: Env.schema.string.optional(),
+  CLASSROOM_STUDENT_DEFAULT_PASSWORD: Env.schema.string.optional(),
+
+  // Variables for configuring @adonisjs/queue
+  QUEUE_DRIVER: Env.schema.enum.optional(['redis', 'database', 'sync'] as const),
 
   // DB (validated when using pg in config)
   DB_HOST: Env.schema.string.optional(),

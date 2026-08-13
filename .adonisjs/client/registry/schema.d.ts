@@ -451,6 +451,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncTask']>>>
     }
   }
+  'showClassroomSyncRun': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/classroom-sync-runs/:runId'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { runId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['showSyncRun']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['showSyncRun']>>>
+    }
+  }
   'googleClassroomCallback': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/integrations/google-classroom/callback'
@@ -521,6 +533,18 @@ export interface Registry {
       query: ExtractQueryForGet<InferInput<(typeof import('#validators/google_classroom').listClassroomCourseWorkValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourseWork']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourseWork']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'syncGoogleClassroomStudents': {
+    methods: ["POST"]
+    pattern: '/api/v1/integrations/google-classroom/sync-students'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncStudents']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncStudents']>>>
     }
   }
   'listStudentSubmissions': {
@@ -821,6 +845,18 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['show']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['show']>>>
+    }
+  }
+  'profile.changePassword': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/account/password'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/user').changePasswordValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/user').changePasswordValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['updatePassword']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['updatePassword']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'ngo_institutions.index': {

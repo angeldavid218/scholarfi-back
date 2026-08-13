@@ -7,13 +7,20 @@ test.group('CSV parser', (group) => {
 
   test('parses headers with Spanish aliases', ({ assert }) => {
     const csv = [
-      'email,nombre,materia,grupo',
-      'student@school.edu,Ana,Matemáticas,3°A',
+      'email,nombre,matricula,materia,grupo',
+      'student@school.edu,Ana,MAT-001,Matemáticas,3°A',
     ].join('\n')
 
     const parsed = parseCsvContent(csv)
-    assert.deepEqual(parsed.headers, ['student_email', 'student_name', 'subject', 'section'])
+    assert.deepEqual(parsed.headers, [
+      'student_email',
+      'student_name',
+      'registration_number',
+      'subject',
+      'section',
+    ])
     assert.equal(parsed.rows[0].student_email, 'student@school.edu')
+    assert.equal(parsed.rows[0].registration_number, 'MAT-001')
     assert.equal(parsed.rows[0].subject, 'Matemáticas')
     assert.equal(parsed.rows[0].section, '3°A')
   })

@@ -45,12 +45,14 @@ export interface ApiDefinition {
   closeTask: typeof routes['closeTask']
   createTaskFromClassroom: typeof routes['createTaskFromClassroom']
   syncClassroomTask: typeof routes['syncClassroomTask']
+  showClassroomSyncRun: typeof routes['showClassroomSyncRun']
   googleClassroomCallback: typeof routes['googleClassroomCallback']
   connectGoogleClassroom: typeof routes['connectGoogleClassroom']
   googleClassroomStatus: typeof routes['googleClassroomStatus']
   disconnectGoogleClassroom: typeof routes['disconnectGoogleClassroom']
   listGoogleClassroomCourses: typeof routes['listGoogleClassroomCourses']
   listGoogleClassroomCourseWork: typeof routes['listGoogleClassroomCourseWork']
+  syncGoogleClassroomStudents: typeof routes['syncGoogleClassroomStudents']
   listStudentSubmissions: typeof routes['listStudentSubmissions']
   teacherQueue: typeof routes['teacherQueue']
   adminQueue: typeof routes['adminQueue']
@@ -79,6 +81,7 @@ export interface ApiDefinition {
     profile: {
       show: typeof routes['profile.profile.show']
     }
+    changePassword: typeof routes['profile.changePassword']
   }
   ngoInstitutions: {
     index: typeof routes['ngo_institutions.index']

@@ -228,6 +228,12 @@ const routes = {
     tokens: [{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":1,"val":"id","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"sync-classroom","end":""}],
     types: placeholder as Registry['syncClassroomTask']['types'],
   },
+  'showClassroomSyncRun': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/classroom-sync-runs/:runId',
+    tokens: [{"old":"/api/v1/classroom-sync-runs/:runId","type":0,"val":"api","end":""},{"old":"/api/v1/classroom-sync-runs/:runId","type":0,"val":"v1","end":""},{"old":"/api/v1/classroom-sync-runs/:runId","type":0,"val":"classroom-sync-runs","end":""},{"old":"/api/v1/classroom-sync-runs/:runId","type":1,"val":"runId","end":""}],
+    types: placeholder as Registry['showClassroomSyncRun']['types'],
+  },
   'googleClassroomCallback': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/integrations/google-classroom/callback',
@@ -263,6 +269,12 @@ const routes = {
     pattern: '/api/v1/integrations/google-classroom/courses/:courseId/coursework',
     tokens: [{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"courses","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":1,"val":"courseId","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"coursework","end":""}],
     types: placeholder as Registry['listGoogleClassroomCourseWork']['types'],
+  },
+  'syncGoogleClassroomStudents': {
+    methods: ["POST"],
+    pattern: '/api/v1/integrations/google-classroom/sync-students',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"sync-students","end":""}],
+    types: placeholder as Registry['syncGoogleClassroomStudents']['types'],
   },
   'listStudentSubmissions': {
     methods: ["GET","HEAD"],
@@ -413,6 +425,12 @@ const routes = {
     pattern: '/api/v1/account/profile',
     tokens: [{"old":"/api/v1/account/profile","type":0,"val":"api","end":""},{"old":"/api/v1/account/profile","type":0,"val":"v1","end":""},{"old":"/api/v1/account/profile","type":0,"val":"account","end":""},{"old":"/api/v1/account/profile","type":0,"val":"profile","end":""}],
     types: placeholder as Registry['profile.profile.show']['types'],
+  },
+  'profile.changePassword': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/account/password',
+    tokens: [{"old":"/api/v1/account/password","type":0,"val":"api","end":""},{"old":"/api/v1/account/password","type":0,"val":"v1","end":""},{"old":"/api/v1/account/password","type":0,"val":"account","end":""},{"old":"/api/v1/account/password","type":0,"val":"password","end":""}],
+    types: placeholder as Registry['profile.changePassword']['types'],
   },
   'ngo_institutions.index': {
     methods: ["GET","HEAD"],

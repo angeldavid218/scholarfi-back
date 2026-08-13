@@ -248,6 +248,20 @@ router
     router
       .group(() => {
         router
+          .get('/:runId', [
+            () => import('#controllers/google_classroom_controller'),
+            'showSyncRun',
+          ])
+          .as('showClassroomSyncRun')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('classroom-sync-runs')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
           .get('/google-classroom/callback', [
             () => import('#controllers/google_classroom_controller'),
             'callback',
@@ -292,6 +306,13 @@ router
             'listCourseWork',
           ])
           .as('listGoogleClassroomCourseWork')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/google-classroom/sync-students', [
+            () => import('#controllers/google_classroom_controller'),
+            'syncStudents',
+          ])
+          .as('syncGoogleClassroomStudents')
           .use(middleware.role({ roles: ['teacher'] }))
       })
       .prefix('integrations')
@@ -473,6 +494,14 @@ router
         router
           .get('/profile', [controllers.Profile, 'show'])
           .use(middleware.role({ roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'] }))
+        router
+          .patch('/password', [() => import('#controllers/profile_controller'), 'updatePassword'])
+          .as('changePassword')
+          .use(
+            middleware.role({
+              roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
+            })
+          )
       })
       .prefix('account')
       .as('profile')

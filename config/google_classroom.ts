@@ -30,6 +30,10 @@ const googleClassroomConfig = {
   get mockMode(): boolean {
     return (env.get('GOOGLE_CLASSROOM_MOCK') as string | undefined) === 'true'
   },
+  get studentDefaultPassword(): string {
+    const configured = (env.get('CLASSROOM_STUDENT_DEFAULT_PASSWORD') as string | undefined)?.trim()
+    return configured && configured.length > 0 ? configured : 'scholarfi-pass'
+  },
 }
 
 export default googleClassroomConfig

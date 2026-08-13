@@ -47,20 +47,49 @@ GOOGLE_OAUTH_SCOPES=https://www.googleapis.com/auth/classroom.courses.readonly,h
 INTEGRATION_TOKEN_ENCRYPTION_KEY=<32+ char secret>
 FRONTEND_URL=http://localhost:5173
 CORS_ORIGIN=http://localhost:5173
+# Optional: password assigned when Sync students provisions Classroom roster accounts
+# CLASSROOM_STUDENT_DEFAULT_PASSWORD=scholarfi-pass
+# Local/dev without real Google OAuth API calls:
+# GOOGLE_CLASSROOM_MOCK=true
 ```
 
 Generate encryption key: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
-## 6. Pilot checklist
+## 6. Classroom sync worker (`@adonisjs/queue`)
+
+`POST /tasks/:id/sync-classroom` dispatches `SyncClassroomTaskJob` and returns `202` with a `runId`. The teacher UI polls `GET /classroom-sync-runs/:runId`.
+
+When `QUEUE_DRIVER=database` (default outside tests), run the official Adonis worker alongside the API:
+
+```bash
+npm run queue:work
+# equivalent: node ace queue:work --queue=classroom
+```
+
+You should see `Starting worker for queues: classroom`. If it says `default` only, Classroom jobs will sit queued forever.
+
+## 6b. Sync students (auto-registration)
+
+`POST /integrations/google-classroom/sync-students` (teacher, Classroom connected) lists every course the teacher can access, upserts ScholarFi groups, and for each roster email:
+
+- **New email** → creates an **active** student with `CLASSROOM_STUDENT_DEFAULT_PASSWORD` (default `scholarfi-pass`), no matrícula
+- **Pending student** → activates with that default password and links to the class
+- **Active student** → links to the class only (password unchanged)
+
+Students then log in with email + default password and change it from the header user menu (`PATCH /account/password`).
+
+When `GOOGLE_CLASSROOM_MOCK=true`, roster emails come from fixtures in `fixtures/demo_students.ts` (demo pilot students plus roster-only emails like `student-delta@school.edu`).
+
+## 7. Pilot checklist
 
 Before testing end-to-end:
 
 - [ ] Admin allocated teacher credit budget (`/admin/presupuesto-docentes`)
-- [ ] Students exist in ScholarFi with the **same email** as their Google Classroom accounts
 - [ ] Teacher connected Classroom (`/teacher/integraciones`)
+- [ ] Teacher clicked **Sincronizar estudiantes** on `/teacher` (or students already exist with matching Classroom emails)
 - [ ] Pilot GC course has assignments with numeric `maxPoints` and graded `assignedGrade` values
-- [ ] Students submitted completion on ScholarFi for the linked task
-- [ ] Teacher clicks **Sincronizar** on the Classroom-linked task
+- [ ] `npm run queue:work` is running (unless `QUEUE_DRIVER=sync`)
+- [ ] Teacher imports coursework and clicks **Sincronizar** on the Classroom-linked task
 
 ## Notes
 

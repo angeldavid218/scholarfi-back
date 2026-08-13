@@ -47,6 +47,38 @@ async function createInstitution(codePrefix: string) {
   return typeof created === 'number' ? created : created.id
 }
 
+async function awaitClassroomSyncResult(client: any, token: string, taskId: number) {
+  const syncResponse = await client
+    .post(`/api/v1/tasks/${taskId}/sync-classroom`)
+    .header('Authorization', `Bearer ${token}`)
+
+  syncResponse.assertStatus(202)
+  const enqueueBody = syncResponse.body() as any
+  const runId = enqueueBody.data.runId as number
+
+  const runResponse = await client
+    .get(`/api/v1/classroom-sync-runs/${runId}`)
+    .header('Authorization', `Bearer ${token}`)
+
+  runResponse.assertStatus(200)
+  const runBody = runResponse.body() as any
+  return {
+    enqueue: enqueueBody.data as {
+      runId: number
+      taskId: number
+      status: string
+      deduped: boolean
+    },
+    run: runBody.data as {
+      runId: number
+      taskId: number
+      status: string
+      result: any
+      errorMessage: string | null
+    },
+  }
+}
+
 async function loginToken(client: any, email: string) {
   const response = await client.post('/api/v1/auth/login').json({
     email,
@@ -185,16 +217,12 @@ test.group('Google Classroom connector', (group) => {
       })
     }
 
-    const syncResponse = await client
-      .post(`/api/v1/tasks/${taskId}/sync-classroom`)
-      .header('Authorization', `Bearer ${token}`)
-
-    syncResponse.assertStatus(200)
-    const syncBody = syncResponse.body() as any
-    assert.equal(syncBody.data.rewarded, 1)
-    assert.equal(syncBody.data.skippedLowGrade, 1)
-    assert.equal(syncBody.data.skippedNoGrade, 1)
-    assert.equal(syncBody.data.budgetRemaining, 5)
+    const { run: syncRun } = await awaitClassroomSyncResult(client, token, taskId)
+    assert.equal(syncRun.status, 'completed')
+    assert.equal(syncRun.result.rewarded, 1)
+    assert.equal(syncRun.result.skippedLowGrade, 1)
+    assert.equal(syncRun.result.skippedNoGrade, 1)
+    assert.equal(syncRun.result.budgetRemaining, 5)
 
     const rewardedSubmission = await db
       .from('submissions')
@@ -206,14 +234,10 @@ test.group('Google Classroom connector', (group) => {
 
     assert.equal(rewardedSubmission?.email, 'student-alpha@school.edu')
 
-    const resyncResponse = await client
-      .post(`/api/v1/tasks/${taskId}/sync-classroom`)
-      .header('Authorization', `Bearer ${token}`)
-
-    resyncResponse.assertStatus(200)
-    const resyncBody = resyncResponse.body() as any
-    assert.equal(resyncBody.data.rewarded, 0)
-    assert.equal(resyncBody.data.skippedAlreadyRewarded, 1)
+    const { run: resyncRun } = await awaitClassroomSyncResult(client, token, taskId)
+    assert.equal(resyncRun.status, 'completed')
+    assert.equal(resyncRun.result.rewarded, 0)
+    assert.equal(resyncRun.result.skippedAlreadyRewarded, 1)
   })
 
   test('mock sync rewards roster students imported via CSV without manual ScholarFi submissions', async ({
@@ -295,15 +319,11 @@ test.group('Google Classroom connector', (group) => {
     importResponse.assertStatus(200)
     const taskId = (importResponse.body() as any).data.id as number
 
-    const syncResponse = await client
-      .post(`/api/v1/tasks/${taskId}/sync-classroom`)
-      .header('Authorization', `Bearer ${token}`)
-
-    syncResponse.assertStatus(200)
-    const syncBody = syncResponse.body() as any
-    assert.equal(syncBody.data.rewarded, 1)
-    assert.equal(syncBody.data.skippedLowGrade, 1)
-    assert.equal(syncBody.data.skippedNoGrade, 1)
+    const { run: syncRun } = await awaitClassroomSyncResult(client, token, taskId)
+    assert.equal(syncRun.status, 'completed')
+    assert.equal(syncRun.result.rewarded, 1)
+    assert.equal(syncRun.result.skippedLowGrade, 1)
+    assert.equal(syncRun.result.skippedNoGrade, 1)
 
     const rewardedSubmission = await db
       .from('submissions')
@@ -382,14 +402,62 @@ test.group('Google Classroom connector', (group) => {
       updated_at: null,
     })
 
-    const syncResponse = await client
-      .post(`/api/v1/tasks/${taskId}/sync-classroom`)
+    const { run: syncRun } = await awaitClassroomSyncResult(client, token, taskId)
+    assert.equal(syncRun.status, 'completed')
+    assert.equal(syncRun.result.rewarded, 1)
+    assert.equal(syncRun.result.budgetRemaining, 10)
+  })
+
+  test('enqueue fails when teacher is not connected to Classroom', async ({ client, assert }) => {
+    const institutionId = await createInstitution('GC-SYNC-FAIL')
+    await seedInstitutionCredits(institutionId, 100)
+
+    const teacher = await User.create({
+      email: 'gc-sync-fail-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Sync Fail Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    await db.table('teacher_credit_pools').insert({
+      institution_id: institutionId,
+      teacher_id: teacher.id,
+      allocated_credits: 20,
+      utilized_credits: 0,
+      created_at: new Date(),
+      updated_at: null,
+    })
+
+    // Connected so import works, then disconnect before sync.
+    await connectMockClassroom(teacher.id, institutionId)
+    const token = await loginToken(client, teacher.email)
+
+    const importResponse = await client
+      .post('/api/v1/tasks/from-classroom')
+      .header('Authorization', `Bearer ${token}`)
+      .json({
+        courseId: 'gc-course-1',
+        courseWorkId: 'gc-work-1',
+        courseName: 'Matematicas 3A',
+        title: 'Ecuaciones lineales',
+        description: 'Resolver ejercicios',
+        rewardAmount: 10,
+        minGrade: 6,
+        maxPoints: 10,
+      })
+    importResponse.assertStatus(200)
+    const taskId = (importResponse.body() as any).data.id as number
+
+    await client
+      .delete('/api/v1/integrations/google-classroom/disconnect')
       .header('Authorization', `Bearer ${token}`)
 
-    syncResponse.assertStatus(200)
-    const syncBody = syncResponse.body() as any
-    assert.equal(syncBody.data.rewarded, 1)
-    assert.equal(syncBody.data.budgetRemaining, 10)
+    const { run } = await awaitClassroomSyncResult(client, token, taskId)
+    assert.equal(run.status, 'failed')
+    assert.isNull(run.result)
+    assert.match(String(run.errorMessage ?? ''), /not connected/i)
   })
 
   test('persistClassroomUserIdsFromRoster links google ids by email and skips conflicts', async ({
@@ -449,5 +517,101 @@ test.group('Google Classroom connector', (group) => {
 
     await student.refresh()
     assert.equal(student.googleClassroomUserId, '100800854909300885323')
+  })
+
+  test('sync students creates active accounts, activates pending, and does not reset active passwords', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution('GC-SYNC-STU')
+    const teacher = await User.create({
+      email: 'gc-sync-students-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Sync Students Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+
+    const pending = await User.create({
+      email: 'demo.student1@scholarfi.test',
+      password: 'RandomPendingPass!',
+      fullName: 'Pending Demo One',
+      institutionId,
+      isActive: false,
+      accountStatus: 'pending',
+      registrationNumber: 'MAT-001',
+    })
+    await assignRoleToUser(pending.id, 'student', 'Student')
+
+    const active = await User.create({
+      email: 'demo.student2@scholarfi.test',
+      password: 'KeepMyPassword9!',
+      fullName: 'Active Demo Two',
+      institutionId,
+      isActive: true,
+      accountStatus: 'active',
+      registrationNumber: 'MAT-002',
+    })
+    await assignRoleToUser(active.id, 'student', 'Student')
+
+    const token = await loginToken(client, teacher.email)
+    const response = await client
+      .post('/api/v1/integrations/google-classroom/sync-students')
+      .header('Authorization', `Bearer ${token}`)
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    const summary = body.data
+
+    assert.isAtLeast(summary.courses, 2)
+    assert.isAtLeast(summary.created, 2)
+    assert.isAtLeast(summary.activated, 1)
+    assert.isAtLeast(summary.linked, 5)
+
+    await pending.refresh()
+    assert.equal(pending.accountStatus, 'active')
+    assert.equal(Boolean(pending.isActive), true)
+
+    const pendingLogin = await client.post('/api/v1/auth/login').json({
+      email: pending.email,
+      password: 'scholarfi-pass',
+    })
+    pendingLogin.assertStatus(200)
+
+    const activeLoginOld = await client.post('/api/v1/auth/login').json({
+      email: active.email,
+      password: 'KeepMyPassword9!',
+    })
+    activeLoginOld.assertStatus(200)
+
+    const createdDelta = await User.query()
+      .whereRaw('LOWER(email) = ?', ['student-delta@school.edu'])
+      .firstOrFail()
+    assert.equal(createdDelta.accountStatus, 'active')
+    assert.equal(Boolean(createdDelta.isActive), true)
+    assert.isNull(createdDelta.registrationNumber)
+
+    const deltaLogin = await client.post('/api/v1/auth/login').json({
+      email: 'student-delta@school.edu',
+      password: 'scholarfi-pass',
+    })
+    deltaLogin.assertStatus(200)
+
+    const mathGroup = await db
+      .from('groups')
+      .where('institution_id', institutionId)
+      .andWhere('external_source', 'google_classroom')
+      .andWhere('external_id', 'gc-course-1')
+      .first()
+    assert.exists(mathGroup)
+
+    const deltaMembership = await db
+      .from('group_students')
+      .where('group_id', mathGroup!.id)
+      .andWhere('student_id', createdDelta.id)
+      .first()
+    assert.exists(deltaMembership)
   })
 })
