@@ -71,14 +71,15 @@ Teacher endpoints (require `GOOGLE_*` env vars):
 - `GET /api/v1/integrations/google-classroom/courses/:courseId/coursework`
 - `POST /api/v1/tasks/from-classroom` — import rewarded GC assignment
 - `POST /api/v1/tasks/:id/sync-classroom` — enqueue Classroom sync (202 + `runId`; rewards run in a worker)
+- `POST /api/v1/integrations/google-classroom/sync-all` — enqueue sync for every active Classroom task (202 + `runs`)
 - `GET /api/v1/classroom-sync-runs/:runId` — poll sync job status/result
 
 ### Classroom sync worker (`@adonisjs/queue`)
 
 Sync no longer blocks the HTTP request. Grades/rewards run via `SyncClassroomTaskJob` on `@adonisjs/queue` (Database adapter by default):
 
-1. Start the API: `npm run dev` (or `npm start`)
-2. Start the worker in a second terminal: `npm run queue:work` (`node ace queue:work --queue=classroom`)
+1. Start the API: `npm run dev` (or `npm start`) — also upserts the nightly `nightly-classroom-sync` schedule (02:00 America/Mexico_City)
+2. Start the worker in a second terminal: `npm run queue:work` (`node ace queue:work --queue=classroom`) — processes per-task jobs **and** due cron schedules
 
 | `QUEUE_DRIVER` | Behavior |
 |----------------|----------|

@@ -32,6 +32,7 @@ import {
 } from '#services/integrations/google_classroom/oauth_service'
 import { verifyOAuthState } from '#services/integrations/google_classroom/oauth_state'
 import ClassroomSyncRun from '#models/classroom_sync_run'
+import { enqueueAllClassroomSyncsForTeacher } from '#services/integrations/google_classroom/sync_all_service'
 import {
   enqueueClassroomSyncTask,
   serializeClassroomSyncRun,
@@ -487,5 +488,57 @@ export default class GoogleClassroomController {
     }
 
     return { data: serializeClassroomSyncRun(run) }
+  }
+
+  async syncAll({ auth, request, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    if (!user.institutionId) {
+      return response.forbidden({
+        error: {
+          code: 'INSTITUTION_SCOPE_REQUIRED',
+          message: 'Teacher must belong to an institution',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    try {
+      gcLogInfo('Classroom sync-all HTTP enqueue received', {
+        requestId: request.id(),
+        teacherId: user.id,
+        institutionId: user.institutionId,
+      })
+
+      const enqueued = await enqueueAllClassroomSyncsForTeacher({
+        teacherId: user.id,
+        institutionId: user.institutionId,
+        requestId: request.id(),
+      })
+
+      return response.accepted({
+        data: {
+          tasks: enqueued.tasks,
+          runs: enqueued.runs,
+        },
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'sync_failed'
+      gcLogError(
+        'Classroom sync-all HTTP enqueue failed',
+        {
+          requestId: request.id(),
+          teacherId: user.id,
+          institutionId: user.institutionId,
+        },
+        error
+      )
+      return response.unprocessableEntity({
+        error: {
+          code: 'CLASSROOM_SYNC_FAILED',
+          message,
+          requestId: request.id(),
+        },
+      })
+    }
   }
 }

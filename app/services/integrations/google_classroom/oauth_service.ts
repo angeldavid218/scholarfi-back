@@ -125,6 +125,23 @@ export async function getTeacherIntegration(
   return row ? (row as TeacherIntegrationRow) : null
 }
 
+export type ConnectedClassroomTeacher = {
+  teacherId: number
+  institutionId: number
+}
+
+export async function listConnectedClassroomTeachers(): Promise<ConnectedClassroomTeacher[]> {
+  const rows = await db
+    .from('teacher_integrations')
+    .where('provider', 'google_classroom')
+    .select('teacher_id', 'institution_id')
+
+  return (rows as Array<{ teacher_id: number; institution_id: number }>).map((row) => ({
+    teacherId: row.teacher_id,
+    institutionId: row.institution_id,
+  }))
+}
+
 export async function upsertTeacherIntegration(input: {
   teacherId: number
   institutionId: number

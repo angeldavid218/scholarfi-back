@@ -59,6 +59,20 @@ Generate encryption key: `node -e "console.log(require('crypto').randomBytes(32)
 
 `POST /tasks/:id/sync-classroom` dispatches `SyncClassroomTaskJob` and returns `202` with a `runId`. The teacher UI polls `GET /classroom-sync-runs/:runId`.
 
+`POST /integrations/google-classroom/sync-all` enqueues the same per-task job for **every active Google Classroom task** owned by the teacher (not only the current UI page) and returns `202` with `{ tasks, runs: [{ runId, taskId, status, deduped }] }`. **Sincronizar todo** on `/teacher` uses this endpoint.
+
+A nightly orchestrator (`SyncAllClassroomTasksJob`) runs the same bulk enqueue for every teacher with a connected Classroom integration. It is registered on API boot in `start/scheduler.ts`:
+
+```ts
+await SyncAllClassroomTasksJob.schedule({})
+  .id('nightly-classroom-sync')
+  .cron('0 2 * * *')
+  .timezone('America/Mexico_City')
+  .run()
+```
+
+Override with `CLASSROOM_NIGHTLY_SYNC_CRON` / `CLASSROOM_NIGHTLY_SYNC_TIMEZONE` if needed. Default is 02:00 America/Mexico_City so grade sync stays off daytime CPU.
+
 When `QUEUE_DRIVER=database` (default outside tests), run the official Adonis worker alongside the API:
 
 ```bash
@@ -88,8 +102,8 @@ Before testing end-to-end:
 - [ ] Teacher connected Classroom (`/teacher/integraciones`)
 - [ ] Teacher clicked **Sincronizar estudiantes** on `/teacher` (or students already exist with matching Classroom emails)
 - [ ] Pilot GC course has assignments with numeric `maxPoints` and graded `assignedGrade` values
-- [ ] `npm run queue:work` is running (unless `QUEUE_DRIVER=sync`)
-- [ ] Teacher imports coursework and clicks **Sincronizar** on the Classroom-linked task
+- [ ] `npm run queue:work` is running (unless `QUEUE_DRIVER=sync`) — required for per-task sync, **Sincronizar todo**, and the nightly cron
+- [ ] Teacher imports coursework and clicks **Sincronizar** on the Classroom-linked task (or **Sincronizar todo** for every active Classroom task)
 
 ## Notes
 

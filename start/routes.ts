@@ -314,6 +314,13 @@ router
           ])
           .as('syncGoogleClassroomStudents')
           .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/google-classroom/sync-all', [
+            () => import('#controllers/google_classroom_controller'),
+            'syncAll',
+          ])
+          .as('syncAllGoogleClassroomTasks')
+          .use(middleware.role({ roles: ['teacher'] }))
       })
       .prefix('integrations')
       .use(middleware.auth())

@@ -614,4 +614,208 @@ test.group('Google Classroom connector', (group) => {
       .first()
     assert.exists(deltaMembership)
   })
+
+  test('sync-all enqueues every active Classroom task and skips closed or manual tasks', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution('GC-SYNC-ALL')
+    await seedInstitutionCredits(institutionId, 1000)
+
+    const teacher = await User.create({
+      email: 'gc-sync-all-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Sync All Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await db.table('teacher_credit_pools').insert({
+      institution_id: institutionId,
+      teacher_id: teacher.id,
+      allocated_credits: 50,
+      utilized_credits: 0,
+      created_at: new Date(),
+      updated_at: null,
+    })
+    await connectMockClassroom(teacher.id, institutionId)
+    const token = await loginToken(client, teacher.email)
+
+    const activeImport = await client
+      .post('/api/v1/tasks/from-classroom')
+      .header('Authorization', `Bearer ${token}`)
+      .json({
+        courseId: 'gc-course-1',
+        courseWorkId: 'gc-work-1',
+        courseName: 'Matematicas 3A',
+        title: 'Activa',
+        description: 'Tarea activa de Classroom',
+        rewardAmount: 10,
+        minGrade: 6,
+        maxPoints: 10,
+      })
+    activeImport.assertStatus(200)
+    const activeTaskId = (activeImport.body() as any).data.id as number
+
+    const closedImport = await client
+      .post('/api/v1/tasks/from-classroom')
+      .header('Authorization', `Bearer ${token}`)
+      .json({
+        courseId: 'gc-course-1',
+        courseWorkId: 'gc-work-2',
+        courseName: 'Matematicas 3A',
+        title: 'Cerrada',
+        description: 'Tarea cerrada de Classroom',
+        rewardAmount: 10,
+        minGrade: 6,
+        maxPoints: 10,
+      })
+    closedImport.assertStatus(200)
+    const closedTaskId = (closedImport.body() as any).data.id as number
+
+    const closeResponse = await client
+      .patch(`/api/v1/tasks/${closedTaskId}/close`)
+      .header('Authorization', `Bearer ${token}`)
+      .json({})
+    closeResponse.assertStatus(200)
+
+    const manualResponse = await client
+      .post('/api/v1/tasks')
+      .header('Authorization', `Bearer ${token}`)
+      .json({
+        title: 'Tarea manual',
+        description: 'No es de Classroom',
+        rewardAmount: 5,
+      })
+    manualResponse.assertStatus(200)
+
+    const response = await client
+      .post('/api/v1/integrations/google-classroom/sync-all')
+      .header('Authorization', `Bearer ${token}`)
+      .json({})
+
+    response.assertStatus(202)
+    const body = response.body() as any
+    assert.equal(body.data.tasks, 1)
+    assert.lengthOf(body.data.runs, 1)
+    assert.equal(body.data.runs[0].taskId, activeTaskId)
+    assert.notEqual(body.data.runs[0].taskId, closedTaskId)
+  })
+
+  test('sync-all with no matching tasks returns 202 and tasks 0', async ({ client, assert }) => {
+    const institutionId = await createInstitution('GC-SYNC-ALL-EMPTY')
+    const teacher = await User.create({
+      email: 'gc-sync-all-empty@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Sync All Empty',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+    const token = await loginToken(client, teacher.email)
+
+    const response = await client
+      .post('/api/v1/integrations/google-classroom/sync-all')
+      .header('Authorization', `Bearer ${token}`)
+      .json({})
+
+    response.assertStatus(202)
+    const body = response.body() as any
+    assert.equal(body.data.tasks, 0)
+    assert.lengthOf(body.data.runs, 0)
+  })
+
+  test('nightly helper enqueues active Classroom tasks for every connected teacher', async ({
+    client,
+    assert,
+  }) => {
+    const { enqueueAllClassroomSyncsForConnectedTeachers } = await import(
+      '#services/integrations/google_classroom/sync_all_service'
+    )
+
+    const institutionA = await createInstitution('GC-NIGHT-A')
+    const institutionB = await createInstitution('GC-NIGHT-B')
+    await seedInstitutionCredits(institutionA, 1000)
+    await seedInstitutionCredits(institutionB, 1000)
+
+    const teacherA = await User.create({
+      email: 'gc-nightly-a@example.com',
+      password: 'Secret123!',
+      fullName: 'Nightly A',
+      institutionId: institutionA,
+      isActive: true,
+    })
+    const teacherB = await User.create({
+      email: 'gc-nightly-b@example.com',
+      password: 'Secret123!',
+      fullName: 'Nightly B',
+      institutionId: institutionB,
+      isActive: true,
+    })
+    await assignRoleToUser(teacherA.id, 'teacher', 'Teacher')
+    await assignRoleToUser(teacherB.id, 'teacher', 'Teacher')
+    await db.table('teacher_credit_pools').insert({
+      institution_id: institutionA,
+      teacher_id: teacherA.id,
+      allocated_credits: 20,
+      utilized_credits: 0,
+      created_at: new Date(),
+      updated_at: null,
+    })
+    await db.table('teacher_credit_pools').insert({
+      institution_id: institutionB,
+      teacher_id: teacherB.id,
+      allocated_credits: 20,
+      utilized_credits: 0,
+      created_at: new Date(),
+      updated_at: null,
+    })
+    await connectMockClassroom(teacherA.id, institutionA)
+    await connectMockClassroom(teacherB.id, institutionB)
+
+    const tokenA = await loginToken(client, teacherA.email)
+    const tokenB = await loginToken(client, teacherB.email)
+
+    const importA = await client
+      .post('/api/v1/tasks/from-classroom')
+      .header('Authorization', `Bearer ${tokenA}`)
+      .json({
+        courseId: 'gc-course-1',
+        courseWorkId: 'gc-work-1',
+        courseName: 'Curso A',
+        title: 'Tarea A',
+        description: 'Nightly teacher A',
+        rewardAmount: 10,
+        minGrade: 6,
+        maxPoints: 10,
+      })
+    importA.assertStatus(200)
+    const taskA = (importA.body() as any).data.id as number
+
+    const importB = await client
+      .post('/api/v1/tasks/from-classroom')
+      .header('Authorization', `Bearer ${tokenB}`)
+      .json({
+        courseId: 'gc-course-1',
+        courseWorkId: 'gc-work-1',
+        courseName: 'Curso B',
+        title: 'Tarea B',
+        description: 'Nightly teacher B',
+        rewardAmount: 10,
+        minGrade: 6,
+        maxPoints: 10,
+      })
+    importB.assertStatus(200)
+    const taskB = (importB.body() as any).data.id as number
+
+    const result = await enqueueAllClassroomSyncsForConnectedTeachers({
+      requestId: 'test-nightly-classroom-sync',
+    })
+
+    const ourRuns = result.runs.filter((run) => run.taskId === taskA || run.taskId === taskB)
+    assert.lengthOf(ourRuns, 2)
+    assert.isAtLeast(result.teachers, 2)
+    assert.isAtLeast(result.tasks, 2)
+  })
 })
