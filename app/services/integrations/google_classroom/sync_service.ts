@@ -1,8 +1,13 @@
 import Task from '#models/task'
 import db from '@adonisjs/lucid/services/db'
+import { getInstitutionCreditPoolSummary } from '#services/credits/institution_credit_pool_service'
 import { issueRewardForSubmission } from '#services/credits/reward_issuance_service'
 import { getTeacherCreditPoolSummary } from '#services/credits/teacher_credit_pool_service'
-import { InsufficientTeacherCreditsError } from '#services/credits/types'
+import {
+  InsufficientInstitutionCreditsError,
+  InsufficientTeacherCreditsError,
+  type RewardFundingSource,
+} from '#services/credits/types'
 import googleClassroomConfig from '#config/google_classroom'
 import { buildClassroomGradeMaps, resolveClassroomGradeForUser } from '#services/integrations/google_classroom/client'
 import {
@@ -64,12 +69,58 @@ function parseSyncMetadata(task: Task): GoogleClassroomSyncMetadata {
 }
 
 async function submissionAlreadyRewarded(submissionId: number): Promise<boolean> {
-  const row = await db
+  const teacherRow = await db
     .from('teacher_credit_entries')
     .where('submission_id', submissionId)
     .andWhere('entry_type', 'reward_issue')
     .first()
-  return Boolean(row)
+  if (teacherRow) return true
+
+  const institutionRow = await db
+    .from('institution_credit_entries')
+    .where('submission_id', submissionId)
+    .andWhere('entry_type', 'reward_issue')
+    .first()
+  return Boolean(institutionRow)
+}
+
+/**
+ * Same funding rule as task create/import: use the teacher pool when the teacher
+ * has allocated credits; otherwise fund from the institution pool.
+ */
+async function resolveSyncFunding(input: {
+  teacherId: number
+  institutionId: number
+}): Promise<{
+  fundingSource: RewardFundingSource
+  remainingCredits: number
+}> {
+  const teacherPool = await getTeacherCreditPoolSummary(input.teacherId)
+  if (teacherPool && teacherPool.allocatedCredits > 0) {
+    return {
+      fundingSource: 'teacher',
+      remainingCredits: teacherPool.remainingCredits,
+    }
+  }
+
+  const institutionPool = await getInstitutionCreditPoolSummary(input.institutionId)
+  return {
+    fundingSource: 'institution',
+    remainingCredits: institutionPool.remainingCredits,
+  }
+}
+
+async function refreshRemainingCredits(input: {
+  fundingSource: RewardFundingSource
+  teacherId: number
+  institutionId: number
+}): Promise<number> {
+  if (input.fundingSource === 'teacher') {
+    const pool = await getTeacherCreditPoolSummary(input.teacherId)
+    return pool?.remainingCredits ?? 0
+  }
+  const pool = await getInstitutionCreditPoolSummary(input.institutionId)
+  return pool.remainingCredits
 }
 
 function logCtx(
@@ -245,14 +296,15 @@ export async function syncGoogleClassroomTask(input: {
       rewardedSubmissionIds: [],
     }
 
-    let pool = await getTeacherCreditPoolSummary(input.teacherId)
+    let funding = await resolveSyncFunding({
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+    })
     const rewardAmount = Number(task.rewardAmount)
 
-    gcLogInfo('Teacher credit pool at sync start', ctx, {
-      hasPool: pool?.hasPool ?? false,
-      allocatedCredits: pool?.allocatedCredits ?? 0,
-      utilizedCredits: pool?.utilizedCredits ?? 0,
-      remainingCredits: pool?.remainingCredits ?? 0,
+    gcLogInfo('Credit pool at sync start', ctx, {
+      fundingSource: funding.fundingSource,
+      remainingCredits: funding.remainingCredits,
       rewardAmountPerStudent: rewardAmount,
     })
 
@@ -295,7 +347,7 @@ export async function syncGoogleClassroomTask(input: {
       } else if (grade < metadata.minGrade) {
         result.skippedLowGrade += 1
         skipReason = 'grade_below_minimum'
-      } else if (!pool || pool.remainingCredits < rewardAmount || rewardAmount <= 0) {
+      } else if (funding.remainingCredits < rewardAmount || rewardAmount <= 0) {
         result.skippedBudgetExhausted += 1
         skipReason = 'budget_exhausted'
       }
@@ -312,7 +364,8 @@ export async function syncGoogleClassroomTask(input: {
           email: submission.email,
           grade: grade ?? null,
           reason: skipReason,
-          remainingCredits: pool?.remainingCredits ?? 0,
+          fundingSource: funding.fundingSource,
+          remainingCredits: funding.remainingCredits,
         })
         continue
       }
@@ -325,6 +378,7 @@ export async function syncGoogleClassroomTask(input: {
           email: submission.email,
           grade,
           rewardAmount,
+          fundingSource: funding.fundingSource,
         })
 
         await db.transaction(async (trx) => {
@@ -334,8 +388,8 @@ export async function syncGoogleClassroomTask(input: {
             amount: rewardAmount,
             submissionId: submission.id,
             actorUserId: input.teacherId,
-            fundingSource: 'teacher',
-            teacherId: input.teacherId,
+            fundingSource: funding.fundingSource,
+            teacherId: funding.fundingSource === 'teacher' ? input.teacherId : null,
             client: trx,
           })
 
@@ -371,27 +425,40 @@ export async function syncGoogleClassroomTask(input: {
             transactionId: issued.transactionId,
             idempotent: issued.idempotent,
             amount: issued.amount,
+            fundingSource: issued.fundingSource,
           })
         })
 
         result.rewarded += 1
         result.rewardedSubmissionIds.push(submission.id)
-        pool = await getTeacherCreditPoolSummary(input.teacherId)
+        funding = {
+          ...funding,
+          remainingCredits: await refreshRemainingCredits({
+            fundingSource: funding.fundingSource,
+            teacherId: input.teacherId,
+            institutionId: input.institutionId,
+          }),
+        }
 
-        gcLogInfo('Teacher pool updated after reward', ctx, {
+        gcLogInfo('Credit pool updated after reward', ctx, {
           submissionId: submission.id,
-          remainingCredits: pool?.remainingCredits ?? 0,
+          fundingSource: funding.fundingSource,
+          remainingCredits: funding.remainingCredits,
         })
       } catch (error) {
-        if (error instanceof InsufficientTeacherCreditsError) {
+        if (
+          error instanceof InsufficientTeacherCreditsError ||
+          error instanceof InsufficientInstitutionCreditsError
+        ) {
           result.skippedBudgetExhausted += 1
           await db
             .from('submissions')
             .where('id', submission.id)
             .update({ reward_skipped_reason: 'budget_exhausted' })
 
-          gcLogWarn('Classroom sync stopped: teacher credits exhausted mid-run', ctx, {
+          gcLogWarn('Classroom sync stopped: credits exhausted mid-run', ctx, {
             submissionId: submission.id,
+            fundingSource: funding.fundingSource,
             remainingCredits: error.remaining,
             requestedCredits: error.requested,
           })
@@ -401,7 +468,7 @@ export async function syncGoogleClassroomTask(input: {
       }
     }
 
-    result.budgetRemaining = pool?.remainingCredits ?? 0
+    result.budgetRemaining = funding.remainingCredits
 
     task.syncMetadata = {
       ...metadata,
