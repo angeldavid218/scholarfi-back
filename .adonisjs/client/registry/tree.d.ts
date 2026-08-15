@@ -53,6 +53,7 @@ export interface ApiDefinition {
   listGoogleClassroomCourses: typeof routes['listGoogleClassroomCourses']
   listGoogleClassroomCourseWork: typeof routes['listGoogleClassroomCourseWork']
   syncGoogleClassroomStudents: typeof routes['syncGoogleClassroomStudents']
+  syncAllGoogleClassroomTasks: typeof routes['syncAllGoogleClassroomTasks']
   listStudentSubmissions: typeof routes['listStudentSubmissions']
   teacherQueue: typeof routes['teacherQueue']
   adminQueue: typeof routes['adminQueue']

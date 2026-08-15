@@ -49,6 +49,7 @@ export type ScannedRoutes = {
     'listGoogleClassroomCourses': { paramsTuple?: []; params?: {} }
     'listGoogleClassroomCourseWork': { paramsTuple: [ParamValue]; params: {'courseId': ParamValue} }
     'syncGoogleClassroomStudents': { paramsTuple?: []; params?: {} }
+    'syncAllGoogleClassroomTasks': { paramsTuple?: []; params?: {} }
     'listStudentSubmissions': { paramsTuple?: []; params?: {} }
     'teacherQueue': { paramsTuple?: []; params?: {} }
     'adminQueue': { paramsTuple?: []; params?: {} }
@@ -170,6 +171,7 @@ export type ScannedRoutes = {
     'syncClassroomTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'connectGoogleClassroom': { paramsTuple?: []; params?: {} }
     'syncGoogleClassroomStudents': { paramsTuple?: []; params?: {} }
+    'syncAllGoogleClassroomTasks': { paramsTuple?: []; params?: {} }
     'createSubmission': { paramsTuple?: []; params?: {} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
     'createCatalogReward': { paramsTuple?: []; params?: {} }

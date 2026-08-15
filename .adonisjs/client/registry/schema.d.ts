@@ -547,6 +547,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncStudents']>>>
     }
   }
+  'syncAllGoogleClassroomTasks': {
+    methods: ["POST"]
+    pattern: '/api/v1/integrations/google-classroom/sync-all'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncAll']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncAll']>>>
+    }
+  }
   'listStudentSubmissions': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/submissions'

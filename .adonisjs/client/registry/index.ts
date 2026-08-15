@@ -276,6 +276,12 @@ const routes = {
     tokens: [{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"sync-students","end":""}],
     types: placeholder as Registry['syncGoogleClassroomStudents']['types'],
   },
+  'syncAllGoogleClassroomTasks': {
+    methods: ["POST"],
+    pattern: '/api/v1/integrations/google-classroom/sync-all',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"sync-all","end":""}],
+    types: placeholder as Registry['syncAllGoogleClassroomTasks']['types'],
+  },
   'listStudentSubmissions': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/submissions',

@@ -96,7 +96,7 @@ export async function getStudentAchievementsForUi(params: {
       key: FIRST_5_ACTIVITIES_KEY,
       title: FIRST_5_ACTIVITIES_TITLE,
       description:
-        'Completa y recibe recompensa por tus primeras 5 actividades. El logro se atestigua on-chain con SAS.',
+        'Completa y recibe recompensa por tus primeras 5 actividades.',
       threshold: FIRST_5_ACTIVITIES_THRESHOLD,
       progress,
       unlocked,
