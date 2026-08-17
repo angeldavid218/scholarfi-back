@@ -1,21 +1,8 @@
 /**
- * Load sas-lib + @solana/signers from vendor-sas (main node_modules is root-owned).
- * When `npm install sas-lib` works in the app root, prefer that path instead.
+ * Re-export sas-lib + @solana/signers for attestation services.
+ * Prefer normal package imports so production installs (Render) resolve from node_modules.
  */
-import { createRequire } from 'node:module'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const vendorRequire = createRequire(
-  join(dirname(fileURLToPath(import.meta.url)), '../../../vendor-sas/package.json')
-)
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sasLib: any = vendorRequire('sas-lib')
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const solanaSigners: any = vendorRequire('@solana/signers')
-
-export const {
+export {
   deserializeAttestationData,
   deriveAttestationPda,
   deriveCredentialPda,
@@ -27,7 +14,9 @@ export const {
   getSchemaDecoder,
   serializeAttestationData,
   SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS,
-} = sasLib
+} from 'sas-lib'
+
+export { createKeyPairSignerFromBytes } from '@solana/signers'
 
 export type Schema = {
   discriminator: number
@@ -39,7 +28,3 @@ export type Schema = {
   isPaused: boolean
   version: number
 }
-
-export const createKeyPairSignerFromBytes: (
-  bytes: Uint8Array
-) => Promise<{ address: string }> = solanaSigners.createKeyPairSignerFromBytes
