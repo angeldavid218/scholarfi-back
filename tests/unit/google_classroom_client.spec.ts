@@ -13,7 +13,7 @@ test.group('Google Classroom client helpers', () => {
     let refreshCount = 0
     const originalFetch = globalThis.fetch
 
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
+    globalThis.fetch = (async (input: string | URL) => {
       const url = String(input)
       if (url.includes('oauth2.googleapis.com/token')) {
         refreshCount += 1
