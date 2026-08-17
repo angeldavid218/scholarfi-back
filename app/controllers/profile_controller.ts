@@ -1,5 +1,4 @@
 import Institution from '#models/institution'
-import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import hash from '@adonisjs/core/services/hash'
 import { changePasswordValidator } from '#validators/user'
