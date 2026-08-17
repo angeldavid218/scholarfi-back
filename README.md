@@ -142,7 +142,7 @@ After seed/reset, confirm:
 
 ## Solana leaderboard + SAS attestation (Devnet POC)
 
-Requires `SOLANA_RPC_URL` and mint/oracle secrets. Attestation code imports `sas-lib` and `@solana/signers` from `node_modules` via `app/services/attestation/sas_sdk.ts`.
+Requires `SOLANA_RPC_URL` and mint/oracle secrets. Attestation code imports `sas-lib` from `node_modules` via `app/services/attestation/sas_sdk.ts`.
 
 ```bash
 # Leaderboard PDAs (SchoolBoard + StudentScore)

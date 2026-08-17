@@ -1,7 +1,10 @@
 /**
- * Re-export sas-lib + @solana/signers for attestation services.
- * Prefer normal package imports so production installs (Render) resolve from node_modules.
+ * Re-export sas-lib for attestation services.
+ * Load createKeyPairSignerFromBytes from sas-lib's nested Solana Kit deps so
+ * we do not require a top-level @solana/kit or @solana/signers install.
  */
+import { createRequire } from 'node:module'
+
 export {
   deserializeAttestationData,
   deriveAttestationPda,
@@ -14,17 +17,23 @@ export {
   getSchemaDecoder,
   serializeAttestationData,
   SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS,
+  type Schema,
 } from 'sas-lib'
 
-export { createKeyPairSignerFromBytes } from '@solana/signers'
+import { deriveSchemaPda } from 'sas-lib'
 
-export type Schema = {
-  discriminator: number
-  credential: string
-  name: Uint8Array
-  description: Uint8Array
-  layout: Uint8Array
-  fieldNames: Uint8Array
-  isPaused: boolean
-  version: number
+const requireFromApp = createRequire(import.meta.url)
+const requireFromSas = createRequire(requireFromApp.resolve('sas-lib/package.json'))
+
+export const createKeyPairSignerFromBytes: (
+  bytes: Uint8Array,
+  extractable?: boolean
+) => Promise<any> = requireFromSas('@solana/signers').createKeyPairSignerFromBytes
+
+/** Solana Kit branded address (base58 string at runtime). */
+export type Address = Parameters<typeof deriveSchemaPda>[0]['credential']
+
+/** Cast a base58 string to Kit's branded Address type. */
+export function asAddress(value: string): Address {
+  return value as Address
 }
