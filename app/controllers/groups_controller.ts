@@ -3,6 +3,10 @@ import Institution from '#models/institution'
 import User from '#models/user'
 import { importGroupsFromCsv } from '#services/group_csv_import_service'
 import {
+  csvImportLogInfo,
+  csvImportLogWarn,
+} from '#services/group_csv_import_logger'
+import {
   findOrCreateGroup,
   upsertGroupStudent,
   upsertGroupTeacher,
@@ -119,6 +123,18 @@ export default class GroupsController {
     })
 
     if (!csvFile || !csvFile.isValid || !csvFile.tmpPath) {
+      csvImportLogWarn(
+        'CSV import rejected: invalid file upload',
+        {
+          requestId: request.id(),
+          institutionId: teacher.institutionId,
+          teacherId: teacher.id,
+        },
+        {
+          isValid: csvFile?.isValid ?? false,
+          error: csvFile?.errors[0]?.message ?? null,
+        }
+      )
       return response.badRequest({
         error: {
           code: 'INVALID_CSV_FILE',
@@ -129,6 +145,18 @@ export default class GroupsController {
 
     const csvContent = await readFile(csvFile.tmpPath, 'utf-8')
     const dryRun = parseBooleanQuery(request.input('dryRun'))
+
+    csvImportLogInfo(
+      dryRun ? 'CSV import request received (dry-run)' : 'CSV import request received',
+      {
+        requestId: request.id(),
+        institutionId: teacher.institutionId,
+        teacherId: teacher.id,
+        filename: csvFile.clientName,
+        dryRun,
+      },
+      { fileSize: csvFile.size }
+    )
 
     let columnMapping: Record<string, string> | undefined
     const mappingRaw = request.input('columnMapping')
@@ -164,6 +192,7 @@ export default class GroupsController {
       csvContent,
       dryRun,
       columnMapping,
+      requestId: request.id(),
     })
 
     return {

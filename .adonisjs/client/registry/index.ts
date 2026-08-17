@@ -24,6 +24,12 @@ const routes = {
     tokens: [{"old":"/api/v1/auth/logout","type":0,"val":"api","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['auth.access_token.destroy']['types'],
   },
+  'auth.registerStudent': {
+    methods: ["POST"],
+    pattern: '/api/v1/auth/register-student',
+    tokens: [{"old":"/api/v1/auth/register-student","type":0,"val":"api","end":""},{"old":"/api/v1/auth/register-student","type":0,"val":"v1","end":""},{"old":"/api/v1/auth/register-student","type":0,"val":"auth","end":""},{"old":"/api/v1/auth/register-student","type":0,"val":"register-student","end":""}],
+    types: placeholder as Registry['auth.registerStudent']['types'],
+  },
   'index': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/institutions',
@@ -65,6 +71,24 @@ const routes = {
     pattern: '/api/v1/institutions/credit-pool',
     tokens: [{"old":"/api/v1/institutions/credit-pool","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/credit-pool","type":0,"val":"credit-pool","end":""}],
     types: placeholder as Registry['showMyInstitutionCreditPool']['types'],
+  },
+  'listTeacherCreditPools': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/institutions/teacher-credit-pools',
+    tokens: [{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/teacher-credit-pools","type":0,"val":"teacher-credit-pools","end":""}],
+    types: placeholder as Registry['listTeacherCreditPools']['types'],
+  },
+  'allocateEqualTeacherCredits': {
+    methods: ["POST"],
+    pattern: '/api/v1/institutions/teacher-credit-pools/allocate-equal',
+    tokens: [{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"teacher-credit-pools","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/allocate-equal","type":0,"val":"allocate-equal","end":""}],
+    types: placeholder as Registry['allocateEqualTeacherCredits']['types'],
+  },
+  'allocateTeacherCredits': {
+    methods: ["POST"],
+    pattern: '/api/v1/institutions/teacher-credit-pools/:teacherId/allocate',
+    tokens: [{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"teacher-credit-pools","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":1,"val":"teacherId","end":""},{"old":"/api/v1/institutions/teacher-credit-pools/:teacherId/allocate","type":0,"val":"allocate","end":""}],
+    types: placeholder as Registry['allocateTeacherCredits']['types'],
   },
   'bootstrapSchoolAdmin': {
     methods: ["POST"],
@@ -156,6 +180,12 @@ const routes = {
     tokens: [{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"api","end":""},{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"groups","end":""},{"old":"/api/v1/groups/import-runs/:id","type":0,"val":"import-runs","end":""},{"old":"/api/v1/groups/import-runs/:id","type":1,"val":"id","end":""}],
     types: placeholder as Registry['showGroupImportRun']['types'],
   },
+  'showMyTeacherCreditPool': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/teachers/credit-pool',
+    tokens: [{"old":"/api/v1/teachers/credit-pool","type":0,"val":"api","end":""},{"old":"/api/v1/teachers/credit-pool","type":0,"val":"v1","end":""},{"old":"/api/v1/teachers/credit-pool","type":0,"val":"teachers","end":""},{"old":"/api/v1/teachers/credit-pool","type":0,"val":"credit-pool","end":""}],
+    types: placeholder as Registry['showMyTeacherCreditPool']['types'],
+  },
   'listStudentAvailableTasks': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/tasks/available',
@@ -185,6 +215,72 @@ const routes = {
     pattern: '/api/v1/tasks/:id/close',
     tokens: [{"old":"/api/v1/tasks/:id/close","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/:id/close","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/:id/close","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/:id/close","type":1,"val":"id","end":""},{"old":"/api/v1/tasks/:id/close","type":0,"val":"close","end":""}],
     types: placeholder as Registry['closeTask']['types'],
+  },
+  'createTaskFromClassroom': {
+    methods: ["POST"],
+    pattern: '/api/v1/tasks/from-classroom',
+    tokens: [{"old":"/api/v1/tasks/from-classroom","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/from-classroom","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/from-classroom","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/from-classroom","type":0,"val":"from-classroom","end":""}],
+    types: placeholder as Registry['createTaskFromClassroom']['types'],
+  },
+  'syncClassroomTask': {
+    methods: ["POST"],
+    pattern: '/api/v1/tasks/:id/sync-classroom',
+    tokens: [{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"api","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"v1","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"tasks","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":1,"val":"id","end":""},{"old":"/api/v1/tasks/:id/sync-classroom","type":0,"val":"sync-classroom","end":""}],
+    types: placeholder as Registry['syncClassroomTask']['types'],
+  },
+  'showClassroomSyncRun': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/classroom-sync-runs/:runId',
+    tokens: [{"old":"/api/v1/classroom-sync-runs/:runId","type":0,"val":"api","end":""},{"old":"/api/v1/classroom-sync-runs/:runId","type":0,"val":"v1","end":""},{"old":"/api/v1/classroom-sync-runs/:runId","type":0,"val":"classroom-sync-runs","end":""},{"old":"/api/v1/classroom-sync-runs/:runId","type":1,"val":"runId","end":""}],
+    types: placeholder as Registry['showClassroomSyncRun']['types'],
+  },
+  'googleClassroomCallback': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/integrations/google-classroom/callback',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/callback","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/callback","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/callback","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/callback","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/callback","type":0,"val":"callback","end":""}],
+    types: placeholder as Registry['googleClassroomCallback']['types'],
+  },
+  'connectGoogleClassroom': {
+    methods: ["POST"],
+    pattern: '/api/v1/integrations/google-classroom/connect',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/connect","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/connect","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/connect","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/connect","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/connect","type":0,"val":"connect","end":""}],
+    types: placeholder as Registry['connectGoogleClassroom']['types'],
+  },
+  'googleClassroomStatus': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/integrations/google-classroom/status',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/status","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/status","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/status","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/status","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/status","type":0,"val":"status","end":""}],
+    types: placeholder as Registry['googleClassroomStatus']['types'],
+  },
+  'disconnectGoogleClassroom': {
+    methods: ["DELETE"],
+    pattern: '/api/v1/integrations/google-classroom/disconnect',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/disconnect","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/disconnect","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/disconnect","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/disconnect","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/disconnect","type":0,"val":"disconnect","end":""}],
+    types: placeholder as Registry['disconnectGoogleClassroom']['types'],
+  },
+  'listGoogleClassroomCourses': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/integrations/google-classroom/courses',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/courses","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/courses","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/courses","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/courses","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/courses","type":0,"val":"courses","end":""}],
+    types: placeholder as Registry['listGoogleClassroomCourses']['types'],
+  },
+  'listGoogleClassroomCourseWork': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/integrations/google-classroom/courses/:courseId/coursework',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"courses","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":1,"val":"courseId","end":""},{"old":"/api/v1/integrations/google-classroom/courses/:courseId/coursework","type":0,"val":"coursework","end":""}],
+    types: placeholder as Registry['listGoogleClassroomCourseWork']['types'],
+  },
+  'syncGoogleClassroomStudents': {
+    methods: ["POST"],
+    pattern: '/api/v1/integrations/google-classroom/sync-students',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/sync-students","type":0,"val":"sync-students","end":""}],
+    types: placeholder as Registry['syncGoogleClassroomStudents']['types'],
+  },
+  'syncAllGoogleClassroomTasks': {
+    methods: ["POST"],
+    pattern: '/api/v1/integrations/google-classroom/sync-all',
+    tokens: [{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"api","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"v1","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"integrations","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"google-classroom","end":""},{"old":"/api/v1/integrations/google-classroom/sync-all","type":0,"val":"sync-all","end":""}],
+    types: placeholder as Registry['syncAllGoogleClassroomTasks']['types'],
   },
   'listStudentSubmissions': {
     methods: ["GET","HEAD"],
@@ -270,6 +366,24 @@ const routes = {
     tokens: [{"old":"/api/v1/rewards/catalog","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/catalog","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/catalog","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/catalog","type":0,"val":"catalog","end":""}],
     types: placeholder as Registry['createCatalogReward']['types'],
   },
+  'updateCatalogReward': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/rewards/catalog/:id',
+    tokens: [{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"api","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"rewards","end":""},{"old":"/api/v1/rewards/catalog/:id","type":0,"val":"catalog","end":""},{"old":"/api/v1/rewards/catalog/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['updateCatalogReward']['types'],
+  },
+  'listStudentLeaderboard': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/leaderboard/students',
+    tokens: [{"old":"/api/v1/leaderboard/students","type":0,"val":"api","end":""},{"old":"/api/v1/leaderboard/students","type":0,"val":"v1","end":""},{"old":"/api/v1/leaderboard/students","type":0,"val":"leaderboard","end":""},{"old":"/api/v1/leaderboard/students","type":0,"val":"students","end":""}],
+    types: placeholder as Registry['listStudentLeaderboard']['types'],
+  },
+  'listMyAchievements': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/achievements/me',
+    tokens: [{"old":"/api/v1/achievements/me","type":0,"val":"api","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"v1","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"achievements","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"me","end":""}],
+    types: placeholder as Registry['listMyAchievements']['types'],
+  },
   'studentBalance': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/students/:studentId/balance',
@@ -317,6 +431,12 @@ const routes = {
     pattern: '/api/v1/account/profile',
     tokens: [{"old":"/api/v1/account/profile","type":0,"val":"api","end":""},{"old":"/api/v1/account/profile","type":0,"val":"v1","end":""},{"old":"/api/v1/account/profile","type":0,"val":"account","end":""},{"old":"/api/v1/account/profile","type":0,"val":"profile","end":""}],
     types: placeholder as Registry['profile.profile.show']['types'],
+  },
+  'profile.changePassword': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/account/password',
+    tokens: [{"old":"/api/v1/account/password","type":0,"val":"api","end":""},{"old":"/api/v1/account/password","type":0,"val":"v1","end":""},{"old":"/api/v1/account/password","type":0,"val":"account","end":""},{"old":"/api/v1/account/password","type":0,"val":"password","end":""}],
+    types: placeholder as Registry['profile.changePassword']['types'],
   },
   'ngo_institutions.index': {
     methods: ["GET","HEAD"],

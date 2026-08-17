@@ -10,10 +10,90 @@ function normalizeSubjectName(name: string): string {
   return name.trim().replace(/\s+/g, ' ')
 }
 
-function buildGroupDisplayName(subjectName: string, section: string | null, className: string | null): string {
+export function buildGroupDisplayName(
+  subjectName: string,
+  section: string | null,
+  className: string | null
+): string {
   if (className && className.length > 0) return className
-  if (section && section.length > 0) return `${subjectName} ${section}`
-  return subjectName
+
+  const normalizedSubject = normalizeSubjectName(subjectName)
+  const normalizedSection = section?.trim() || null
+
+  if (normalizedSection) {
+    if (normalizedSubject.toLowerCase().endsWith(normalizedSection.toLowerCase())) {
+      return normalizedSubject
+    }
+    return `${normalizedSubject} ${normalizedSection}`
+  }
+
+  return normalizedSubject
+}
+
+export async function findInstitutionGroup(
+  input: {
+    institutionId: number
+    subjectId: number
+    subjectName: string
+    section: string | null
+    className: string | null
+  },
+  trx?: TransactionClientContract
+) {
+  const section = input.section?.trim() || null
+  const className = input.className?.trim() || null
+  const displayName = buildGroupDisplayName(input.subjectName, section, className)
+
+  const baseQuery = () => {
+    let query = db
+      .from('groups')
+      .where('institution_id', input.institutionId)
+      .where('subject_id', input.subjectId)
+
+    if (trx) query = query.useTransaction(trx)
+    return query
+  }
+
+  if (section) {
+    const bySection = await baseQuery().where('section', section).orderBy('id', 'asc').first()
+    if (bySection) return bySection
+  }
+
+  if (className) {
+    const byClassName = await baseQuery().whereILike('name', className).first()
+    if (byClassName) return byClassName
+  }
+
+  const byDisplayName = await baseQuery().whereILike('name', displayName).first()
+  if (byDisplayName) return byDisplayName
+
+  if (!section) {
+    const byNameOnly = await baseQuery().where('name', displayName).first()
+    if (byNameOnly) return byNameOnly
+  }
+
+  if (className || section) {
+    let fallback = db
+      .from('groups')
+      .where('institution_id', input.institutionId)
+
+    if (trx) fallback = fallback.useTransaction(trx)
+
+    if (section) {
+      fallback = fallback.where('section', section)
+    }
+
+    if (className) {
+      fallback = fallback.whereILike('name', className)
+    } else {
+      fallback = fallback.whereILike('name', displayName)
+    }
+
+    const crossSubjectMatch = await fallback.orderBy('id', 'asc').first()
+    if (crossSubjectMatch) return crossSubjectMatch
+  }
+
+  return null
 }
 
 export async function findOrCreateSubject(
@@ -71,20 +151,16 @@ export async function findOrCreateGroup(
   const className = input.className?.trim() || null
   const displayName = buildGroupDisplayName(input.subjectName, section, className)
 
-  let findQuery = db
-    .from('groups')
-    .where('institution_id', input.institutionId)
-    .where('subject_id', input.subjectId)
-
-  if (trx) findQuery = findQuery.useTransaction(trx)
-
-  if (section) {
-    findQuery = findQuery.where('section', section)
-  } else {
-    findQuery = findQuery.where('name', displayName)
-  }
-
-  const existing = await findQuery.first()
+  const existing = await findInstitutionGroup(
+    {
+      institutionId: input.institutionId,
+      subjectId: input.subjectId,
+      subjectName: input.subjectName,
+      section,
+      className,
+    },
+    trx
+  )
   if (existing) return existing
 
   const insertQuery = db
@@ -179,11 +255,17 @@ export type InstitutionStudentRow = {
   id: number
   email: string
   fullName: string | null
+  registrationNumber: string | null
 }
 
 export type FindOrCreateStudentResult =
   | { ok: true; student: InstitutionStudentRow; created: boolean }
   | { ok: false; message: string }
+
+export function normalizeRegistrationNumber(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : null
+}
 
 async function ensureStudentRoleId(trx?: TransactionClientContract): Promise<number> {
   let query = db.from('roles').where('key', 'student')
@@ -222,7 +304,12 @@ export async function findInstitutionStudentByEmail(
     .where('users.institution_id', institutionId)
     .where('roles.key', 'student')
     .whereRaw('LOWER(users.email) = ?', [normalizedEmail])
-    .select('users.id as id', 'users.email as email', 'users.full_name as fullName')
+    .select(
+      'users.id as id',
+      'users.email as email',
+      'users.full_name as fullName',
+      'users.registration_number as registrationNumber'
+    )
 
   if (trx) query = query.useTransaction(trx)
 
@@ -230,24 +317,131 @@ export async function findInstitutionStudentByEmail(
   return row ? (row as InstitutionStudentRow) : null
 }
 
+async function findRegistrationNumberConflict(
+  institutionId: number,
+  registrationNumber: string,
+  excludeUserId?: number,
+  trx?: TransactionClientContract
+): Promise<boolean> {
+  let query = db
+    .from('users')
+    .where('institution_id', institutionId)
+    .whereRaw('LOWER(registration_number) = ?', [registrationNumber.toLowerCase()])
+
+  if (excludeUserId != null) {
+    query = query.whereNot('id', excludeUserId)
+  }
+  if (trx) query = query.useTransaction(trx)
+
+  const row = await query.first()
+  return row !== undefined && row !== null
+}
+
+async function backfillStudentRegistrationNumber(
+  student: InstitutionStudentRow,
+  registrationNumber: string | null,
+  institutionId: number,
+  dryRun: boolean
+): Promise<FindOrCreateStudentResult> {
+  if (!registrationNumber) {
+    return { ok: true, student, created: false }
+  }
+
+  const existingNumber = normalizeRegistrationNumber(student.registrationNumber)
+  if (existingNumber) {
+    if (existingNumber.toLowerCase() !== registrationNumber.toLowerCase()) {
+      return {
+        ok: false,
+        message: `Registration number mismatch for ${student.email}`,
+      }
+    }
+    return { ok: true, student, created: false }
+  }
+
+  const conflict = await findRegistrationNumberConflict(
+    institutionId,
+    registrationNumber,
+    student.id
+  )
+  if (conflict) {
+    return {
+      ok: false,
+      message: `Registration number already used: ${registrationNumber}`,
+    }
+  }
+
+  if (!dryRun) {
+    await db
+      .from('users')
+      .where('id', student.id)
+      .update({
+        registration_number: registrationNumber,
+        updated_at: new Date(),
+      })
+  }
+
+  return {
+    ok: true,
+    student: { ...student, registrationNumber },
+    created: false,
+  }
+}
+
 export async function findOrCreateInstitutionStudent(input: {
   institutionId: number
   email: string
   fullName: string | null
+  registrationNumber?: string | null
   dryRun: boolean
   pendingCreatedEmails?: Set<string>
+  pendingCreatedRegistrationNumbers?: Set<string>
 }): Promise<FindOrCreateStudentResult> {
   const normalizedEmail = input.email.trim().toLowerCase()
+  const registrationNumber = normalizeRegistrationNumber(input.registrationNumber)
+
   const existing = await findInstitutionStudentByEmail(input.institutionId, normalizedEmail)
   if (existing) {
-    return { ok: true, student: existing, created: false }
+    return backfillStudentRegistrationNumber(
+      existing,
+      registrationNumber,
+      input.institutionId,
+      input.dryRun
+    )
   }
 
   if (input.dryRun && input.pendingCreatedEmails?.has(normalizedEmail)) {
     return {
       ok: true,
-      student: { id: 0, email: normalizedEmail, fullName: input.fullName },
+      student: {
+        id: 0,
+        email: normalizedEmail,
+        fullName: input.fullName,
+        registrationNumber,
+      },
       created: false,
+    }
+  }
+
+  if (!registrationNumber) {
+    return {
+      ok: false,
+      message: `Registration number is required for new student: ${normalizedEmail}`,
+    }
+  }
+
+  const pendingKey = registrationNumber.toLowerCase()
+  if (input.dryRun && input.pendingCreatedRegistrationNumbers?.has(pendingKey)) {
+    return {
+      ok: false,
+      message: `Registration number already used: ${registrationNumber}`,
+    }
+  }
+
+  const conflict = await findRegistrationNumberConflict(input.institutionId, registrationNumber)
+  if (conflict) {
+    return {
+      ok: false,
+      message: `Registration number already used: ${registrationNumber}`,
     }
   }
 
@@ -271,9 +465,15 @@ export async function findOrCreateInstitutionStudent(input: {
 
   if (input.dryRun) {
     input.pendingCreatedEmails?.add(normalizedEmail)
+    input.pendingCreatedRegistrationNumbers?.add(pendingKey)
     return {
       ok: true,
-      student: { id: 0, email: normalizedEmail, fullName: input.fullName },
+      student: {
+        id: 0,
+        email: normalizedEmail,
+        fullName: input.fullName,
+        registrationNumber,
+      },
       created: true,
     }
   }
@@ -285,7 +485,9 @@ export async function findOrCreateInstitutionStudent(input: {
         email: normalizedEmail,
         password: randomBytes(18).toString('base64url'),
         institutionId: input.institutionId,
-        isActive: true,
+        isActive: false,
+        accountStatus: 'pending',
+        registrationNumber,
       },
       { client: trx }
     )
@@ -309,6 +511,7 @@ export async function findOrCreateInstitutionStudent(input: {
       id: createdUser.id,
       email: createdUser.email,
       fullName: createdUser.fullName,
+      registrationNumber: createdUser.registrationNumber,
     },
     created: true,
   }

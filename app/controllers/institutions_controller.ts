@@ -375,12 +375,16 @@ export default class InstitutionsController {
 
         let role = await trx.from('roles').where('key', payload.role).first()
         if (!role) {
-          const label = payload.role === 'teacher' ? 'Teacher' : 'Student'
+          const labelMap: Record<string, string> = {
+            teacher: 'Teacher',
+            student: 'Student',
+            school_admin: 'School Admin',
+          }
           const inserted = await trx
             .table('roles')
             .insert({
               key: payload.role,
-              label,
+              label: labelMap[payload.role],
               created_at: new Date(),
               updated_at: null,
             })

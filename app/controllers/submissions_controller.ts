@@ -2,8 +2,10 @@ import Submission from '#models/submission'
 import Task from '#models/task'
 import SubmissionValidation from '#models/submission_validation'
 import db from '@adonisjs/lucid/services/db'
+import { getTeacherCreditPoolSummary } from '#services/credits/teacher_credit_pool_service'
 import {
   InsufficientInstitutionCreditsError,
+  InsufficientTeacherCreditsError,
   issueRewardForSubmission,
 } from '#services/credits/reward_issuance_service'
 import {
@@ -58,7 +60,7 @@ export default class SubmissionsController {
       .where('submissions.id', submissionId)
       .andWhere('submissions.institution_id', institutionId ?? -1)
       .andWhere('tasks.created_by_teacher_id', teacherId)
-      .select('submissions.*')
+      .select('submissions.*', 'tasks.reward_amount as taskRewardAmount')
       .first()
 
     if (!submission) {
@@ -87,23 +89,123 @@ export default class SubmissionsController {
       }
     }
 
-    await db.transaction(async (trx) => {
-      submission.useTransaction(trx)
-      submission.status =
-        action === 'validate' ? SUBMISSION_STATUS.validated : SUBMISSION_STATUS.rejectedByTeacher
-      await submission.save()
+    if (action === 'reject') {
+      await db.transaction(async (trx) => {
+        submission.useTransaction(trx)
+        submission.status = SUBMISSION_STATUS.rejectedByTeacher
+        await submission.save()
 
-      await SubmissionValidation.create(
-        {
-          submissionId: submission.id,
-          teacherId,
-          schoolAdminId: null,
-          action,
-          comment: reason,
+        await SubmissionValidation.create(
+          {
+            submissionId: submission.id,
+            teacherId,
+            schoolAdminId: null,
+            action,
+            comment: reason,
+          },
+          { client: trx }
+        )
+      })
+
+      return {
+        statusCode: 200 as const,
+        payload: {
+          data: {
+            id: submission.id,
+            status: submission.status,
+            statusLabelEs: statusLabelEs(submission.status),
+          },
         },
-        { client: trx }
-      )
-    })
+      }
+    }
+
+    const task = await Task.find(submission.taskId)
+    const rewardAmount = Number(task?.rewardAmount ?? 0)
+    const teacherPool = await getTeacherCreditPoolSummary(teacherId)
+    const canAutoApprove =
+      teacherPool !== null &&
+      teacherPool.allocatedCredits > 0 &&
+      teacherPool.remainingCredits >= rewardAmount &&
+      rewardAmount > 0
+
+    let rewardTransactionId: number | null = null
+
+    try {
+      await db.transaction(async (trx) => {
+        submission.useTransaction(trx)
+
+        if (canAutoApprove) {
+          submission.status = SUBMISSION_STATUS.approved
+          await submission.save()
+
+          await SubmissionValidation.create(
+            {
+              submissionId: submission.id,
+              teacherId,
+              schoolAdminId: null,
+              action: 'validate',
+              comment: reason,
+            },
+            { client: trx }
+          )
+
+          await SubmissionValidation.create(
+            {
+              submissionId: submission.id,
+              teacherId: null,
+              schoolAdminId: null,
+              action: 'auto_approve',
+              comment: 'Aprobación automática por presupuesto docente',
+            },
+            { client: trx }
+          )
+
+          const issued = await issueRewardForSubmission({
+            institutionId: submission.institutionId,
+            studentId: submission.studentId,
+            amount: rewardAmount,
+            submissionId: submission.id,
+            actorUserId: teacherId,
+            fundingSource: 'teacher',
+            teacherId,
+            client: trx,
+          })
+          rewardTransactionId = issued.transactionId
+        } else {
+          submission.status = SUBMISSION_STATUS.validated
+          await submission.save()
+
+          await SubmissionValidation.create(
+            {
+              submissionId: submission.id,
+              teacherId,
+              schoolAdminId: null,
+              action: 'validate',
+              comment: reason,
+            },
+            { client: trx }
+          )
+        }
+      })
+    } catch (error) {
+      if (error instanceof InsufficientTeacherCreditsError) {
+        return {
+          statusCode: 422 as const,
+          payload: {
+            error: {
+              code: error.code,
+              message: 'El docente no tiene créditos suficientes para esta recompensa',
+              details: {
+                remainingCredits: error.remaining,
+                requestedCredits: error.requested,
+              },
+              requestId: requestId ?? 'unknown',
+            },
+          },
+        }
+      }
+      throw error
+    }
 
     return {
       statusCode: 200 as const,
@@ -112,6 +214,7 @@ export default class SubmissionsController {
           id: submission.id,
           status: submission.status,
           statusLabelEs: statusLabelEs(submission.status),
+          ...(canAutoApprove ? { autoApproved: true, rewardTransactionId } : {}),
         },
       },
     }

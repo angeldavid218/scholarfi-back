@@ -17,10 +17,29 @@ export const signupValidator = vine.create({
 })
 
 /**
+ * Validator for student account claim via email + matrícula
+ */
+export const registerStudentValidator = vine.create({
+  email: email(),
+  registrationNumber: vine.string().trim().minLength(1).maxLength(64),
+  password: password(),
+  passwordConfirmation: password().sameAs('password'),
+})
+
+/**
  * Validator to use before validating user credentials
  * during login
  */
 export const loginValidator = vine.create({
   email: email(),
   password: vine.string(),
+})
+
+/**
+ * Validator for authenticated password change
+ */
+export const changePasswordValidator = vine.create({
+  currentPassword: vine.string().minLength(1).maxLength(32),
+  password: password(),
+  passwordConfirmation: password().sameAs('password'),
 })

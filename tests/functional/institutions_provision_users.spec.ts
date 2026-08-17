@@ -123,6 +123,55 @@ test.group('Institutions provision users', (group) => {
     assert.equal(Number(row.balance), 0)
   })
 
+  test('school admin provisions school admin in own active institution', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution('active')
+
+    const schoolAdmin = await User.create({
+      email: 'school-admin-provision-peer@example.com',
+      password: 'Secret123!',
+      fullName: 'School Admin Provision Peer',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(schoolAdmin.id, 'school_admin', 'School Admin')
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: 'school-admin-provision-peer@example.com',
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as any).data.token as string
+
+    const response = await client
+      .post('/api/v1/institutions/users')
+      .header('authorization', `Bearer ${token}`)
+      .json({
+        fullName: 'Provisioned School Admin',
+        email: 'provisioned-school-admin@example.com',
+        password: 'Secret123!',
+        role: 'school_admin',
+      })
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    assert.equal(body.data.role, 'school_admin')
+    assert.equal(body.data.institutionId, institutionId)
+
+    const wallet = await db.from('token_balances').where('user_id', body.data.id).first()
+    assert.isNull(wallet)
+
+    const roleRow = await db
+      .from('user_roles')
+      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .where('user_roles.user_id', body.data.id)
+      .select('roles.key', 'roles.label')
+      .first()
+    assert.equal(roleRow?.key, 'school_admin')
+    assert.equal(roleRow?.label, 'School Admin')
+  })
+
   test('school admin cannot provision users when institution is inactive', async ({ client }) => {
     const institutionId = await createInstitution('inactive')
 

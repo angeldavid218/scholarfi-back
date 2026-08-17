@@ -30,6 +30,8 @@ export default class RedemptionsController {
     const catalog = await CatalogReward.query()
       .where('id', payload.rewardId)
       .andWhere('institution_id', user.institutionId)
+      .andWhere('source', 'internal')
+      .andWhere('is_active', true)
       .first()
 
     if (!catalog) {
@@ -118,20 +120,46 @@ export default class RedemptionsController {
     }
 
     const rows = await q.paginate(page, perPage)
+    const items = rows.all()
+    const rewardIds = [...new Set(items.map((r) => r.rewardId))]
+    const userIds = [...new Set(items.map((r) => r.userId))]
+
+    const catalogRows =
+      rewardIds.length > 0
+        ? await CatalogReward.query().whereIn('id', rewardIds)
+        : []
+    const catalogById = new Map(catalogRows.map((c) => [c.id, c]))
+
+    const studentRows =
+      userIds.length > 0
+        ? await db.from('users').whereIn('id', userIds).select('id', 'full_name', 'email')
+        : []
+    const studentById = new Map(
+      studentRows.map((s) => [
+        s.id as number,
+        { fullName: (s.full_name as string | null) ?? null, email: s.email as string },
+      ])
+    )
 
     return {
       data: {
-        items: rows.all().map((r) => ({
-          id: r.id,
-          institutionId: r.institutionId,
-          userId: r.userId,
-          rewardId: r.rewardId,
-          amount: r.amount,
-          status: r.status,
-          transactionSignature: r.transactionSignature,
-          createdAt: r.createdAt,
-          updatedAt: r.updatedAt,
-        })),
+        items: items.map((r) => {
+          const catalog = catalogById.get(r.rewardId)
+          const student = studentById.get(r.userId)
+          return {
+            id: r.id,
+            institutionId: r.institutionId,
+            userId: r.userId,
+            studentName: student?.fullName ?? student?.email ?? null,
+            rewardId: r.rewardId,
+            rewardTitle: catalog?.title ?? null,
+            amount: r.amount,
+            status: r.status,
+            transactionSignature: r.transactionSignature,
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt,
+          }
+        }),
         meta: rows.getMeta(),
       },
     }

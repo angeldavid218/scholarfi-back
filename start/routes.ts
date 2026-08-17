@@ -22,6 +22,12 @@ router
         router.post('signup', [controllers.NewAccount, 'store'])
         router.post('login', [controllers.AccessToken, 'store'])
         router.post('logout', [controllers.AccessToken, 'destroy']).use(middleware.auth())
+        router
+          .post('register-student', [
+            () => import('#controllers/student_registration_controller'),
+            'store',
+          ])
+          .as('registerStudent')
       })
       .prefix('auth')
       .as('auth')
@@ -70,6 +76,27 @@ router
             'showMine',
           ])
           .as('showMyInstitutionCreditPool')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .get('/teacher-credit-pools', [
+            () => import('#controllers/teacher_credits_controller'),
+            'index',
+          ])
+          .as('listTeacherCreditPools')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/teacher-credit-pools/allocate-equal', [
+            () => import('#controllers/teacher_credits_controller'),
+            'allocateEqual',
+          ])
+          .as('allocateEqualTeacherCredits')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/teacher-credit-pools/:teacherId/allocate', [
+            () => import('#controllers/teacher_credits_controller'),
+            'allocateToTeacher',
+          ])
+          .as('allocateTeacherCredits')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
           .post('/:id/bootstrap-school-admin', [
@@ -166,6 +193,20 @@ router
     router
       .group(() => {
         router
+          .get('/credit-pool', [
+            () => import('#controllers/teacher_credits_controller'),
+            'showMine',
+          ])
+          .as('showMyTeacherCreditPool')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('teachers')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
           .get('/available', [() => import('#controllers/tasks_controller'), 'available'])
           .as('listStudentAvailableTasks')
           .use(middleware.role({ roles: ['student'] }))
@@ -185,8 +226,103 @@ router
           .patch('/:id/close', [() => import('#controllers/tasks_controller'), 'close'])
           .as('closeTask')
           .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/from-classroom', [
+            () => import('#controllers/google_classroom_controller'),
+            'createTaskFromClassroom',
+          ])
+          .as('createTaskFromClassroom')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/:id/sync-classroom', [
+            () => import('#controllers/google_classroom_controller'),
+            'syncTask',
+          ])
+          .as('syncClassroomTask')
+          .use(middleware.role({ roles: ['teacher'] }))
       })
       .prefix('tasks')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/:runId', [
+            () => import('#controllers/google_classroom_controller'),
+            'showSyncRun',
+          ])
+          .as('showClassroomSyncRun')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('classroom-sync-runs')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/google-classroom/callback', [
+            () => import('#controllers/google_classroom_controller'),
+            'callback',
+          ])
+          .as('googleClassroomCallback')
+      })
+      .prefix('integrations')
+
+    router
+      .group(() => {
+        router
+          .post('/google-classroom/connect', [
+            () => import('#controllers/google_classroom_controller'),
+            'connect',
+          ])
+          .as('connectGoogleClassroom')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/google-classroom/status', [
+            () => import('#controllers/google_classroom_controller'),
+            'status',
+          ])
+          .as('googleClassroomStatus')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .delete('/google-classroom/disconnect', [
+            () => import('#controllers/google_classroom_controller'),
+            'disconnect',
+          ])
+          .as('disconnectGoogleClassroom')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/google-classroom/courses', [
+            () => import('#controllers/google_classroom_controller'),
+            'listCourses',
+          ])
+          .as('listGoogleClassroomCourses')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .get('/google-classroom/courses/:courseId/coursework', [
+            () => import('#controllers/google_classroom_controller'),
+            'listCourseWork',
+          ])
+          .as('listGoogleClassroomCourseWork')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/google-classroom/sync-students', [
+            () => import('#controllers/google_classroom_controller'),
+            'syncStudents',
+          ])
+          .as('syncGoogleClassroomStudents')
+          .use(middleware.role({ roles: ['teacher'] }))
+        router
+          .post('/google-classroom/sync-all', [
+            () => import('#controllers/google_classroom_controller'),
+            'syncAll',
+          ])
+          .as('syncAllGoogleClassroomTasks')
+          .use(middleware.role({ roles: ['teacher'] }))
+      })
+      .prefix('integrations')
       .use(middleware.auth())
       .use(middleware.tenantScope())
 
@@ -276,8 +412,37 @@ router
           .post('/catalog', [() => import('#controllers/catalog_rewards_controller'), 'store'])
           .as('createCatalogReward')
           .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .patch('/catalog/:id', [() => import('#controllers/catalog_rewards_controller'), 'update'])
+          .as('updateCatalogReward')
+          .use(middleware.role({ roles: ['school_admin'] }))
       })
       .prefix('rewards')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/students', [
+            () => import('#controllers/leaderboard_controller'),
+            'students',
+          ])
+          .as('listStudentLeaderboard')
+          .use(middleware.role({ roles: ['student', 'teacher', 'school_admin'] }))
+      })
+      .prefix('leaderboard')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/me', [() => import('#controllers/achievements_controller'), 'me'])
+          .as('listMyAchievements')
+          .use(middleware.role({ roles: ['student'] }))
+      })
+      .prefix('achievements')
       .use(middleware.auth())
       .use(middleware.tenantScope())
 
@@ -336,6 +501,14 @@ router
         router
           .get('/profile', [controllers.Profile, 'show'])
           .use(middleware.role({ roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'] }))
+        router
+          .patch('/password', [() => import('#controllers/profile_controller'), 'updatePassword'])
+          .as('changePassword')
+          .use(
+            middleware.role({
+              roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
+            })
+          )
       })
       .prefix('account')
       .as('profile')

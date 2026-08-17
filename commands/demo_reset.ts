@@ -1,4 +1,4 @@
-import { BaseCommand, flags } from '@adonisjs/core/ace'
+import { BaseCommand } from '@adonisjs/core/ace'
 import { seedDemoBaseline } from '#services/demo_seed_service'
 
 export default class DemoReset extends BaseCommand {
@@ -8,16 +8,9 @@ export default class DemoReset extends BaseCommand {
     startApp: true,
   }
 
-  @flags.boolean({
-    flagName: 'starter',
-    description: 'Omit tasks/submissions/rewards (institution + users only)',
-  })
-  declare starter: boolean
-
   async run() {
     const result = await seedDemoBaseline({
       forceReset: true,
-      includeStarterData: !this.starter,
     })
 
     this.logger.success('Demo baseline reset successfully')
@@ -26,9 +19,8 @@ export default class DemoReset extends BaseCommand {
     this.logger.info(`School admin user: ${result.schoolAdminId}`)
     this.logger.info(`Teacher user: ${result.teacherId}`)
     this.logger.info(`Students: ${result.studentIds.join(', ')}`)
-    if (result.starterTaskId && result.starterSubmissionId) {
-      this.logger.info(`Starter task: ${result.starterTaskId}`)
-      this.logger.info(`Starter submission: ${result.starterSubmissionId}`)
-    }
+    this.logger.info(
+      'Tasks/rewards come from Classroom mock sync (import all Matematicas 3A + sync all).'
+    )
   }
 }

@@ -56,7 +56,7 @@ export class BudgetAllocationSchema extends BaseModel {
 }
 
 export class CatalogRewardSchema extends BaseModel {
-  static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'title', 'updatedAt'] as const
+  static $columns = ['createdAt', 'creditCost', 'description', 'id', 'institutionId', 'isActive', 'source', 'title', 'updatedAt'] as const
   $columns = CatalogRewardSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -69,7 +69,38 @@ export class CatalogRewardSchema extends BaseModel {
   @column()
   declare institutionId: number
   @column()
+  declare isActive: boolean
+  @column()
+  declare source: string
+  @column()
   declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class ClassroomSyncRunSchema extends BaseModel {
+  static $columns = ['createdAt', 'errorMessage', 'id', 'institutionId', 'queueJobId', 'requestId', 'resultJson', 'status', 'taskId', 'teacherId', 'updatedAt'] as const
+  $columns = ClassroomSyncRunSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare queueJobId: string | null
+  @column()
+  declare requestId: string | null
+  @column()
+  declare resultJson: any | null
+  @column()
+  declare status: string
+  @column()
+  declare taskId: number
+  @column()
+  declare teacherId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -265,6 +296,70 @@ export class NgoInstitutionSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class QueueJobSchema extends BaseModel {
+  static $columns = ['acquiredAt', 'data', 'dedupAt', 'dedupId', 'dedupTtl', 'error', 'executeAt', 'finishedAt', 'id', 'queue', 'score', 'status', 'workerId'] as const
+  $columns = QueueJobSchema.$columns
+  @column()
+  declare acquiredAt: bigint | number | null
+  @column()
+  declare data: string
+  @column()
+  declare dedupAt: bigint | number | null
+  @column()
+  declare dedupId: string | null
+  @column()
+  declare dedupTtl: bigint | number | null
+  @column()
+  declare error: string | null
+  @column()
+  declare executeAt: bigint | number | null
+  @column()
+  declare finishedAt: bigint | number | null
+  @column({ isPrimary: true })
+  declare id: string
+  @column()
+  declare queue: string
+  @column()
+  declare score: bigint | number | null
+  @column()
+  declare status: string
+  @column()
+  declare workerId: string | null
+}
+
+export class QueueScheduleSchema extends BaseModel {
+  static $columns = ['createdAt', 'cronExpression', 'everyMs', 'fromDate', 'id', 'lastRunAt', 'name', 'nextRunAt', 'payload', 'runCount', 'runLimit', 'status', 'timezone', 'toDate'] as const
+  $columns = QueueScheduleSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare cronExpression: string | null
+  @column()
+  declare everyMs: bigint | number | null
+  @column.dateTime()
+  declare fromDate: DateTime | null
+  @column({ isPrimary: true })
+  declare id: string
+  @column.dateTime()
+  declare lastRunAt: DateTime | null
+  @column()
+  declare name: string
+  @column.dateTime()
+  declare nextRunAt: DateTime | null
+  @column()
+  declare payload: string
+  @column()
+  declare runCount: number
+  @column()
+  declare runLimit: number | null
+  @column()
+  declare status: string
+  @column()
+  declare timezone: string
+  @column.dateTime()
+  declare toDate: DateTime | null
+}
+
 export class RedemptionSchema extends BaseModel {
   static $columns = ['amount', 'createdAt', 'id', 'institutionId', 'rewardId', 'status', 'transactionSignature', 'updatedAt', 'userId'] as const
   $columns = RedemptionSchema.$columns
@@ -347,6 +442,35 @@ export class SimulatedBalanceSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class StudentAchievementAttestationSchema extends BaseModel {
+  static $columns = ['achievementHash', 'achievementKey', 'attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'institutionId', 'status', 'studentId', 'threshold', 'updatedAt'] as const
+  $columns = StudentAchievementAttestationSchema.$columns
+  @column()
+  declare achievementHash: string
+  @column()
+  declare achievementKey: string
+  @column()
+  declare attestationPda: string | null
+  @column()
+  declare attestationSignature: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare status: string
+  @column()
+  declare studentId: number
+  @column()
+  declare threshold: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class SubjectSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'id', 'institutionId', 'name', 'status', 'updatedAt'] as const
   $columns = SubjectSchema.$columns
@@ -362,6 +486,37 @@ export class SubjectSchema extends BaseModel {
   declare name: string
   @column()
   declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class SubmissionChainProofSchema extends BaseModel {
+  static $columns = ['attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'leaderboardSignature', 'processedAchievementPda', 'schoolBoardPda', 'status', 'studentScorePda', 'submissionHash', 'submissionId', 'updatedAt'] as const
+  $columns = SubmissionChainProofSchema.$columns
+  @column()
+  declare attestationPda: string | null
+  @column()
+  declare attestationSignature: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare leaderboardSignature: string | null
+  @column()
+  declare processedAchievementPda: string | null
+  @column()
+  declare schoolBoardPda: string | null
+  @column()
+  declare status: string
+  @column()
+  declare studentScorePda: string | null
+  @column()
+  declare submissionHash: string
+  @column()
+  declare submissionId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -386,7 +541,7 @@ export class SubmissionValidationSchema extends BaseModel {
 }
 
 export class SubmissionSchema extends BaseModel {
-  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'id', 'institutionId', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
+  static $columns = ['createdAt', 'evidenceText', 'evidenceUrl', 'externalGrade', 'gradeCheckedAt', 'id', 'institutionId', 'rewardSkippedReason', 'status', 'studentId', 'submittedAt', 'taskId', 'updatedAt'] as const
   $columns = SubmissionSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -394,10 +549,16 @@ export class SubmissionSchema extends BaseModel {
   declare evidenceText: string
   @column()
   declare evidenceUrl: string | null
+  @column()
+  declare externalGrade: string | null
+  @column.dateTime()
+  declare gradeCheckedAt: DateTime | null
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare institutionId: number
+  @column()
+  declare rewardSkippedReason: string | null
   @column()
   declare status: string
   @column()
@@ -439,6 +600,79 @@ export class TaskSchema extends BaseModel {
   declare syncMetadata: any | null
   @column()
   declare title: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class TeacherCreditEntrySchema extends BaseModel {
+  static $columns = ['actorUserId', 'amount', 'createdAt', 'entryType', 'id', 'institutionId', 'notes', 'submissionId', 'teacherId', 'tokenTransactionId'] as const
+  $columns = TeacherCreditEntrySchema.$columns
+  @column()
+  declare actorUserId: number | null
+  @column()
+  declare amount: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare entryType: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare notes: string | null
+  @column()
+  declare submissionId: number | null
+  @column()
+  declare teacherId: number
+  @column()
+  declare tokenTransactionId: number | null
+}
+
+export class TeacherCreditPoolSchema extends BaseModel {
+  static $columns = ['allocatedCredits', 'createdAt', 'id', 'institutionId', 'teacherId', 'updatedAt', 'utilizedCredits'] as const
+  $columns = TeacherCreditPoolSchema.$columns
+  @column()
+  declare allocatedCredits: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare teacherId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare utilizedCredits: number
+}
+
+export class TeacherIntegrationSchema extends BaseModel {
+  static $columns = ['connectedAt', 'createdAt', 'encryptedRefreshToken', 'externalEmail', 'externalUserId', 'id', 'institutionId', 'lastSyncAt', 'provider', 'scopes', 'teacherId', 'updatedAt'] as const
+  $columns = TeacherIntegrationSchema.$columns
+  @column.dateTime()
+  declare connectedAt: DateTime
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare encryptedRefreshToken: string
+  @column()
+  declare externalEmail: string
+  @column()
+  declare externalUserId: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column.dateTime()
+  declare lastSyncAt: DateTime | null
+  @column()
+  declare provider: string
+  @column()
+  declare scopes: string
+  @column()
+  declare teacherId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -524,8 +758,10 @@ export class UserRoleSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'updatedAt', 'walletPublicKey'] as const
+  static $columns = ['accountStatus', 'createdAt', 'email', 'encryptedWalletSecret', 'fullName', 'googleClassroomUserId', 'id', 'institutionId', 'isActive', 'ngoInstitutionId', 'password', 'registrationNumber', 'updatedAt', 'walletPublicKey'] as const
   $columns = UserSchema.$columns
+  @column()
+  declare accountStatus: string
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
@@ -534,6 +770,8 @@ export class UserSchema extends BaseModel {
   declare encryptedWalletSecret: string | null
   @column()
   declare fullName: string | null
+  @column()
+  declare googleClassroomUserId: string | null
   @column({ isPrimary: true })
   declare id: number
   @column()
@@ -544,6 +782,8 @@ export class UserSchema extends BaseModel {
   declare ngoInstitutionId: number | null
   @column({ serializeAs: null })
   declare password: string
+  @column()
+  declare registrationNumber: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

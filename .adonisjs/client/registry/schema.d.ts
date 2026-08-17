@@ -43,6 +43,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_token_controller').default['destroy']>>>
     }
   }
+  'auth.registerStudent': {
+    methods: ["POST"]
+    pattern: '/api/v1/auth/register-student'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/user').registerStudentValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/user').registerStudentValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/student_registration_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/student_registration_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'index': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/institutions'
@@ -125,6 +137,42 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['showMine']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institution_credits_controller').default['showMine']>>>
+    }
+  }
+  'listTeacherCreditPools': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/institutions/teacher-credit-pools'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['index']>>>
+    }
+  }
+  'allocateEqualTeacherCredits': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/teacher-credit-pools/allocate-equal'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/teacher_credit').allocateEqualTeacherCreditsValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/teacher_credit').allocateEqualTeacherCreditsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateEqual']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateEqual']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'allocateTeacherCredits': {
+    methods: ["POST"]
+    pattern: '/api/v1/institutions/teacher-credit-pools/:teacherId/allocate'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/teacher_credit').allocateTeacherCreditsValidator)>>
+      paramsTuple: [ParamValue]
+      params: { teacherId: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/teacher_credit').allocateTeacherCreditsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateToTeacher']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['allocateToTeacher']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'bootstrapSchoolAdmin': {
@@ -307,6 +355,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/groups_controller').default['showImportRun']>>>
     }
   }
+  'showMyTeacherCreditPool': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/teachers/credit-pool'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['showMine']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/teacher_credits_controller').default['showMine']>>>
+    }
+  }
   'listStudentAvailableTasks': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/tasks/available'
@@ -365,6 +425,138 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/task').closeTaskValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['close']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/tasks_controller').default['close']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'createTaskFromClassroom': {
+    methods: ["POST"]
+    pattern: '/api/v1/tasks/from-classroom'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/google_classroom').createTaskFromClassroomValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/google_classroom').createTaskFromClassroomValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['createTaskFromClassroom']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['createTaskFromClassroom']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'syncClassroomTask': {
+    methods: ["POST"]
+    pattern: '/api/v1/tasks/:id/sync-classroom'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncTask']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncTask']>>>
+    }
+  }
+  'showClassroomSyncRun': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/classroom-sync-runs/:runId'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { runId: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['showSyncRun']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['showSyncRun']>>>
+    }
+  }
+  'googleClassroomCallback': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/callback'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['callback']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['callback']>>>
+    }
+  }
+  'connectGoogleClassroom': {
+    methods: ["POST"]
+    pattern: '/api/v1/integrations/google-classroom/connect'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['connect']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['connect']>>>
+    }
+  }
+  'googleClassroomStatus': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/status'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['status']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['status']>>>
+    }
+  }
+  'disconnectGoogleClassroom': {
+    methods: ["DELETE"]
+    pattern: '/api/v1/integrations/google-classroom/disconnect'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['disconnect']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['disconnect']>>>
+    }
+  }
+  'listGoogleClassroomCourses': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/courses'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourses']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourses']>>>
+    }
+  }
+  'listGoogleClassroomCourseWork': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/integrations/google-classroom/courses/:courseId/coursework'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { courseId: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/google_classroom').listClassroomCourseWorkValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourseWork']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['listCourseWork']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'syncGoogleClassroomStudents': {
+    methods: ["POST"]
+    pattern: '/api/v1/integrations/google-classroom/sync-students'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncStudents']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncStudents']>>>
+    }
+  }
+  'syncAllGoogleClassroomTasks': {
+    methods: ["POST"]
+    pattern: '/api/v1/integrations/google-classroom/sync-all'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncAll']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/google_classroom_controller').default['syncAll']>>>
     }
   }
   'listStudentSubmissions': {
@@ -535,6 +727,42 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'updateCatalogReward': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/rewards/catalog/:id'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/catalog_reward').updateCatalogRewardValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/catalog_reward').updateCatalogRewardValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/catalog_rewards_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'listStudentLeaderboard': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/leaderboard/students'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/leaderboard_controller').default['students']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/leaderboard_controller').default['students']>>>
+    }
+  }
+  'listMyAchievements': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/achievements/me'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
+    }
+  }
   'studentBalance': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/students/:studentId/balance'
@@ -629,6 +857,18 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['show']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['show']>>>
+    }
+  }
+  'profile.changePassword': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/account/password'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/user').changePasswordValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/user').changePasswordValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['updatePassword']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/profile_controller').default['updatePassword']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'ngo_institutions.index': {

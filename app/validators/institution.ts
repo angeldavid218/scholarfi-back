@@ -23,7 +23,7 @@ export const provisionInstitutionUserValidator = vine.create({
   fullName: vine.string().trim().minLength(2).maxLength(180),
   email: vine.string().trim().email().maxLength(254),
   password: vine.string().minLength(8).maxLength(32),
-  role: vine.enum(['teacher', 'student'] as const),
+  role: vine.enum(['teacher', 'student', 'school_admin'] as const),
 })
 
 export const assignInstitutionUserRoleValidator = vine.create({

@@ -82,8 +82,8 @@ test.group('School groups and CSV import', (group) => {
     const token = (loginResponse.body() as { data: { token: string } }).data.token
 
     const csv = [
-      'student_email,student_name,subject,section',
-      `${student.email},Groups Student,Matemáticas,3°A`,
+      'student_email,student_name,registration_number,subject,section',
+      `${student.email},Groups Student,MAT-GRP-001,Matemáticas,3°A`,
     ].join('\n')
 
     const dryRunResponse = await client
@@ -142,8 +142,8 @@ test.group('School groups and CSV import', (group) => {
 
     const newStudentEmail = `new-student-off-${Date.now()}@example.com`
     const csv = [
-      'student_email,student_name,subject,section',
-      `${newStudentEmail},Nuevo Estudiante,Matemáticas,3°A`,
+      'student_email,student_name,registration_number,subject,section',
+      `${newStudentEmail},Nuevo Estudiante,MAT-OFF-001,Matemáticas,3°A`,
     ].join('\n')
 
     const importResponse = await client
@@ -159,10 +159,13 @@ test.group('School groups and CSV import', (group) => {
       .from('users')
       .where('institution_id', institutionId)
       .where('email', newStudentEmail)
-      .select('id')
+      .select('id', 'account_status', 'is_active', 'registration_number')
       .first()
 
     assert.isDefined(student)
+    assert.equal(student.account_status, 'pending')
+    assert.equal(student.is_active, 0)
+    assert.equal(student.registration_number, 'MAT-OFF-001')
     const wallet = await db.from('token_balances').where('user_id', student.id).first()
     assert.isNull(wallet)
   })
@@ -187,8 +190,8 @@ test.group('School groups and CSV import', (group) => {
 
     const newStudentEmail = `new-student-${Date.now()}@example.com`
     const csv = [
-      'student_email,student_name,subject,section',
-      `${newStudentEmail},Nuevo Estudiante,Matemáticas,3°A`,
+      'student_email,student_name,registration_number,subject,section',
+      `${newStudentEmail},Nuevo Estudiante,MAT-ON-001,Matemáticas,3°A`,
     ].join('\n')
 
     const importResponse = await client
@@ -247,13 +250,14 @@ test.group('School groups and CSV import', (group) => {
     const token = (loginResponse.body() as { data: { token: string } }).data.token
 
     const csv = [
-      'ID interno,Correo electrónico,Apellidos y nombres,Asignatura,Grupo,Notas,Teléfono tutor',
-      `001,${student.email},Mapping Student,Matemáticas,3°A,10,555-0100`,
+      'ID interno,Correo electrónico,Apellidos y nombres,Matrícula,Asignatura,Grupo,Notas,Teléfono tutor',
+      `001,${student.email},Mapping Student,MAT-MAP-001,Matemáticas,3°A,10,555-0100`,
     ].join('\n')
 
     const columnMapping = JSON.stringify({
       student_email: 'Correo electrónico',
       student_name: 'Apellidos y nombres',
+      registration_number: 'Matrícula',
       subject: 'Asignatura',
       section: 'Grupo',
     })
@@ -354,5 +358,111 @@ test.group('School groups and CSV import', (group) => {
     const listBody = listResponse.body() as any
     assert.lengthOf(listBody.data, 1)
     assert.equal(listBody.data[0].studentCount, 1)
+  })
+
+  test('teacher CSV import enrolls students into existing Google Classroom group', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution(`gc-merge-${Date.now()}`)
+
+    const teacher = await User.create({
+      email: `teacher-gc-merge-${Date.now()}@example.com`,
+      password: 'Secret123!',
+      fullName: 'GC Merge Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const student = await User.create({
+      email: `student-gc-merge-${Date.now()}@example.com`,
+      password: 'Secret123!',
+      fullName: 'GC Merge Student',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(student.id, 'student', 'Student')
+
+    const subjectInserted = await db
+      .table('subjects')
+      .insert({
+        institution_id: institutionId,
+        name: 'Matematicas 3A',
+        code: null,
+        status: 'active',
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+    const subjectId =
+      typeof subjectInserted[0] === 'number' ? subjectInserted[0] : subjectInserted[0].id
+
+    const groupInserted = await db
+      .table('groups')
+      .insert({
+        institution_id: institutionId,
+        subject_id: subjectId,
+        name: 'Matematicas 3A',
+        section: '3A',
+        code: null,
+        sync_metadata: { source: 'google_classroom' },
+        status: 'active',
+        external_source: 'google_classroom',
+        external_id: 'gc-course-1',
+        created_by_teacher_id: teacher.id,
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+    const classroomGroupId =
+      typeof groupInserted[0] === 'number' ? groupInserted[0] : groupInserted[0].id
+
+    await db.table('group_teachers').insert({
+      institution_id: institutionId,
+      group_id: classroomGroupId,
+      teacher_id: teacher.id,
+      created_at: new Date(),
+      updated_at: null,
+    })
+
+    const loginResponse = await client.post('/api/v1/auth/login').json({
+      email: teacher.email,
+      password: 'Secret123!',
+    })
+    const token = (loginResponse.body() as { data: { token: string } }).data.token
+
+    const csv = [
+      'student_email,student_name,registration_number,subject,section,class_name',
+      `${student.email},GC Merge Student,MAT-GC-001,Matematicas 3A,3A,Matematicas 3A`,
+    ].join('\n')
+
+    const importResponse = await client
+      .post('/api/v1/groups/import-csv')
+      .header('Authorization', `Bearer ${token}`)
+      .file('file', Buffer.from(csv), { filename: 'classes.csv', contentType: 'text/csv' })
+
+    importResponse.assertStatus(200)
+    const importBody = importResponse.body() as any
+    assert.equal(importBody.data.summary.groupsCreated, 0)
+    assert.equal(importBody.data.summary.enrollmentsUpserted, 1)
+
+    const groups = await db
+      .from('groups')
+      .where('institution_id', institutionId)
+      .where('section', '3A')
+      .whereILike('name', 'Matematicas 3A')
+
+    assert.lengthOf(groups, 1)
+    assert.equal(groups[0].id, classroomGroupId)
+    assert.equal(groups[0].external_source, 'google_classroom')
+
+    const enrollment = await db
+      .from('group_students')
+      .where('group_id', classroomGroupId)
+      .where('student_id', student.id)
+      .first()
+
+    assert.isDefined(enrollment)
   })
 })
