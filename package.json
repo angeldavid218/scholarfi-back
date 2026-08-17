@@ -73,7 +73,6 @@
     "@adonisjs/shield": "^9.0.0",
     "@coral-xyz/anchor": "^0.32.1",
     "@japa/api-client": "^3.2.1",
-    "@solana/signers": "^5.5.1",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.4",
     "@tuyau/core": "^1.2.2",

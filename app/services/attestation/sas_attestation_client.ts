@@ -10,6 +10,7 @@ import bs58 from 'bs58'
 import env from '#start/env'
 import { getSolanaRpcUrl } from '#services/leaderboard/school_score_client'
 import {
+  asAddress,
   deserializeAttestationData,
   deriveAttestationPda,
   deriveCredentialPda,
@@ -72,11 +73,15 @@ export const DEFAULT_MILESTONE_SCHEMA_NAME = 'scholarfi.milestone.v1'
 
 type KitInstruction = {
   programAddress: string
-  data: Uint8Array | number[]
+  data: Uint8Array | Readonly<Uint8Array> | number[]
   accounts: Array<{
     address: string
     role: number
   }>
+}
+
+function asKitInstruction(ix: unknown): KitInstruction {
+  return ix as KitInstruction
 }
 
 function loadKeypairFromSecret(secret: string): Keypair {
@@ -179,7 +184,10 @@ export async function resolveCredentialPda(authority: Keypair, name = getSasCred
     return pinned
   }
   const signer = await toTransactionSigner(authority)
-  const [pda] = await deriveCredentialPda({ authority: signer.address, name })
+  const [pda] = await deriveCredentialPda({
+    authority: asAddress(signer.address),
+    name,
+  })
   return pda
 }
 
@@ -192,7 +200,11 @@ export async function resolveSchemaPda(
   if (pinned) {
     return pinned
   }
-  const [pda] = await deriveSchemaPda({ credential: credentialPda, name, version })
+  const [pda] = await deriveSchemaPda({
+    credential: asAddress(credentialPda),
+    name,
+    version,
+  })
   return pda
 }
 
@@ -210,7 +222,7 @@ export async function createCredentialIfNeeded(params: {
   const name = params.name ?? getSasCredentialName()
   const authoritySigner = await toTransactionSigner(params.authority)
   const [credentialPda] = await deriveCredentialPda({
-    authority: authoritySigner.address,
+    authority: asAddress(authoritySigner.address),
     name,
   })
 
@@ -219,13 +231,15 @@ export async function createCredentialIfNeeded(params: {
   }
 
   const authorizedSigner = await toTransactionSigner(params.authorizedSigner)
-  const ix = getCreateCredentialInstruction({
-    payer: authoritySigner,
-    authority: authoritySigner,
-    credential: credentialPda,
-    name,
-    signers: [authorizedSigner.address],
-  }) as KitInstruction
+  const ix = asKitInstruction(
+    getCreateCredentialInstruction({
+      payer: authoritySigner,
+      authority: authoritySigner,
+      credential: asAddress(credentialPda),
+      name,
+      signers: [asAddress(authorizedSigner.address)],
+    })
+  )
 
   const signature = await sendKitInstruction(params.connection, [params.authority], ix)
   return { credentialPda, signature, created: true }
@@ -241,7 +255,7 @@ export async function createSchemaIfNeeded(params: {
   const name = params.name ?? getSasSchemaName()
   const version = params.version ?? getSasSchemaVersion()
   const [schemaPda] = await deriveSchemaPda({
-    credential: params.credentialPda,
+    credential: asAddress(params.credentialPda),
     name,
     version,
   })
@@ -251,16 +265,18 @@ export async function createSchemaIfNeeded(params: {
   }
 
   const authoritySigner = await toTransactionSigner(params.authority)
-  const ix = getCreateSchemaInstruction({
-    payer: authoritySigner,
-    authority: authoritySigner,
-    credential: params.credentialPda,
-    schema: schemaPda,
-    name,
-    description: 'ScholarFi approved academic achievement (v1)',
-    layout: ACHIEVEMENT_SCHEMA_LAYOUT,
-    fieldNames: [...ACHIEVEMENT_SCHEMA_FIELDS],
-  }) as KitInstruction
+  const ix = asKitInstruction(
+    getCreateSchemaInstruction({
+      payer: authoritySigner,
+      authority: authoritySigner,
+      credential: asAddress(params.credentialPda),
+      schema: asAddress(schemaPda),
+      name,
+      description: 'ScholarFi approved academic achievement (v1)',
+      layout: ACHIEVEMENT_SCHEMA_LAYOUT,
+      fieldNames: [...ACHIEVEMENT_SCHEMA_FIELDS],
+    })
+  )
 
   const signature = await sendKitInstruction(params.connection, [params.authority], ix)
   return { schemaPda, signature, created: true }
@@ -274,7 +290,7 @@ export async function fetchSchemaAccount(
   if (!info) {
     throw new Error(`Schema account not found: ${schemaPda}`)
   }
-  return getSchemaDecoder().decode(info.data) as Schema
+  return getSchemaDecoder().decode(info.data)
 }
 
 export function buildAchievementData(params: {
@@ -312,9 +328,9 @@ export async function createAchievementAttestation(params: {
   const noncePk = nonceFromHash(params.submissionHash)
   const nonce = noncePk.toBase58()
   const [attestationPda] = await deriveAttestationPda({
-    credential: params.credentialPda,
-    schema: params.schemaPda,
-    nonce,
+    credential: asAddress(params.credentialPda),
+    schema: asAddress(params.schemaPda),
+    nonce: asAddress(nonce),
   })
 
   if (await accountExists(params.connection, attestationPda)) {
@@ -328,16 +344,18 @@ export async function createAchievementAttestation(params: {
     Math.floor(Date.now() / 1000) + getSasExpiryDays() * 24 * 60 * 60
 
   const signer = await toTransactionSigner(params.authorizedSigner)
-  const ix = getCreateAttestationInstruction({
-    payer: signer,
-    authority: signer,
-    credential: params.credentialPda,
-    schema: params.schemaPda,
-    attestation: attestationPda,
-    nonce,
-    data: dataBytes,
-    expiry,
-  }) as KitInstruction
+  const ix = asKitInstruction(
+    getCreateAttestationInstruction({
+      payer: signer,
+      authority: signer,
+      credential: asAddress(params.credentialPda),
+      schema: asAddress(params.schemaPda),
+      attestation: asAddress(attestationPda),
+      nonce: asAddress(nonce),
+      data: dataBytes,
+      expiry,
+    })
+  )
 
   const signature = await sendKitInstruction(params.connection, [params.authorizedSigner], ix)
   return { attestationPda, nonce, signature, created: true }
@@ -363,7 +381,7 @@ export async function resolveMilestoneSchemaPda(credentialPda: string) {
   // Derive directly — do NOT call resolveSchemaPda(), which pins SAS_SCHEMA_PDA
   // (the per-submission achievement schema) and would serialize the wrong fields.
   const [pda] = await deriveSchemaPda({
-    credential: credentialPda,
+    credential: asAddress(credentialPda),
     name: getSasMilestoneSchemaName(),
     version: getSasMilestoneSchemaVersion(),
   })
@@ -378,7 +396,7 @@ export async function createMilestoneSchemaIfNeeded(params: {
   const name = getSasMilestoneSchemaName()
   const version = getSasMilestoneSchemaVersion()
   const [schemaPda] = await deriveSchemaPda({
-    credential: params.credentialPda,
+    credential: asAddress(params.credentialPda),
     name,
     version,
   })
@@ -388,16 +406,18 @@ export async function createMilestoneSchemaIfNeeded(params: {
   }
 
   const authoritySigner = await toTransactionSigner(params.authority)
-  const ix = getCreateSchemaInstruction({
-    payer: authoritySigner,
-    authority: authoritySigner,
-    credential: params.credentialPda,
-    schema: schemaPda,
-    name,
-    description: 'ScholarFi milestone achievement (v1)',
-    layout: MILESTONE_SCHEMA_LAYOUT,
-    fieldNames: [...MILESTONE_SCHEMA_FIELDS],
-  }) as KitInstruction
+  const ix = asKitInstruction(
+    getCreateSchemaInstruction({
+      payer: authoritySigner,
+      authority: authoritySigner,
+      credential: asAddress(params.credentialPda),
+      schema: asAddress(schemaPda),
+      name,
+      description: 'ScholarFi milestone achievement (v1)',
+      layout: MILESTONE_SCHEMA_LAYOUT,
+      fieldNames: [...MILESTONE_SCHEMA_FIELDS],
+    })
+  )
 
   const signature = await sendKitInstruction(params.connection, [params.authority], ix)
   return { schemaPda, signature, created: true }
@@ -438,9 +458,9 @@ export async function createMilestoneAttestation(params: {
   const noncePk = nonceFromHash(params.achievementHash)
   const nonce = noncePk.toBase58()
   const [attestationPda] = await deriveAttestationPda({
-    credential: params.credentialPda,
-    schema: params.schemaPda,
-    nonce,
+    credential: asAddress(params.credentialPda),
+    schema: asAddress(params.schemaPda),
+    nonce: asAddress(nonce),
   })
 
   if (await accountExists(params.connection, attestationPda)) {
@@ -454,16 +474,18 @@ export async function createMilestoneAttestation(params: {
     Math.floor(Date.now() / 1000) + getSasExpiryDays() * 24 * 60 * 60
 
   const signer = await toTransactionSigner(params.authorizedSigner)
-  const ix = getCreateAttestationInstruction({
-    payer: signer,
-    authority: signer,
-    credential: params.credentialPda,
-    schema: params.schemaPda,
-    attestation: attestationPda,
-    nonce,
-    data: dataBytes,
-    expiry,
-  }) as KitInstruction
+  const ix = asKitInstruction(
+    getCreateAttestationInstruction({
+      payer: signer,
+      authority: signer,
+      credential: asAddress(params.credentialPda),
+      schema: asAddress(params.schemaPda),
+      attestation: asAddress(attestationPda),
+      nonce: asAddress(nonce),
+      data: dataBytes,
+      expiry,
+    })
+  )
 
   const signature = await sendKitInstruction(params.connection, [params.authorizedSigner], ix)
   return { attestationPda, nonce, signature, created: true }
@@ -481,8 +503,13 @@ export async function fetchAndDecodeAchievementAttestation(params: {
   if (!attInfo) {
     throw new Error(`Attestation account not found: ${params.attestationPda}`)
   }
-  const attestation = getAttestationDecoder().decode(attInfo.data) as { data: Uint8Array }
-  return deserializeAttestationData(schema, Uint8Array.from(attestation.data)) as AchievementAttestationData
+  const attestation = getAttestationDecoder().decode(attInfo.data) as unknown as {
+    data: Uint8Array | Readonly<Uint8Array>
+  }
+  return deserializeAttestationData(
+    schema,
+    Uint8Array.from(attestation.data)
+  ) as AchievementAttestationData
 }
 
 export function explorerAddressUrl(address: string, cluster = 'devnet'): string {
