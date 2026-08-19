@@ -384,6 +384,36 @@ const routes = {
     tokens: [{"old":"/api/v1/achievements/me","type":0,"val":"api","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"v1","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"achievements","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"me","end":""}],
     types: placeholder as Registry['listMyAchievements']['types'],
   },
+  'diplomaMetadata': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/public/diplomas/:id',
+    tokens: [{"old":"/api/v1/public/diplomas/:id","type":0,"val":"api","end":""},{"old":"/api/v1/public/diplomas/:id","type":0,"val":"v1","end":""},{"old":"/api/v1/public/diplomas/:id","type":0,"val":"public","end":""},{"old":"/api/v1/public/diplomas/:id","type":0,"val":"diplomas","end":""},{"old":"/api/v1/public/diplomas/:id","type":1,"val":"id","end":""}],
+    types: placeholder as Registry['diplomaMetadata']['types'],
+  },
+  'diplomaArtwork': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/public/diplomas/:id.svg',
+    tokens: [{"old":"/api/v1/public/diplomas/:id.svg","type":0,"val":"api","end":""},{"old":"/api/v1/public/diplomas/:id.svg","type":0,"val":"v1","end":""},{"old":"/api/v1/public/diplomas/:id.svg","type":0,"val":"public","end":""},{"old":"/api/v1/public/diplomas/:id.svg","type":0,"val":"diplomas","end":""},{"old":"/api/v1/public/diplomas/:id.svg","type":1,"val":"id","end":".svg"}],
+    types: placeholder as Registry['diplomaArtwork']['types'],
+  },
+  'previewBestDiploma': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/diplomas/preview-best',
+    tokens: [{"old":"/api/v1/diplomas/preview-best","type":0,"val":"api","end":""},{"old":"/api/v1/diplomas/preview-best","type":0,"val":"v1","end":""},{"old":"/api/v1/diplomas/preview-best","type":0,"val":"diplomas","end":""},{"old":"/api/v1/diplomas/preview-best","type":0,"val":"preview-best","end":""}],
+    types: placeholder as Registry['previewBestDiploma']['types'],
+  },
+  'mintBestDiploma': {
+    methods: ["POST"],
+    pattern: '/api/v1/diplomas/mint-best',
+    tokens: [{"old":"/api/v1/diplomas/mint-best","type":0,"val":"api","end":""},{"old":"/api/v1/diplomas/mint-best","type":0,"val":"v1","end":""},{"old":"/api/v1/diplomas/mint-best","type":0,"val":"diplomas","end":""},{"old":"/api/v1/diplomas/mint-best","type":0,"val":"mint-best","end":""}],
+    types: placeholder as Registry['mintBestDiploma']['types'],
+  },
+  'listMyDiplomas': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/diplomas/me',
+    tokens: [{"old":"/api/v1/diplomas/me","type":0,"val":"api","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"v1","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"diplomas","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"me","end":""}],
+    types: placeholder as Registry['listMyDiplomas']['types'],
+  },
   'studentBalance': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/students/:studentId/balance',

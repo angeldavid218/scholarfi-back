@@ -33,6 +33,12 @@ export default await Env.create(new URL('../', import.meta.url), {
   TREASURY_WALLET_PUBLIC_KEY: Env.schema.string.optional(),
   WALLET_ENCRYPTION_KEY: Env.schema.string.optional(),
 
+  // Compressed NFT diplomas (Bubblegum). RPC must support DAS (e.g. Helius).
+  CNFT_MERKLE_TREE: Env.schema.string.optional(),
+  CNFT_METADATA_BASE_URL: Env.schema.string.optional({ format: 'url', tld: false }),
+  CNFT_METADATA_IMAGE_URL: Env.schema.string.optional({ format: 'url', tld: false }),
+  CNFT_ACADEMIC_PERIOD: Env.schema.string.optional(),
+
   // School score leaderboard POC (oracle-gated PDAs on Devnet)
   LEADERBOARD_PROGRAM_ID: Env.schema.string.optional(),
   LEADERBOARD_ORACLE_SECRET: Env.schema.string.optional(),

@@ -162,6 +162,23 @@ node ace sas:attest-milestones
 
 With on-chain institutions, `issueRewardForSubmission` best-effort calls `record_score` after a confirmed mint (SchoolBoard + StudentScore). SAS milestone attestations are **not** issued on the sync/reward path — run `sas:attest-milestones` periodically (or after demos).
 
+## Compressed NFT diplomas (outstanding student)
+
+Mints a Metaplex Bubblegum **cNFT** to the current ranking #1 student's custodial wallet. Backend signs with `MINT_AUTHORITY_SECRET` (no browser wallet).
+
+1. `SOLANA_RPC_URL` must be **DAS-capable** (Helius or similar). `https://api.devnet.solana.com` does not support DAS.
+2. Fund the mint-authority wallet with extra SOL for tree rent.
+3. Create the merkle tree once and pin the address:
+
+```bash
+node ace cnft:setup-tree
+# then set CNFT_MERKLE_TREE=<printed address> in .env
+```
+
+4. Institution must have `cryptoWalletsEnabled` and `TOKEN_MODE=solana`.
+5. School admin: `GET /api/v1/diplomas/preview-best` then `POST /api/v1/diplomas/mint-best`.
+6. Student: `GET /api/v1/diplomas/me`. Metadata: `GET /api/v1/public/diplomas/:id.json`.
+
 ### Demo seed users
 
 

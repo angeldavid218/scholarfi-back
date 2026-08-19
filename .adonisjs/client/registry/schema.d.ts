@@ -763,6 +763,66 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
     }
   }
+  'diplomaMetadata': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/public/diplomas/:id'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['metadata']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['metadata']>>>
+    }
+  }
+  'diplomaArtwork': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/public/diplomas/:id.svg'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['artwork']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['artwork']>>>
+    }
+  }
+  'previewBestDiploma': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/diplomas/preview-best'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['previewBest']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['previewBest']>>>
+    }
+  }
+  'mintBestDiploma': {
+    methods: ["POST"]
+    pattern: '/api/v1/diplomas/mint-best'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['mintBest']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['mintBest']>>>
+    }
+  }
+  'listMyDiplomas': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/diplomas/me'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['me']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['me']>>>
+    }
+  }
   'studentBalance': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/students/:studentId/balance'

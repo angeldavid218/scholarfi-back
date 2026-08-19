@@ -67,6 +67,11 @@ export type ScannedRoutes = {
     'updateCatalogReward': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
     'listMyAchievements': { paramsTuple?: []; params?: {} }
+    'diplomaMetadata': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'previewBestDiploma': { paramsTuple?: []; params?: {} }
+    'mintBestDiploma': { paramsTuple?: []; params?: {} }
+    'listMyDiplomas': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'createRedemption': { paramsTuple?: []; params?: {} }
@@ -107,6 +112,10 @@ export type ScannedRoutes = {
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
     'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
     'listMyAchievements': { paramsTuple?: []; params?: {} }
+    'diplomaMetadata': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'previewBestDiploma': { paramsTuple?: []; params?: {} }
+    'listMyDiplomas': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'listRedemptions': { paramsTuple?: []; params?: {} }
@@ -143,6 +152,10 @@ export type ScannedRoutes = {
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
     'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
     'listMyAchievements': { paramsTuple?: []; params?: {} }
+    'diplomaMetadata': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'previewBestDiploma': { paramsTuple?: []; params?: {} }
+    'listMyDiplomas': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'listRedemptions': { paramsTuple?: []; params?: {} }
@@ -175,6 +188,7 @@ export type ScannedRoutes = {
     'createSubmission': { paramsTuple?: []; params?: {} }
     'postRewardForSubmission': { paramsTuple: [ParamValue]; params: {'submissionId': ParamValue} }
     'createCatalogReward': { paramsTuple?: []; params?: {} }
+    'mintBestDiploma': { paramsTuple?: []; params?: {} }
     'createRedemption': { paramsTuple?: []; params?: {} }
   }
   PATCH: {

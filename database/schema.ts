@@ -471,6 +471,43 @@ export class StudentAchievementAttestationSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class StudentDiplomaMintSchema extends BaseModel {
+  static $columns = ['assetId', 'createdAt', 'displayName', 'errorMessage', 'id', 'institutionId', 'kind', 'leafIndex', 'merkleTree', 'metadataUri', 'points', 'rank', 'signature', 'status', 'studentId', 'updatedAt'] as const
+  $columns = StudentDiplomaMintSchema.$columns
+  @column()
+  declare assetId: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare displayName: string
+  @column()
+  declare errorMessage: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare kind: string
+  @column()
+  declare leafIndex: number | null
+  @column()
+  declare merkleTree: string | null
+  @column()
+  declare metadataUri: string | null
+  @column()
+  declare points: number
+  @column()
+  declare rank: number
+  @column()
+  declare signature: string | null
+  @column()
+  declare status: string
+  @column()
+  declare studentId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class SubjectSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'id', 'institutionId', 'name', 'status', 'updatedAt'] as const
   $columns = SubjectSchema.$columns

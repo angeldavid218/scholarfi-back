@@ -8,6 +8,7 @@ export const controllers = {
   Achievements: () => import('#controllers/achievements_controller'),
   CatalogRewards: () => import('#controllers/catalog_rewards_controller'),
   Dashboard: () => import('#controllers/dashboard_controller'),
+  Diplomas: () => import('#controllers/diplomas_controller'),
   GoogleClassroom: () => import('#controllers/google_classroom_controller'),
   Groups: () => import('#controllers/groups_controller'),
   InstitutionCredits: () => import('#controllers/institution_credits_controller'),
