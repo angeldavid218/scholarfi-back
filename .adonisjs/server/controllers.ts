@@ -6,8 +6,10 @@
 export const controllers = {
   AccessToken: () => import('#controllers/access_token_controller'),
   Achievements: () => import('#controllers/achievements_controller'),
+  Attestations: () => import('#controllers/attestations_controller'),
   CatalogRewards: () => import('#controllers/catalog_rewards_controller'),
   Dashboard: () => import('#controllers/dashboard_controller'),
+  DemoConfig: () => import('#controllers/demo_config_controller'),
   Diplomas: () => import('#controllers/diplomas_controller'),
   GoogleClassroom: () => import('#controllers/google_classroom_controller'),
   Groups: () => import('#controllers/groups_controller'),

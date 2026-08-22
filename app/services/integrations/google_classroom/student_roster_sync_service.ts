@@ -11,6 +11,7 @@ import {
 } from '#services/integrations/google_classroom/group_link_service'
 import { upsertGroupStudent } from '#services/group_upsert_service'
 import { maybeCreateStudentWallet } from '#services/institution_crypto_wallets_service'
+import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
 import { gcLogInfo } from '#services/integrations/google_classroom/logger'
 
 export type ClassroomStudentRosterSyncSummary = {
@@ -220,6 +221,16 @@ export async function syncClassroomStudentsForTeacher(input: {
           processedEmails.add(email)
         }
 
+        if (member.fullName) {
+          await db
+            .from('users')
+            .where('id', existing.id)
+            .update({
+              full_name: member.fullName,
+              updated_at: new Date(),
+            })
+        }
+
         await upsertGroupStudent({
           institutionId: input.institutionId,
           groupId,
@@ -239,6 +250,24 @@ export async function syncClassroomStudentsForTeacher(input: {
       institutionId: input.institutionId,
       emailByUserId,
     })
+
+    // Create pending submissions for already-imported Classroom tasks on this group
+    // so the next "Sincronizar" can issue rewards for newly linked students.
+    const classroomTasks = await db
+      .from('tasks')
+      .where('institution_id', input.institutionId)
+      .andWhere('group_id', groupId)
+      .andWhere('external_source', 'google_classroom')
+      .andWhere('status', 'active')
+      .select('id')
+
+    for (const task of classroomTasks) {
+      await ensureClassroomTaskGroupSubmissions({
+        institutionId: input.institutionId,
+        taskId: Number(task.id),
+        groupId,
+      })
+    }
   }
 
   gcLogInfo(

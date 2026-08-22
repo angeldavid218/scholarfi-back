@@ -201,6 +201,7 @@ export async function persistClassroomUserIdsFromRoster(input: {
   }
 
   for (const [googleUserId, rawEmail] of input.emailByUserId) {
+    if (!googleUserId || googleUserId.includes('@')) continue
     const email = rawEmail.trim().toLowerCase()
 
     const owner = await db

@@ -3,7 +3,13 @@ import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { type AccessToken, DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
-export default class User extends compose(UserSchema, withAuthFinder(hash)) {
+export default class User extends compose(
+  UserSchema,
+  withAuthFinder(() => hash.use(), {
+    uids: ['email'],
+    passwordColumnName: 'password',
+  })
+) {
   static accessTokens = DbAccessTokensProvider.forModel(User)
   declare currentAccessToken?: AccessToken
   declare ngoInstitutionId: number | null

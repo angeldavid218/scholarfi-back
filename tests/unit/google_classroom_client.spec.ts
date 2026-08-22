@@ -74,5 +74,32 @@ test.group('Google Classroom client helpers', () => {
     })
     assert.isFalse(missing.gradeFound)
     assert.isUndefined(missing.grade)
+
+    const emailShapedGoogleId = resolveClassroomGradeForUser({
+      email: 'student@school.edu',
+      googleClassroomUserId: 'student@school.edu',
+      gradeByEmail,
+      gradeByGoogleUserId,
+    })
+    assert.isTrue(emailShapedGoogleId.gradeFound)
+    assert.equal(emailShapedGoogleId.grade, 4)
+    assert.equal(emailShapedGoogleId.lookupKey, 'student@school.edu')
+  })
+
+  test('resolveClassroomGradeForUser finds mock fixture grades via gc-user id', ({ assert }) => {
+    const email = 'mateo.vargas@scholarfi.test'
+    const googleId = 'gc-user-mateo-vargas-scholarfi-test'
+    const gradeByEmail = new Map<string, number | null>([[email, 5]])
+    const gradeByGoogleUserId = new Map<string, number | null>([[googleId, 5]])
+
+    const resolved = resolveClassroomGradeForUser({
+      email,
+      googleClassroomUserId: googleId,
+      gradeByEmail,
+      gradeByGoogleUserId,
+    })
+    assert.isTrue(resolved.gradeFound)
+    assert.equal(resolved.grade, 5)
+    assert.equal(resolved.lookupKey, `google:${googleId}`)
   })
 })

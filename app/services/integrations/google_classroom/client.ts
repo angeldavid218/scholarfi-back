@@ -415,11 +415,21 @@ export async function buildClassroomGradeMaps(input: {
     for (const submission of submissions) {
       const grade = resolveSubmissionGrade(submission)
       const key = normalizeClassroomUserKey(submission.userId)
+      // Mock submissions use email as userId — grades are keyed by email only.
       gradeByEmail.set(key, grade)
-      if (/^\d+$/.test(submission.userId.trim())) {
-        gradeByGoogleUserId.set(submission.userId.trim(), grade)
+    }
+
+    // After "Sincronizar estudiantes", users store mock google_classroom_user_id
+    // (gc-user-...). Index the same grades by that id so reward sync still matches.
+    // Do not put emails into emailByUserId — persist treats keys as Google profile ids.
+    for (const member of listClassroomMockRosterForCourse(input.courseId)) {
+      const email = member.email.trim().toLowerCase()
+      emailByUserId.set(member.googleUserId, email)
+      if (gradeByEmail.has(email)) {
+        gradeByGoogleUserId.set(member.googleUserId, gradeByEmail.get(email) ?? null)
       }
     }
+
     return { gradeByEmail, gradeByGoogleUserId, emailByUserId }
   }
 
@@ -539,8 +549,10 @@ export function resolveClassroomGradeForUser(input: {
   gradeByEmail: Map<string, number | null>
   gradeByGoogleUserId: Map<string, number | null>
 }): { grade: number | null | undefined; gradeFound: boolean; lookupKey: string } {
+  const userKey = input.email.trim().toLowerCase()
   const googleId = input.googleClassroomUserId?.trim() || null
-  if (googleId && input.gradeByGoogleUserId.has(googleId)) {
+
+  if (googleId && !googleId.includes('@') && input.gradeByGoogleUserId.has(googleId)) {
     return {
       grade: input.gradeByGoogleUserId.get(googleId),
       gradeFound: true,
@@ -548,7 +560,6 @@ export function resolveClassroomGradeForUser(input: {
     }
   }
 
-  const userKey = input.email.trim().toLowerCase()
   return {
     grade: input.gradeByEmail.get(userKey),
     gradeFound: input.gradeByEmail.has(userKey),

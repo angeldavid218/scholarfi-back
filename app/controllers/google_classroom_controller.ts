@@ -24,6 +24,7 @@ import { syncClassroomStudentsForTeacher } from '#services/integrations/google_c
 import {
   buildGoogleAuthUrl,
   deleteTeacherIntegration,
+  ensureMockTeacherIntegration,
   exchangeGoogleAuthCode,
   getTeacherIntegration,
   getTeacherRefreshToken,
@@ -48,6 +49,39 @@ import { DateTime } from 'luxon'
 
 export default class GoogleClassroomController {
   async connect({ auth, response, request }: HttpContext) {
+    const user = auth.getUserOrFail()
+    if (!user.institutionId) {
+      return response.forbidden({
+        error: {
+          code: 'INSTITUTION_SCOPE_REQUIRED',
+          message: 'Teacher must belong to an institution',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    if (googleClassroomConfig.mockMode) {
+      try {
+        await ensureMockTeacherIntegration(user.id, user.institutionId)
+      } catch (error) {
+        return response.serviceUnavailable({
+          error: {
+            code: 'GOOGLE_CLASSROOM_NOT_CONFIGURED',
+            message: error instanceof Error ? error.message : 'Mock Classroom is not configured',
+            requestId: request.id(),
+          },
+        })
+      }
+
+      return {
+        data: {
+          authUrl: null,
+          connected: true,
+          mockMode: true,
+        },
+      }
+    }
+
     try {
       assertGoogleClassroomConfig()
     } catch (error) {
@@ -55,17 +89,6 @@ export default class GoogleClassroomController {
         error: {
           code: 'GOOGLE_CLASSROOM_NOT_CONFIGURED',
           message: error instanceof Error ? error.message : 'Google Classroom is not configured',
-          requestId: request.id(),
-        },
-      })
-    }
-
-    const user = auth.getUserOrFail()
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
           requestId: request.id(),
         },
       })
@@ -126,6 +149,7 @@ export default class GoogleClassroomController {
       data: {
         connected: Boolean(integration),
         provider: 'google_classroom',
+        mockMode: googleClassroomConfig.mockMode,
         externalEmail: integration?.external_email ?? null,
         connectedAt: integration?.connected_at ?? null,
         lastSyncAt: integration?.last_sync_at ?? null,

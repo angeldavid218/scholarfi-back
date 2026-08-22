@@ -10,8 +10,11 @@ import { achievementHash, hashToHex, studentIdHash } from '#services/attestation
 import {
   buildMilestoneData,
   createMilestoneAttestation,
+  createMilestoneSchemaIfNeeded,
   createSasConnection,
+  explorerTxUrl,
   isSasEnabled,
+  loadSasAuthorityKeypair,
   loadSasAuthorizedSignerKeypair,
   resolveCredentialPda,
   resolveMilestoneSchemaPda,
@@ -61,6 +64,242 @@ export type StudentAchievementsResponse = {
 
 function explorerAttestationUrl(pda: string): string {
   return `https://explorer.solana.com/address/${pda}?cluster=devnet`
+}
+
+function studentDisplayName(fullName: string | null, email: string | null, studentId: number): string {
+  const name = typeof fullName === 'string' ? fullName.trim() : ''
+  const mail = typeof email === 'string' ? email : ''
+  return name || (mail.includes('@') ? mail.split('@')[0] : mail) || `Estudiante #${studentId}`
+}
+
+export type MilestoneCandidateView = {
+  studentId: number
+  displayName: string
+  rewardedCount: number
+  status: 'eligible' | 'attested' | 'failed' | 'pending'
+  attestationPda: string | null
+  attestationSignature: string | null
+  explorerUrl: string | null
+}
+
+export type MilestoneAttestationPreview = {
+  institutionId: number
+  sasEnabled: boolean
+  onChainEnabled: boolean
+  milestoneTitle: string
+  threshold: number
+  achievementKey: string
+  summary: {
+    eligible: number
+    attested: number
+    failed: number
+    pending: number
+    total: number
+  }
+  candidates: MilestoneCandidateView[]
+}
+
+export type MilestoneSchemaEnsureResult = {
+  schemaPda: string
+  created: boolean
+  signature: string | null
+}
+
+export type MilestoneAttestRunSummary = {
+  attested: number
+  alreadyAttested: number
+  skipped: number
+  failed: number
+}
+
+export type MilestoneAttestResultView = MilestoneAttestResult & {
+  explorerUrl: string | null
+  txExplorerUrl: string | null
+}
+
+/**
+ * Ensure the milestone SAS schema exists (shared by CLI and admin API).
+ */
+export async function ensureMilestoneSchemaReady(): Promise<MilestoneSchemaEnsureResult> {
+  const connection = createSasConnection()
+  const authority = loadSasAuthorityKeypair()
+  const signer = loadSasAuthorizedSignerKeypair()
+  const credentialPda = await resolveCredentialPda(signer)
+  const schema = await createMilestoneSchemaIfNeeded({
+    connection,
+    authority,
+    credentialPda,
+  })
+  return {
+    schemaPda: schema.schemaPda,
+    created: schema.created,
+    signature: schema.signature,
+  }
+}
+
+/**
+ * Students with enough rewarded activities for the first-5 milestone (admin preview).
+ */
+export async function listMilestoneCandidatesForInstitution(
+  institutionId: number
+): Promise<MilestoneCandidateView[]> {
+  const rows = await db
+    .from('token_transactions as tt')
+    .join('users as u', 'u.id', 'tt.user_id')
+    .leftJoin('student_achievement_attestations as saa', (join) => {
+      join
+        .on('saa.student_id', 'tt.user_id')
+        .andOnVal('saa.achievement_key', FIRST_5_ACTIVITIES_KEY)
+    })
+    .where('tt.institution_id', institutionId)
+    .where('tt.type', 'mint')
+    .andWhere('tt.status', 'confirmed')
+    .whereNotNull('tt.achievement_id')
+    .groupBy(
+      'tt.user_id',
+      'u.full_name',
+      'u.email',
+      'saa.status',
+      'saa.attestation_pda',
+      'saa.attestation_signature'
+    )
+    .havingRaw('COUNT(*) >= ?', [FIRST_5_ACTIVITIES_THRESHOLD])
+    .select('tt.user_id as student_id')
+    .select(db.raw('COUNT(*)::int as rewarded_count'))
+    .select('u.full_name', 'u.email')
+    .select(
+      'saa.status as attestation_status',
+      'saa.attestation_pda',
+      'saa.attestation_signature'
+    )
+    .orderBy('rewarded_count', 'desc')
+
+  return rows.map((row) => {
+    const studentId = Number(row.student_id)
+    const rewardedCount = Number(row.rewarded_count ?? 0)
+    const attestationStatus =
+      typeof row.attestation_status === 'string' ? row.attestation_status : null
+    const attestationPda =
+      typeof row.attestation_pda === 'string' ? row.attestation_pda : null
+    const attestationSignature =
+      typeof row.attestation_signature === 'string' ? row.attestation_signature : null
+
+    let status: MilestoneCandidateView['status'] = 'eligible'
+    if (attestationStatus === 'attested' && attestationPda) {
+      status = 'attested'
+    } else if (attestationStatus === 'failed') {
+      status = 'failed'
+    } else if (attestationStatus === 'pending') {
+      status = 'pending'
+    }
+
+    return {
+      studentId,
+      displayName: studentDisplayName(
+        typeof row.full_name === 'string' ? row.full_name : null,
+        typeof row.email === 'string' ? row.email : null,
+        studentId
+      ),
+      rewardedCount,
+      status,
+      attestationPda,
+      attestationSignature,
+      explorerUrl: attestationPda ? explorerAttestationUrl(attestationPda) : null,
+    }
+  })
+}
+
+export async function getMilestoneAttestationPreview(
+  institutionId: number
+): Promise<MilestoneAttestationPreview> {
+  const [candidates, onChainEnabled] = await Promise.all([
+    listMilestoneCandidatesForInstitution(institutionId),
+    isInstitutionOnChainExecution(institutionId),
+  ])
+
+  const summary = {
+    eligible: candidates.filter((c) => c.status === 'eligible').length,
+    attested: candidates.filter((c) => c.status === 'attested').length,
+    failed: candidates.filter((c) => c.status === 'failed').length,
+    pending: candidates.filter((c) => c.status === 'pending').length,
+    total: candidates.length,
+  }
+
+  return {
+    institutionId,
+    sasEnabled: isSasEnabled(),
+    onChainEnabled,
+    milestoneTitle: FIRST_5_ACTIVITIES_TITLE,
+    threshold: FIRST_5_ACTIVITIES_THRESHOLD,
+    achievementKey: FIRST_5_ACTIVITIES_KEY,
+    summary,
+    candidates,
+  }
+}
+
+export function summarizeMilestoneAttestResults(
+  results: MilestoneAttestResult[]
+): MilestoneAttestRunSummary {
+  return {
+    attested: results.filter((r) => r.status === 'attested').length,
+    alreadyAttested: results.filter((r) => r.status === 'already_attested').length,
+    skipped: results.filter((r) => r.status === 'skipped').length,
+    failed: results.filter((r) => r.status === 'failed').length,
+  }
+}
+
+export function toMilestoneAttestResultView(result: MilestoneAttestResult): MilestoneAttestResultView {
+  return {
+    ...result,
+    explorerUrl: result.attestationPda ? explorerAttestationUrl(result.attestationPda) : null,
+    txExplorerUrl:
+      result.attestationSignature && result.attestationSignature !== 'existing'
+        ? explorerTxUrl(result.attestationSignature)
+        : null,
+  }
+}
+
+/**
+ * Ensure milestone schema and batch-attest eligible students (admin API / demo).
+ * Skips students already attested in DB so the run summary reflects this action only.
+ */
+export async function runMilestoneAttestationsForInstitution(params: {
+  institutionId: number
+  studentId?: number
+  ensureSchema?: boolean
+  limit?: number
+}): Promise<{ results: MilestoneAttestResultView[]; summary: MilestoneAttestRunSummary }> {
+  if (params.ensureSchema !== false) {
+    await ensureMilestoneSchemaReady()
+  }
+
+  let results: MilestoneAttestResult[]
+
+  if (params.studentId) {
+    results = await attestFirst5MilestonesBatch({
+      institutionId: params.institutionId,
+      studentId: params.studentId,
+      limit: params.limit,
+    })
+  } else {
+    const candidates = await listMilestoneCandidatesForInstitution(params.institutionId)
+    const pending = candidates.filter((c) => c.status !== 'attested')
+    const limit = params.limit ?? 100
+    results = []
+    for (const candidate of pending.slice(0, limit)) {
+      results.push(
+        await attestFirst5ActivitiesForStudent({
+          studentId: candidate.studentId,
+          institutionId: params.institutionId,
+        })
+      )
+    }
+  }
+
+  return {
+    results: results.map(toMilestoneAttestResultView),
+    summary: summarizeMilestoneAttestResults(results),
+  }
 }
 
 /**
@@ -257,15 +496,18 @@ export async function attestFirst5ActivitiesForStudent(params: {
     row.errorMessage = null
     await row.save()
 
+    // Count as attested whenever this run successfully records the attestation.
+    // `already_attested` is reserved for the early DB short-circuit above; an
+    // existing on-chain PDA with a missing/pending DB row is still a successful emit.
     return {
       studentId: params.studentId,
       institutionId: params.institutionId,
       achievementKey,
       title,
       rewardedCount,
-      status: attest.created ? 'attested' : 'already_attested',
+      status: 'attested',
       attestationPda: attest.attestationPda,
-      attestationSignature: attest.signature,
+      attestationSignature: attest.signature ?? row.attestationSignature,
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)

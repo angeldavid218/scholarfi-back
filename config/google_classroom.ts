@@ -28,7 +28,9 @@ const googleClassroomConfig = {
     return (env.get('FRONTEND_URL') as string | undefined) ?? 'http://localhost:5173'
   },
   get mockMode(): boolean {
-    return (env.get('GOOGLE_CLASSROOM_MOCK') as string | undefined) === 'true'
+    const raw = (env.get('GOOGLE_CLASSROOM_MOCK') as string | undefined) ?? ''
+    const value = raw.split('#')[0]?.trim() ?? ''
+    return /^(true|1|yes)$/i.test(value)
   },
   get studentDefaultPassword(): string {
     const configured = (env.get('CLASSROOM_STUDENT_DEFAULT_PASSWORD') as string | undefined)?.trim()

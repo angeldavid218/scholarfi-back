@@ -447,6 +447,13 @@ router
       .use(middleware.tenantScope())
 
     router
+      .get('/public/demo-config', [
+        () => import('#controllers/demo_config_controller'),
+        'show',
+      ])
+      .as('publicDemoConfig')
+
+    router
       .get('/public/diplomas/:id', [
         () => import('#controllers/diplomas_controller'),
         'metadata',
@@ -476,6 +483,27 @@ router
           .use(middleware.role({ roles: ['student'] }))
       })
       .prefix('diplomas')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/milestones/preview', [
+            () => import('#controllers/attestations_controller'),
+            'previewMilestones',
+          ])
+          .as('previewMilestoneAttestations')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/milestones/run', [
+            () => import('#controllers/attestations_controller'),
+            'runMilestones',
+          ])
+          .as('runMilestoneAttestations')
+          .use(middleware.role({ roles: ['school_admin'] }))
+      })
+      .prefix('attestations')
       .use(middleware.auth())
       .use(middleware.tenantScope())
 

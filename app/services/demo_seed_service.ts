@@ -1,4 +1,5 @@
 import Institution from '#models/institution'
+import tokenConfig from '#config/token'
 import { DEMO_CATALOG_REWARDS } from '#fixtures/demo_catalog_rewards'
 import { DEMO_STUDENTS } from '#fixtures/demo_students'
 import { buildGroupDisplayName } from '#services/group_upsert_service'
@@ -102,6 +103,7 @@ async function clearDemoTables() {
       student_achievement_attestations,
       submission_chain_proofs,
       submission_validations,
+      classroom_sync_runs,
       submissions,
       tasks,
       teacher_integrations,
@@ -144,7 +146,7 @@ export async function seedDemoBaseline(options: { forceReset: boolean }) {
         name: 'ScholarFi Demo Academy',
         code: 'SFA-DEMO',
         status: 'active',
-        cryptoWalletsEnabled: false,
+        cryptoWalletsEnabled: tokenConfig.mode === 'solana',
         createdBy: null,
       },
       { client: trx }

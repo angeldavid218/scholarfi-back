@@ -823,6 +823,30 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['me']>>>
     }
   }
+  'previewMilestoneAttestations': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/attestations/milestones/preview'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/attestations_controller').default['previewMilestones']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/attestations_controller').default['previewMilestones']>>>
+    }
+  }
+  'runMilestoneAttestations': {
+    methods: ["POST"]
+    pattern: '/api/v1/attestations/milestones/run'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/attestations_controller').default['runMilestones']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/attestations_controller').default['runMilestones']>>>
+    }
+  }
   'studentBalance': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/students/:studentId/balance'

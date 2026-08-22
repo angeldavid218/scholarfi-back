@@ -1,18 +1,15 @@
 import { BaseCommand, flags } from '@adonisjs/core/ace'
 import {
-  createMilestoneSchemaIfNeeded,
   createSasConnection,
   explorerAddressUrl,
   explorerTxUrl,
   getSasMilestoneSchemaName,
   isSasEnabled,
-  loadSasAuthorityKeypair,
-  loadSasAuthorizedSignerKeypair,
-  resolveCredentialPda,
 } from '#services/attestation/sas_attestation_client'
 import {
   FIRST_5_ACTIVITIES_TITLE,
   attestFirst5MilestonesBatch,
+  ensureMilestoneSchemaReady,
 } from '#services/attestation/milestone_attestation_service'
 
 export default class SasAttestMilestones extends BaseCommand {
@@ -59,16 +56,11 @@ export default class SasAttestMilestones extends BaseCommand {
     this.logger.info(`Milestone: ${FIRST_5_ACTIVITIES_TITLE}`)
 
     if (this.ensureSchema) {
-      const authority = loadSasAuthorityKeypair()
-      const signer = loadSasAuthorizedSignerKeypair()
-      const credentialPda = await resolveCredentialPda(signer)
-      const schema = await createMilestoneSchemaIfNeeded({
-        connection,
-        authority,
-        credentialPda,
-      })
+      const schema = await ensureMilestoneSchemaReady()
       if (schema.created) {
-        this.logger.success(`Milestone schema created (${getSasMilestoneSchemaName()}): ${schema.signature}`)
+        this.logger.success(
+          `Milestone schema created (${getSasMilestoneSchemaName()}): ${schema.signature}`
+        )
       } else {
         this.logger.info(`Milestone schema ready: ${schema.schemaPda}`)
       }

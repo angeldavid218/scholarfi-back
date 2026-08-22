@@ -1,7 +1,7 @@
 import User from '#models/user'
 import db from '@adonisjs/lucid/services/db'
 import testUtils from '@adonisjs/core/services/test_utils'
-import { encryptIntegrationToken } from '#services/integrations/integration_token_crypto'
+import { ensureMockTeacherIntegration } from '#services/integrations/google_classroom/oauth_service'
 import { seedInstitutionCredits } from '../helpers/institution_credits.js'
 import { test } from '@japa/runner'
 
@@ -88,20 +88,7 @@ async function loginToken(client: any, email: string) {
 }
 
 async function connectMockClassroom(teacherId: number, institutionId: number) {
-  await db.table('teacher_integrations').insert({
-    teacher_id: teacherId,
-    institution_id: institutionId,
-    provider: 'google_classroom',
-    external_user_id: 'gc-teacher-1',
-    external_email: 'teacher@classroom.test',
-    encrypted_refresh_token: encryptIntegrationToken('mock-refresh-token'),
-    scopes:
-      'https://www.googleapis.com/auth/classroom.courses.readonly,https://www.googleapis.com/auth/classroom.coursework.students.readonly',
-    connected_at: new Date(),
-    last_sync_at: null,
-    created_at: new Date(),
-    updated_at: null,
-  })
+  await ensureMockTeacherIntegration(teacherId, institutionId)
 }
 
 test.group('Google Classroom connector', (group) => {
@@ -127,12 +114,51 @@ test.group('Google Classroom connector', (group) => {
     statusResponse.assertStatus(200)
     const statusBody = statusResponse.body() as any
     assert.isTrue(statusBody.data.connected)
-    assert.equal(statusBody.data.externalEmail, 'teacher@classroom.test')
+    assert.isTrue(statusBody.data.mockMode)
+    assert.equal(statusBody.data.externalEmail, 'demo.teacher@scholarfi.test')
 
     const coursesResponse = await client
       .get('/api/v1/integrations/google-classroom/courses')
       .header('Authorization', `Bearer ${token}`)
 
+    coursesResponse.assertStatus(200)
+    const coursesBody = coursesResponse.body() as any
+    assert.isAbove(coursesBody.data.length, 0)
+  })
+
+  test('mock connect upserts integration without Google OAuth', async ({ client, assert }) => {
+    const institutionId = await createInstitution('GC-MOCK-CONNECT')
+    const teacher = await User.create({
+      email: 'gc-mock-connect@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Mock Connect Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+
+    const token = await loginToken(client, teacher.email)
+    const connectResponse = await client
+      .post('/api/v1/integrations/google-classroom/connect')
+      .header('Authorization', `Bearer ${token}`)
+
+    connectResponse.assertStatus(200)
+    const connectBody = connectResponse.body() as any
+    assert.isNull(connectBody.data.authUrl)
+    assert.isTrue(connectBody.data.connected)
+    assert.isTrue(connectBody.data.mockMode)
+
+    const statusResponse = await client
+      .get('/api/v1/integrations/google-classroom/status')
+      .header('Authorization', `Bearer ${token}`)
+    statusResponse.assertStatus(200)
+    const statusBody = statusResponse.body() as any
+    assert.isTrue(statusBody.data.connected)
+    assert.equal(statusBody.data.externalEmail, 'demo.teacher@scholarfi.test')
+
+    const coursesResponse = await client
+      .get('/api/v1/integrations/google-classroom/courses')
+      .header('Authorization', `Bearer ${token}`)
     coursesResponse.assertStatus(200)
     const coursesBody = coursesResponse.body() as any
     assert.isAbove(coursesBody.data.length, 0)
@@ -156,9 +182,9 @@ test.group('Google Classroom connector', (group) => {
 
     const students = await Promise.all(
       [
-        { email: 'student-alpha@school.edu', name: 'Alpha' },
-        { email: 'student-beta@school.edu', name: 'Beta' },
-        { email: 'student-gamma@school.edu', name: 'Gamma' },
+        { email: 'valentina.rojas@school.edu', name: 'Valentina' },
+        { email: 'lucas.mendez@school.edu', name: 'Lucas' },
+        { email: 'camila.torres@school.edu', name: 'Camila' },
       ].map(async (s) => {
         const student = await User.create({
           email: s.email,
@@ -232,7 +258,7 @@ test.group('Google Classroom connector', (group) => {
       .select('users.email as email')
       .first()
 
-    assert.equal(rewardedSubmission?.email, 'student-alpha@school.edu')
+    assert.equal(rewardedSubmission?.email, 'valentina.rojas@school.edu')
 
     const { run: resyncRun } = await awaitClassroomSyncResult(client, token, taskId)
     assert.equal(resyncRun.status, 'completed')
@@ -258,9 +284,9 @@ test.group('Google Classroom connector', (group) => {
 
     const students = await Promise.all(
       [
-        { email: 'student-alpha@school.edu', name: 'Alpha' },
-        { email: 'student-beta@school.edu', name: 'Beta' },
-        { email: 'student-gamma@school.edu', name: 'Gamma' },
+        { email: 'valentina.rojas@school.edu', name: 'Valentina' },
+        { email: 'lucas.mendez@school.edu', name: 'Lucas' },
+        { email: 'camila.torres@school.edu', name: 'Camila' },
       ].map(async (s) => {
         const student = await User.create({
           email: s.email,
@@ -333,7 +359,7 @@ test.group('Google Classroom connector', (group) => {
       .select('users.email as email')
       .first()
 
-    assert.equal(rewardedSubmission?.email, 'student-alpha@school.edu')
+    assert.equal(rewardedSubmission?.email, 'valentina.rojas@school.edu')
   })
 
   test('mock sync uses default grade fixtures for real-looking courseWork ids and demo student emails', async ({
@@ -353,9 +379,9 @@ test.group('Google Classroom connector', (group) => {
     await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
 
     const student = await User.create({
-      email: 'demo.student1@scholarfi.test',
+      email: 'sofia.hernandez@scholarfi.test',
       password: 'Secret123!',
-      fullName: 'Demo Student One',
+      fullName: 'Sofia Hernandez',
       institutionId,
       isActive: true,
     })
@@ -535,9 +561,9 @@ test.group('Google Classroom connector', (group) => {
     await connectMockClassroom(teacher.id, institutionId)
 
     const pending = await User.create({
-      email: 'demo.student1@scholarfi.test',
+      email: 'sofia.hernandez@scholarfi.test',
       password: 'RandomPendingPass!',
-      fullName: 'Pending Demo One',
+      fullName: 'Sofia Hernandez',
       institutionId,
       isActive: false,
       accountStatus: 'pending',
@@ -546,9 +572,9 @@ test.group('Google Classroom connector', (group) => {
     await assignRoleToUser(pending.id, 'student', 'Student')
 
     const active = await User.create({
-      email: 'demo.student2@scholarfi.test',
+      email: 'mateo.vargas@scholarfi.test',
       password: 'KeepMyPassword9!',
-      fullName: 'Active Demo Two',
+      fullName: 'Mateo Vargas',
       institutionId,
       isActive: true,
       accountStatus: 'active',
@@ -587,14 +613,14 @@ test.group('Google Classroom connector', (group) => {
     activeLoginOld.assertStatus(200)
 
     const createdDelta = await User.query()
-      .whereRaw('LOWER(email) = ?', ['student-delta@school.edu'])
+      .whereRaw('LOWER(email) = ?', ['andres.castillo@school.edu'])
       .firstOrFail()
     assert.equal(createdDelta.accountStatus, 'active')
     assert.equal(Boolean(createdDelta.isActive), true)
     assert.isNull(createdDelta.registrationNumber)
 
     const deltaLogin = await client.post('/api/v1/auth/login').json({
-      email: 'student-delta@school.edu',
+      email: 'andres.castillo@school.edu',
       password: 'scholarfi-pass',
     })
     deltaLogin.assertStatus(200)

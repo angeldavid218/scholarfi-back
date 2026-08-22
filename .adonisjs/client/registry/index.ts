@@ -414,6 +414,18 @@ const routes = {
     tokens: [{"old":"/api/v1/diplomas/me","type":0,"val":"api","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"v1","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"diplomas","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"me","end":""}],
     types: placeholder as Registry['listMyDiplomas']['types'],
   },
+  'previewMilestoneAttestations': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/attestations/milestones/preview',
+    tokens: [{"old":"/api/v1/attestations/milestones/preview","type":0,"val":"api","end":""},{"old":"/api/v1/attestations/milestones/preview","type":0,"val":"v1","end":""},{"old":"/api/v1/attestations/milestones/preview","type":0,"val":"attestations","end":""},{"old":"/api/v1/attestations/milestones/preview","type":0,"val":"milestones","end":""},{"old":"/api/v1/attestations/milestones/preview","type":0,"val":"preview","end":""}],
+    types: placeholder as Registry['previewMilestoneAttestations']['types'],
+  },
+  'runMilestoneAttestations': {
+    methods: ["POST"],
+    pattern: '/api/v1/attestations/milestones/run',
+    tokens: [{"old":"/api/v1/attestations/milestones/run","type":0,"val":"api","end":""},{"old":"/api/v1/attestations/milestones/run","type":0,"val":"v1","end":""},{"old":"/api/v1/attestations/milestones/run","type":0,"val":"attestations","end":""},{"old":"/api/v1/attestations/milestones/run","type":0,"val":"milestones","end":""},{"old":"/api/v1/attestations/milestones/run","type":0,"val":"run","end":""}],
+    types: placeholder as Registry['runMilestoneAttestations']['types'],
+  },
   'studentBalance': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/students/:studentId/balance',

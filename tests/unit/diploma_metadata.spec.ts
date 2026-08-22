@@ -45,7 +45,7 @@ test.group('Diploma metadata and artwork', () => {
   })
 
   test('on-chain name is truncated to 32 UTF-8 bytes', ({ assert }) => {
-    const raw = 'Excelencia Académica — Demo Student One'
+    const raw = 'Excelencia Académica — Sofia Hernandez'
     const truncated = truncateUtf8Bytes(raw, MAX_CNFT_NAME_BYTES)
     assert.isAtMost(new TextEncoder().encode(truncated).length, MAX_CNFT_NAME_BYTES)
     assert.isBelow(truncated.length, raw.length)

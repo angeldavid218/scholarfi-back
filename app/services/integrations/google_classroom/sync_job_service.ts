@@ -1,9 +1,11 @@
 import SyncClassroomTaskJob from '#jobs/sync_classroom_task_job'
+import googleClassroomConfig from '#config/google_classroom'
 import ClassroomSyncRun from '#models/classroom_sync_run'
 import Task from '#models/task'
 import {
   gcLogInfo,
 } from '#services/integrations/google_classroom/logger'
+import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
 import env from '#start/env'
 
 export type EnqueueClassroomSyncResult = {
@@ -78,7 +80,21 @@ export async function enqueueClassroomSyncTask(input: {
   }, {
     runId: run.id,
     driver: queueDriver,
+    mockMode: googleClassroomConfig.mockMode,
   })
+
+  // Mock fixtures live in this API process. Running inline avoids a stale
+  // `queue:work` worker that still has old demo student emails (no_grade for everyone).
+  if (googleClassroomConfig.mockMode) {
+    await runMockClassroomSync(run, input)
+    await run.refresh()
+    return {
+      runId: run.id,
+      taskId: input.taskId,
+      status: run.status,
+      deduped: false,
+    }
+  }
 
   try {
     const dispatchResult = await SyncClassroomTaskJob.dispatch({
@@ -126,6 +142,46 @@ export async function enqueueClassroomSyncTask(input: {
     taskId: input.taskId,
     status: run.status,
     deduped: false,
+  }
+}
+
+async function runMockClassroomSync(
+  run: ClassroomSyncRun,
+  input: {
+    taskId: number
+    teacherId: number
+    institutionId: number
+    requestId?: string
+  }
+) {
+  run.status = 'running'
+  await run.save()
+
+  try {
+    const result = await syncGoogleClassroomTask({
+      taskId: input.taskId,
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+      requestId: input.requestId,
+    })
+    run.status = 'completed'
+    run.resultJson = result
+    run.errorMessage = null
+    await run.save()
+    gcLogInfo(
+      'Classroom mock sync completed inline',
+      {
+        requestId: input.requestId,
+        taskId: input.taskId,
+        teacherId: input.teacherId,
+        institutionId: input.institutionId,
+      },
+      { runId: run.id, rewarded: result.rewarded, budgetRemaining: result.budgetRemaining }
+    )
+  } catch (error) {
+    run.status = 'failed'
+    run.errorMessage = error instanceof Error ? error.message : 'sync_failed'
+    await run.save()
   }
 }
 

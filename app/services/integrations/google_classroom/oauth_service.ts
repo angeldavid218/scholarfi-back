@@ -142,6 +142,38 @@ export async function listConnectedClassroomTeachers(): Promise<ConnectedClassro
   }))
 }
 
+export const MOCK_CLASSROOM_EXTERNAL_USER_ID = 'gc-teacher-1'
+export const MOCK_CLASSROOM_EXTERNAL_EMAIL = 'demo.teacher@scholarfi.test'
+export const MOCK_CLASSROOM_REFRESH_TOKEN = 'mock-refresh-token'
+
+const MOCK_CLASSROOM_SCOPES = [
+  'https://www.googleapis.com/auth/classroom.courses.readonly',
+  'https://www.googleapis.com/auth/classroom.rosters.readonly',
+  'https://www.googleapis.com/auth/classroom.coursework.students.readonly',
+  'https://www.googleapis.com/auth/classroom.profile.emails',
+  'https://www.googleapis.com/auth/userinfo.email',
+]
+
+/**
+ * Local fixture connection used when GOOGLE_CLASSROOM_MOCK=true (no Google OAuth).
+ */
+export async function ensureMockTeacherIntegration(
+  teacherId: number,
+  institutionId: number
+): Promise<TeacherIntegrationRow> {
+  const scopes =
+    googleClassroomConfig.scopes.length > 0 ? googleClassroomConfig.scopes : MOCK_CLASSROOM_SCOPES
+
+  return upsertTeacherIntegration({
+    teacherId,
+    institutionId,
+    externalUserId: MOCK_CLASSROOM_EXTERNAL_USER_ID,
+    externalEmail: MOCK_CLASSROOM_EXTERNAL_EMAIL,
+    refreshToken: MOCK_CLASSROOM_REFRESH_TOKEN,
+    scopes,
+  })
+}
+
 export async function upsertTeacherIntegration(input: {
   teacherId: number
   institutionId: number
