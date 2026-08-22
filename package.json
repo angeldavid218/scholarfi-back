@@ -90,6 +90,10 @@
     "reflect-metadata": "^0.2.2",
     "sas-lib": "^1.0.10"
   },
+  "optionalDependencies": {
+    "bufferutil": "4.1.0",
+    "utf-8-validate": "6.0.6"
+  },
   "hotHook": {
     "boundaries": [
       "./app/controllers/**/*.ts",
