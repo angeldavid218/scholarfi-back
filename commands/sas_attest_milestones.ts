@@ -15,7 +15,7 @@ import {
 export default class SasAttestMilestones extends BaseCommand {
   static commandName = 'sas:attest-milestones'
   static description =
-    'Issue off-sync milestone SAS attestations (MVP: Logro completado 5 primeras actividades)'
+    'Issue off-sync milestone SAS attestations (MVP: Logro completado 2 primeras actividades)'
   static options = {
     startApp: true,
   }

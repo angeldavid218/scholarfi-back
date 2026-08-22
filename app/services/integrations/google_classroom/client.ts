@@ -46,10 +46,9 @@ type ClassroomListResponse<T> = {
 
 const MOCK_COURSES: GoogleClassroomCourse[] = [
   { id: 'gc-course-1', name: 'Matematicas 3A', section: '3A', courseState: 'ACTIVE' },
-  { id: 'gc-course-2', name: 'Ciencias 3A', section: '3A', courseState: 'ACTIVE' },
 ]
 
-/** Five published items on course-1 so import-all + sync-all can unlock the first-5 milestone. */
+/** Two published items so import-all + sync-all can unlock the first-5 milestone without a heavy roster. */
 const MOCK_COURSEWORK: Record<string, GoogleClassroomCourseWork[]> = {
   'gc-course-1': [
     {
@@ -70,49 +69,11 @@ const MOCK_COURSEWORK: Record<string, GoogleClassroomCourseWork[]> = {
       dueDate: null,
       dueTime: null,
     },
-    {
-      id: 'gc-work-3',
-      title: 'Problemas de fracciones',
-      description: 'Serie de ejercicios de fracciones equivalentes',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: null,
-      dueTime: null,
-    },
-    {
-      id: 'gc-work-4',
-      title: 'Geometria basica',
-      description: 'Perimetro y area de figuras planas',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: null,
-      dueTime: null,
-    },
-    {
-      id: 'gc-work-5',
-      title: 'Quiz diagnostico',
-      description: 'Evaluacion corta de conceptos previos',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: null,
-      dueTime: null,
-    },
-  ],
-  'gc-course-2': [
-    {
-      id: 'gc-work-6',
-      title: 'Laboratorio virtual',
-      description: 'Informe de laboratorio',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: null,
-      dueTime: null,
-    },
   ],
 }
 
 const MOCK_SUBMISSIONS: Record<string, GoogleClassroomStudentSubmission[]> = Object.fromEntries(
-  ['gc-work-1', 'gc-work-2', 'gc-work-3', 'gc-work-4', 'gc-work-5', 'gc-work-6'].map(
+  ['gc-work-1', 'gc-work-2'].map(
     (courseWorkId) => [
       courseWorkId,
       CLASSROOM_MOCK_STUDENT_GRADES.map((row, index) => ({

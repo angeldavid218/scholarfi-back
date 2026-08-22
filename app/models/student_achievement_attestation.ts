@@ -7,7 +7,7 @@ export type StudentAchievementAttestationStatus =
   | 'skipped'
 
 export const FIRST_5_ACTIVITIES_KEY = 'first_5_activities'
-export const FIRST_5_ACTIVITIES_THRESHOLD = 5
-export const FIRST_5_ACTIVITIES_TITLE = 'Logro completado: 5 primeras actividades'
+export const FIRST_5_ACTIVITIES_THRESHOLD = 2
+export const FIRST_5_ACTIVITIES_TITLE = 'Logro completado: 2 primeras actividades'
 
 export default class StudentAchievementAttestation extends StudentAchievementAttestationSchema {}

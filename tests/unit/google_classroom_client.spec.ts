@@ -87,10 +87,10 @@ test.group('Google Classroom client helpers', () => {
   })
 
   test('resolveClassroomGradeForUser finds mock fixture grades via gc-user id', ({ assert }) => {
-    const email = 'mateo.vargas@scholarfi.test'
-    const googleId = 'gc-user-mateo-vargas-scholarfi-test'
-    const gradeByEmail = new Map<string, number | null>([[email, 5]])
-    const gradeByGoogleUserId = new Map<string, number | null>([[googleId, 5]])
+    const email = 'sofia.hernandez@scholarfi.test'
+    const googleId = 'gc-user-sofia-hernandez-scholarfi-test'
+    const gradeByEmail = new Map<string, number | null>([[email, 8]])
+    const gradeByGoogleUserId = new Map<string, number | null>([[googleId, 8]])
 
     const resolved = resolveClassroomGradeForUser({
       email,
@@ -99,7 +99,7 @@ test.group('Google Classroom client helpers', () => {
       gradeByGoogleUserId,
     })
     assert.isTrue(resolved.gradeFound)
-    assert.equal(resolved.grade, 5)
+    assert.equal(resolved.grade, 8)
     assert.equal(resolved.lookupKey, `google:${googleId}`)
   })
 })

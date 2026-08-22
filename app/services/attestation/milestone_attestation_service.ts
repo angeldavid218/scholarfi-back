@@ -335,7 +335,7 @@ export async function getStudentAchievementsForUi(params: {
       key: FIRST_5_ACTIVITIES_KEY,
       title: FIRST_5_ACTIVITIES_TITLE,
       description:
-        'Completa y recibe recompensa por tus primeras 5 actividades.',
+        'Completa y recibe recompensa por tus primeras 2 actividades.',
       threshold: FIRST_5_ACTIVITIES_THRESHOLD,
       progress,
       unlocked,
@@ -366,7 +366,7 @@ export type MilestoneAttestResult = {
 }
 
 /**
- * Issue the MVP milestone attestation when a student has ≥ 5 rewarded activities.
+ * Issue the MVP milestone attestation when a student has ≥ 2 rewarded activities.
  */
 export async function attestFirst5ActivitiesForStudent(params: {
   studentId: number
