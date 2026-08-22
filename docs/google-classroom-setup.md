@@ -101,12 +101,7 @@ When `GOOGLE_CLASSROOM_MOCK=true`, roster emails come from fixtures in `fixtures
 | Name | Email | Seeded by |
 |------|-------|-----------|
 | Sofia Hernandez | `sofia.hernandez@scholarfi.test` | `demo:reset` |
-| Mateo Vargas | `mateo.vargas@scholarfi.test` | `demo:reset` |
 | Valentina Rojas | `valentina.rojas@school.edu` | `demo:reset` |
-| Lucas Mendez | `lucas.mendez@school.edu` | `demo:reset` |
-| Camila Torres | `camila.torres@school.edu` | `demo:reset` |
-| Andres Castillo | `andres.castillo@school.edu` | **Sincronizar estudiantes** only |
-| Isabella Nunez | `isabella.nunez@school.edu` | **Sincronizar estudiantes** only |
 
 ## 7. Pilot checklist
 

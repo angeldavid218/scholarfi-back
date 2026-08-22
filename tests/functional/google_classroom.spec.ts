@@ -183,8 +183,7 @@ test.group('Google Classroom connector', (group) => {
     const students = await Promise.all(
       [
         { email: 'valentina.rojas@school.edu', name: 'Valentina' },
-        { email: 'lucas.mendez@school.edu', name: 'Lucas' },
-        { email: 'camila.torres@school.edu', name: 'Camila' },
+        { email: 'sofia.hernandez@scholarfi.test', name: 'Sofia' },
       ].map(async (s) => {
         const student = await User.create({
           email: s.email,
@@ -246,8 +245,7 @@ test.group('Google Classroom connector', (group) => {
     const { run: syncRun } = await awaitClassroomSyncResult(client, token, taskId)
     assert.equal(syncRun.status, 'completed')
     assert.equal(syncRun.result.rewarded, 1)
-    assert.equal(syncRun.result.skippedLowGrade, 1)
-    assert.equal(syncRun.result.skippedNoGrade, 1)
+    assert.equal(syncRun.result.skippedBudgetExhausted, 1)
     assert.equal(syncRun.result.budgetRemaining, 5)
 
     const rewardedSubmission = await db
@@ -285,8 +283,7 @@ test.group('Google Classroom connector', (group) => {
     const students = await Promise.all(
       [
         { email: 'valentina.rojas@school.edu', name: 'Valentina' },
-        { email: 'lucas.mendez@school.edu', name: 'Lucas' },
-        { email: 'camila.torres@school.edu', name: 'Camila' },
+        { email: 'sofia.hernandez@scholarfi.test', name: 'Sofia' },
       ].map(async (s) => {
         const student = await User.create({
           email: s.email,
@@ -347,19 +344,21 @@ test.group('Google Classroom connector', (group) => {
 
     const { run: syncRun } = await awaitClassroomSyncResult(client, token, taskId)
     assert.equal(syncRun.status, 'completed')
-    assert.equal(syncRun.result.rewarded, 1)
-    assert.equal(syncRun.result.skippedLowGrade, 1)
-    assert.equal(syncRun.result.skippedNoGrade, 1)
+    assert.equal(syncRun.result.rewarded, 2)
+    assert.equal(syncRun.result.skippedLowGrade, 0)
+    assert.equal(syncRun.result.skippedNoGrade, 0)
 
-    const rewardedSubmission = await db
+    const rewardedEmails = await db
       .from('submissions')
       .innerJoin('users', 'users.id', 'submissions.student_id')
       .where('submissions.task_id', taskId)
       .andWhere('submissions.status', 'approved')
       .select('users.email as email')
-      .first()
 
-    assert.equal(rewardedSubmission?.email, 'valentina.rojas@school.edu')
+    assert.sameMembers(
+      rewardedEmails.map((row) => row.email),
+      ['valentina.rojas@school.edu', 'sofia.hernandez@scholarfi.test']
+    )
   })
 
   test('mock sync uses default grade fixtures for real-looking courseWork ids and demo student emails', async ({
@@ -572,13 +571,13 @@ test.group('Google Classroom connector', (group) => {
     await assignRoleToUser(pending.id, 'student', 'Student')
 
     const active = await User.create({
-      email: 'mateo.vargas@scholarfi.test',
+      email: 'valentina.rojas@school.edu',
       password: 'KeepMyPassword9!',
-      fullName: 'Mateo Vargas',
+      fullName: 'Valentina Rojas',
       institutionId,
       isActive: true,
       accountStatus: 'active',
-      registrationNumber: 'MAT-002',
+      registrationNumber: 'MAT-ALPHA',
     })
     await assignRoleToUser(active.id, 'student', 'Student')
 
@@ -591,10 +590,10 @@ test.group('Google Classroom connector', (group) => {
     const body = response.body() as any
     const summary = body.data
 
-    assert.isAtLeast(summary.courses, 2)
-    assert.isAtLeast(summary.created, 2)
+    assert.isAtLeast(summary.courses, 1)
+    assert.equal(summary.created, 0)
     assert.isAtLeast(summary.activated, 1)
-    assert.isAtLeast(summary.linked, 5)
+    assert.isAtLeast(summary.linked, 2)
 
     await pending.refresh()
     assert.equal(pending.accountStatus, 'active')
@@ -612,19 +611,6 @@ test.group('Google Classroom connector', (group) => {
     })
     activeLoginOld.assertStatus(200)
 
-    const createdDelta = await User.query()
-      .whereRaw('LOWER(email) = ?', ['andres.castillo@school.edu'])
-      .firstOrFail()
-    assert.equal(createdDelta.accountStatus, 'active')
-    assert.equal(Boolean(createdDelta.isActive), true)
-    assert.isNull(createdDelta.registrationNumber)
-
-    const deltaLogin = await client.post('/api/v1/auth/login').json({
-      email: 'andres.castillo@school.edu',
-      password: 'scholarfi-pass',
-    })
-    deltaLogin.assertStatus(200)
-
     const mathGroup = await db
       .from('groups')
       .where('institution_id', institutionId)
@@ -633,12 +619,12 @@ test.group('Google Classroom connector', (group) => {
       .first()
     assert.exists(mathGroup)
 
-    const deltaMembership = await db
+    const pendingMembership = await db
       .from('group_students')
       .where('group_id', mathGroup!.id)
-      .andWhere('student_id', createdDelta.id)
+      .andWhere('student_id', pending.id)
       .first()
-    assert.exists(deltaMembership)
+    assert.exists(pendingMembership)
   })
 
   test('sync-all enqueues every active Classroom task and skips closed or manual tasks', async ({

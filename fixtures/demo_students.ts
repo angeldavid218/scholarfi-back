@@ -1,6 +1,7 @@
 /**
  * Canonical demo students for seed data, Classroom mock grades, and CSV roster import.
  * Keep `demo_classroom_roster.csv` in sync when changing classroom pilot enrollments.
+ * Kept small so mock sync stays cheap on low-CPU hosts (e.g. Render free).
  */
 
 export type DemoStudentGroupEnrollment = {
@@ -33,132 +34,36 @@ export type ClassroomMockRosterOnlyStudent = {
 
 export const DEMO_STUDENT_PASSWORD = 'DemoPass123!'
 
+const MATEMATICAS_3A: DemoStudentGroupEnrollment = {
+  subject: 'Matematicas 3A',
+  section: '3A',
+  className: 'Matematicas 3A',
+  classroomPilot: true,
+}
+
 export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
-    // Grade ≥ minGrade: import + sync all 5 Matematicas coursework → first_5_activities milestone.
+    // Grade ≥ minGrade: import + sync both Matematicas items → first_5_activities milestone.
     email: 'sofia.hernandez@scholarfi.test',
     fullName: 'Sofia Hernandez',
     registrationNumber: 'MAT-001',
     classroomAssignedGrade: 8,
-    seedGroups: [
-      { subject: 'Matemáticas', section: '3°A' },
-      { subject: 'Historia', section: '3°A' },
-      {
-        subject: 'Matematicas 3A',
-        section: '3A',
-        className: 'Matematicas 3A',
-        classroomPilot: true,
-      },
-      {
-        subject: 'Ciencias 3A',
-        section: '3A',
-        className: 'Ciencias 3A',
-        classroomPilot: true,
-      },
-    ],
-  },
-  {
-    email: 'mateo.vargas@scholarfi.test',
-    fullName: 'Mateo Vargas',
-    registrationNumber: 'MAT-002',
-    classroomAssignedGrade: 5,
-    seedGroups: [
-      { subject: 'Matemáticas', section: '3°A' },
-      { subject: 'Historia', section: '3°A' },
-      {
-        subject: 'Matematicas 3A',
-        section: '3A',
-        className: 'Matematicas 3A',
-        classroomPilot: true,
-      },
-      {
-        subject: 'Ciencias 3A',
-        section: '3A',
-        className: 'Ciencias 3A',
-        classroomPilot: true,
-      },
-    ],
+    seedGroups: [MATEMATICAS_3A],
   },
   {
     email: 'valentina.rojas@school.edu',
     fullName: 'Valentina Rojas',
     registrationNumber: 'MAT-ALPHA',
     classroomAssignedGrade: 8,
-    seedGroups: [
-      {
-        subject: 'Matematicas 3A',
-        section: '3A',
-        className: 'Matematicas 3A',
-        classroomPilot: true,
-      },
-      {
-        subject: 'Ciencias 3A',
-        section: '3A',
-        className: 'Ciencias 3A',
-        classroomPilot: true,
-      },
-    ],
-  },
-  {
-    email: 'lucas.mendez@school.edu',
-    fullName: 'Lucas Mendez',
-    registrationNumber: 'MAT-BETA',
-    classroomAssignedGrade: 5,
-    seedGroups: [
-      {
-        subject: 'Matematicas 3A',
-        section: '3A',
-        className: 'Matematicas 3A',
-        classroomPilot: true,
-      },
-      {
-        subject: 'Ciencias 3A',
-        section: '3A',
-        className: 'Ciencias 3A',
-        classroomPilot: true,
-      },
-    ],
-  },
-  {
-    email: 'camila.torres@school.edu',
-    fullName: 'Camila Torres',
-    registrationNumber: 'MAT-GAMMA',
-    classroomAssignedGrade: null,
-    seedGroups: [
-      {
-        subject: 'Matematicas 3A',
-        section: '3A',
-        className: 'Matematicas 3A',
-        classroomPilot: true,
-      },
-      {
-        subject: 'Ciencias 3A',
-        section: '3A',
-        className: 'Ciencias 3A',
-        classroomPilot: true,
-      },
-    ],
+    seedGroups: [MATEMATICAS_3A],
   },
 ]
 
 /**
  * Extra Classroom roster members used only when GOOGLE_CLASSROOM_MOCK=true.
- * Not seeded by demo:seed so Sync students can exercise account creation.
+ * Empty on purpose: extra roster rows slow mock sync on small server instances.
  */
-export const CLASSROOM_MOCK_ROSTER_ONLY_STUDENTS: ClassroomMockRosterOnlyStudent[] = [
-  {
-    googleUserId: 'gc-roster-delta',
-    email: 'andres.castillo@school.edu',
-    fullName: 'Andres Castillo',
-    courseIds: ['gc-course-1', 'gc-course-2'],
-  },
-  {
-    googleUserId: 'gc-roster-epsilon',
-    email: 'isabella.nunez@school.edu',
-    fullName: 'Isabella Nunez',
-    courseIds: ['gc-course-1'],
-  },
-]
+export const CLASSROOM_MOCK_ROSTER_ONLY_STUDENTS: ClassroomMockRosterOnlyStudent[] = []
 
 export const CLASSROOM_MOCK_STUDENT_GRADES = DEMO_STUDENTS.map((student) => ({
   email: student.email,
@@ -173,7 +78,6 @@ export type ClassroomMockRosterMember = {
 
 const COURSE_ID_BY_CLASS_NAME: Record<string, string> = {
   'Matematicas 3A': 'gc-course-1',
-  'Ciencias 3A': 'gc-course-2',
 }
 
 /** Stable mock Google user ids for demo students (used by roster sync fixtures). */

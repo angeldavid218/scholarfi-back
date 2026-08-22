@@ -118,7 +118,7 @@ node ace demo:reset
 Baseline (no Classroom tasks yet — teacher imports them and chooses reward credits):
 
 - `1` active institution (`SFA-DEMO`)
-- `1` school admin, `1` teacher, `5` students (with associations + groups)
+- `1` school admin, `1` teacher, `2` students (with associations + groups)
 - `3` internal marketplace rewards (entrada al cine 500, beca de transporte ONG, kit de útiles)
 - Tasks/rewards: teacher uses **Usar Classroom de demo** (or real Google OAuth) → imports coursework with chosen reward → sync students → sync tasks
 - When `TOKEN_MODE=solana`, `SFA-DEMO` is seeded with `cryptoWalletsEnabled: true` so diploma/SAS UIs are not blocked
@@ -127,15 +127,15 @@ Baseline (no Classroom tasks yet — teacher imports them and chooses reward cre
 
 1. Sign in at `/login` with a demo role chip (or `demo.teacher@scholarfi.test` / `DemoPass123!`)
 2. `/teacher/integraciones` → **Usar Classroom de demo** (skips Google OAuth)
-3. Import **Matematicas 3A** (all 5 items) and set **reward credits** + min grade
-4. Optional: **Sincronizar estudiantes** (registers fixture roster, including Andres/Isabella)
+3. Import **Matematicas 3A** (both items) and set **reward credits** + min grade
+4. Optional: **Sincronizar estudiantes** (links the fixture roster)
 5. **Sincronizar** / **Sincronizar todo** to issue rewards from mock grades (runs inline; no queue worker)
 
 External evaluators (no Google account): see [scholarfi/docs/judge-instructions.md](../scholarfi/docs/judge-instructions.md) (English and Spanish).
 
-Matematicas 3A has **5** coursework items. `sofia.hernandez@scholarfi.test` and `valentina.rojas@school.edu` have grade `8` (≥ default min grade) so they earn on sync.
+Matematicas 3A has **2** coursework items. `sofia.hernandez@scholarfi.test` and `valentina.rojas@school.edu` have grade `8` (≥ default min grade) so they earn on sync.
 
-**Sync students:** provisions roster emails from `fixtures/demo_students.ts` (updates display names, creates missing accounts). Roster-only (not in demo seed): `andres.castillo@school.edu` / `isabella.nunez@school.edu` — default password `scholarfi-pass` (`CLASSROOM_STUDENT_DEFAULT_PASSWORD`).
+**Sync students:** provisions roster emails from `fixtures/demo_students.ts` (updates display names, links existing accounts).
 
 After seed/reset, confirm:
 
@@ -145,10 +145,7 @@ After seed/reset, confirm:
   - `demo.admin@scholarfi.test`
   - `demo.teacher@scholarfi.test`
   - `sofia.hernandez@scholarfi.test` — Sofia Hernandez
-  - `mateo.vargas@scholarfi.test` — Mateo Vargas
   - `valentina.rojas@school.edu` — Valentina Rojas
-  - `lucas.mendez@school.edu` — Lucas Mendez
-  - `camila.torres@school.edu` — Camila Torres
 3. Confirm deterministic institution code exists: `SFA-DEMO`.
 4. Run the Classroom flow above (no tasks are pre-imported).
 ## Solana leaderboard + SAS attestation (Devnet POC)
@@ -165,7 +162,7 @@ node ace sas:setup
 # Manual per-submission attestation smoke (optional; not used on reward path)
 node ace sas:attest --institution-id=1 --submission-id=900101 --points=10 --record-score
 
-# Off-sync milestone attestations (MVP: 5 primeras actividades)
+# Off-sync milestone attestations (MVP: 2 primeras actividades)
 node ace sas:attest-milestones
 # node ace sas:attest-milestones --institution-id=1
 # node ace sas:attest-milestones --student=42
@@ -199,17 +196,7 @@ node ace cnft:setup-tree
 | School Admin | Demo School Admin | `demo.admin@scholarfi.test`      | `DemoPass123!`   | `SFA-DEMO`              |
 | Teacher      | Demo Teacher      | `demo.teacher@scholarfi.test`    | `DemoPass123!`   | `SFA-DEMO`              |
 | Student      | Sofia Hernandez   | `sofia.hernandez@scholarfi.test` | `DemoPass123!`   | `SFA-DEMO`              |
-| Student      | Mateo Vargas      | `mateo.vargas@scholarfi.test`    | `DemoPass123!`   | `SFA-DEMO`              |
 | Student      | Valentina Rojas   | `valentina.rojas@school.edu`     | `DemoPass123!`   | `SFA-DEMO`              |
-| Student      | Lucas Mendez      | `lucas.mendez@school.edu`        | `DemoPass123!`   | `SFA-DEMO`              |
-| Student      | Camila Torres     | `camila.torres@school.edu`       | `DemoPass123!`   | `SFA-DEMO`              |
-
-**Roster-only** (created by **Sincronizar estudiantes**, password `scholarfi-pass`):
-
-| Name             | Email                         |
-| ---------------- | ----------------------------- |
-| Andres Castillo  | `andres.castillo@school.edu`  |
-| Isabella Nunez   | `isabella.nunez@school.edu`   |
 
 Classroom mock pilot roster CSV: `fixtures/demo_classroom_roster.csv` (see `docs/google-classroom-setup.md` pilot checklist).
 
