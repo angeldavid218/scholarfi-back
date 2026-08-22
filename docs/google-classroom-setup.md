@@ -49,11 +49,15 @@ FRONTEND_URL=http://localhost:5173
 CORS_ORIGIN=http://localhost:5173
 # Optional: password assigned when Sync students provisions Classroom roster accounts
 # CLASSROOM_STUDENT_DEFAULT_PASSWORD=scholarfi-pass
-# Local/dev without real Google OAuth API calls:
+# Local/dev / judge sandbox without a Google account:
 # GOOGLE_CLASSROOM_MOCK=true
+# Requires INTEGRATION_TOKEN_ENCRYPTION_KEY only (no GOOGLE_CLIENT_*).
+# Teacher: POST /connect upserts a fixture integration. Login exposes GET /api/v1/public/demo-config.
 ```
 
 Generate encryption key: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+
+Evaluator walkthrough (English and Spanish): [scholarfi/docs/judge-instructions.md](../../scholarfi/docs/judge-instructions.md).
 
 ## 6. Classroom sync worker (`@adonisjs/queue`)
 
@@ -92,17 +96,27 @@ You should see `Starting worker for queues: classroom`. If it says `default` onl
 
 Students then log in with email + default password and change it from the header user menu (`PATCH /account/password`).
 
-When `GOOGLE_CLASSROOM_MOCK=true`, roster emails come from fixtures in `fixtures/demo_students.ts` (demo pilot students plus roster-only emails like `student-delta@school.edu`).
+When `GOOGLE_CLASSROOM_MOCK=true`, roster emails come from fixtures in `fixtures/demo_students.ts`:
+
+| Name | Email | Seeded by |
+|------|-------|-----------|
+| Sofia Hernandez | `sofia.hernandez@scholarfi.test` | `demo:reset` |
+| Mateo Vargas | `mateo.vargas@scholarfi.test` | `demo:reset` |
+| Valentina Rojas | `valentina.rojas@school.edu` | `demo:reset` |
+| Lucas Mendez | `lucas.mendez@school.edu` | `demo:reset` |
+| Camila Torres | `camila.torres@school.edu` | `demo:reset` |
+| Andres Castillo | `andres.castillo@school.edu` | **Sincronizar estudiantes** only |
+| Isabella Nunez | `isabella.nunez@school.edu` | **Sincronizar estudiantes** only |
 
 ## 7. Pilot checklist
 
 Before testing end-to-end:
 
 - [ ] Admin allocated teacher credit budget (`/admin/presupuesto-docentes`)
-- [ ] Teacher connected Classroom (`/teacher/integraciones`)
+- [ ] Teacher connected Classroom (`/teacher/integraciones`) — mock mode: **Usar Classroom de demo** (no Google account)
 - [ ] Teacher clicked **Sincronizar estudiantes** on `/teacher` (or students already exist with matching Classroom emails)
 - [ ] Pilot GC course has assignments with numeric `maxPoints` and graded `assignedGrade` values
-- [ ] `npm run queue:work` is running (unless `QUEUE_DRIVER=sync`) — required for per-task sync, **Sincronizar todo**, and the nightly cron
+- [ ] `npm run queue:work` is running (unless `QUEUE_DRIVER=sync` **or** `GOOGLE_CLASSROOM_MOCK=true`, which syncs inline) — required for real Classroom per-task sync, **Sincronizar todo**, and the nightly cron
 - [ ] Teacher imports coursework and clicks **Sincronizar** on the Classroom-linked task (or **Sincronizar todo** for every active Classroom task)
 
 ## Notes

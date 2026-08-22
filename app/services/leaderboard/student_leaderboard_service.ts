@@ -8,6 +8,7 @@ export type StudentLeaderboardEntry = {
   points: number
   contributionCount: number
   isCurrentUser: boolean
+  hasDiploma: boolean
 }
 
 export type StudentLeaderboardResult = {
@@ -63,6 +64,7 @@ export async function getInstitutionStudentLeaderboard(params: {
       points: Number(row.points ?? 0),
       contributionCount: Number(row.contribution_count ?? 0),
       isCurrentUser: studentId === params.currentUserId,
+      hasDiploma: false as boolean,
     } satisfies StudentLeaderboardEntry
   })
 
@@ -72,6 +74,27 @@ export async function getInstitutionStudentLeaderboard(params: {
   if (current && !entries.some((entry) => entry.studentId === current.studentId)) {
     // Keep current user visible even outside top N
     entries.push(current)
+  }
+
+  const diplomaStudentIds = entries.map((entry) => entry.studentId)
+  if (diplomaStudentIds.length > 0) {
+    try {
+      const diplomaRows = await db
+        .from('student_diploma_mints')
+        .where('institution_id', params.institutionId)
+        .andWhere('status', 'confirmed')
+        .whereIn('student_id', diplomaStudentIds)
+        .select('student_id')
+      const diplomaSet = new Set(diplomaRows.map((row) => Number(row.student_id)))
+      for (const entry of entries) {
+        entry.hasDiploma = diplomaSet.has(entry.studentId)
+      }
+      if (current) current.hasDiploma = diplomaSet.has(current.studentId)
+    } catch (error) {
+      // Ranking must still load if diploma migrations have not been applied yet.
+      const code = (error as { code?: string })?.code
+      if (code !== '42P01') throw error
+    }
   }
 
   return {

@@ -20,7 +20,7 @@ export default class DemoReset extends BaseCommand {
     this.logger.info(`Teacher user: ${result.teacherId}`)
     this.logger.info(`Students: ${result.studentIds.join(', ')}`)
     this.logger.info(
-      'Tasks/rewards come from Classroom mock sync (import all Matematicas 3A + sync all).'
+      'Classroom flow: Usar Classroom de demo (or Google OAuth) → import tasks → sync students → sync tasks.'
     )
   }
 }

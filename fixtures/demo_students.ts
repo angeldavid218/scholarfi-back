@@ -36,8 +36,8 @@ export const DEMO_STUDENT_PASSWORD = 'DemoPass123!'
 export const DEMO_STUDENTS: DemoStudentFixture[] = [
   {
     // Grade ≥ minGrade: import + sync all 5 Matematicas coursework → first_5_activities milestone.
-    email: 'demo.student1@scholarfi.test',
-    fullName: 'Demo Student One',
+    email: 'sofia.hernandez@scholarfi.test',
+    fullName: 'Sofia Hernandez',
     registrationNumber: 'MAT-001',
     classroomAssignedGrade: 8,
     seedGroups: [
@@ -58,8 +58,8 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
     ],
   },
   {
-    email: 'demo.student2@scholarfi.test',
-    fullName: 'Demo Student Two',
+    email: 'mateo.vargas@scholarfi.test',
+    fullName: 'Mateo Vargas',
     registrationNumber: 'MAT-002',
     classroomAssignedGrade: 5,
     seedGroups: [
@@ -80,8 +80,8 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
     ],
   },
   {
-    email: 'student-alpha@school.edu',
-    fullName: 'Student Alpha',
+    email: 'valentina.rojas@school.edu',
+    fullName: 'Valentina Rojas',
     registrationNumber: 'MAT-ALPHA',
     classroomAssignedGrade: 8,
     seedGroups: [
@@ -100,8 +100,8 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
     ],
   },
   {
-    email: 'student-beta@school.edu',
-    fullName: 'Student Beta',
+    email: 'lucas.mendez@school.edu',
+    fullName: 'Lucas Mendez',
     registrationNumber: 'MAT-BETA',
     classroomAssignedGrade: 5,
     seedGroups: [
@@ -120,8 +120,8 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
     ],
   },
   {
-    email: 'student-gamma@school.edu',
-    fullName: 'Student Gamma',
+    email: 'camila.torres@school.edu',
+    fullName: 'Camila Torres',
     registrationNumber: 'MAT-GAMMA',
     classroomAssignedGrade: null,
     seedGroups: [
@@ -148,14 +148,14 @@ export const DEMO_STUDENTS: DemoStudentFixture[] = [
 export const CLASSROOM_MOCK_ROSTER_ONLY_STUDENTS: ClassroomMockRosterOnlyStudent[] = [
   {
     googleUserId: 'gc-roster-delta',
-    email: 'student-delta@school.edu',
-    fullName: 'Student Delta',
+    email: 'andres.castillo@school.edu',
+    fullName: 'Andres Castillo',
     courseIds: ['gc-course-1', 'gc-course-2'],
   },
   {
     googleUserId: 'gc-roster-epsilon',
-    email: 'student-epsilon@school.edu',
-    fullName: 'Student Epsilon',
+    email: 'isabella.nunez@school.edu',
+    fullName: 'Isabella Nunez',
     courseIds: ['gc-course-1'],
   },
 ]

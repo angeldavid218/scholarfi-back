@@ -248,6 +248,19 @@ export async function syncGoogleClassroomTask(input: {
       grades: Object.fromEntries(gradeByEmail.entries()),
     })
 
+    // Token/budget assignment BEFORE loading the FIFO queue
+    let funding = await resolveSyncFunding({
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+    })
+    const rewardAmount = Number(task.rewardAmount)
+
+    gcLogInfo('Credit pool at sync start (pre-FIFO assignment)', ctx, {
+      fundingSource: funding.fundingSource,
+      remainingCredits: funding.remainingCredits,
+      rewardAmountPerStudent: rewardAmount,
+    })
+
     const scholarfiSubmissions = (await db
       .from('submissions')
       .innerJoin('users', 'users.id', 'submissions.student_id')
@@ -295,18 +308,6 @@ export async function syncGoogleClassroomTask(input: {
       budgetRemaining: 0,
       rewardedSubmissionIds: [],
     }
-
-    let funding = await resolveSyncFunding({
-      teacherId: input.teacherId,
-      institutionId: input.institutionId,
-    })
-    const rewardAmount = Number(task.rewardAmount)
-
-    gcLogInfo('Credit pool at sync start', ctx, {
-      fundingSource: funding.fundingSource,
-      remainingCredits: funding.remainingCredits,
-      rewardAmountPerStudent: rewardAmount,
-    })
 
     for (const [index, submission] of scholarfiSubmissions.entries()) {
       const { grade, gradeFound, lookupKey } = resolveSubmissionGradeFromMaps(

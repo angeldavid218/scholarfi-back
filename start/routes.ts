@@ -447,6 +447,67 @@ router
       .use(middleware.tenantScope())
 
     router
+      .get('/public/demo-config', [
+        () => import('#controllers/demo_config_controller'),
+        'show',
+      ])
+      .as('publicDemoConfig')
+
+    router
+      .get('/public/diplomas/:id', [
+        () => import('#controllers/diplomas_controller'),
+        'metadata',
+      ])
+      .as('diplomaMetadata')
+
+    router
+      .get('/public/diplomas/:id.svg', [
+        () => import('#controllers/diplomas_controller'),
+        'artwork',
+      ])
+      .as('diplomaArtwork')
+
+    router
+      .group(() => {
+        router
+          .get('/preview-best', [() => import('#controllers/diplomas_controller'), 'previewBest'])
+          .as('previewBestDiploma')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/mint-best', [() => import('#controllers/diplomas_controller'), 'mintBest'])
+          .as('mintBestDiploma')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .get('/me', [() => import('#controllers/diplomas_controller'), 'me'])
+          .as('listMyDiplomas')
+          .use(middleware.role({ roles: ['student'] }))
+      })
+      .prefix('diplomas')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
+          .get('/milestones/preview', [
+            () => import('#controllers/attestations_controller'),
+            'previewMilestones',
+          ])
+          .as('previewMilestoneAttestations')
+          .use(middleware.role({ roles: ['school_admin'] }))
+        router
+          .post('/milestones/run', [
+            () => import('#controllers/attestations_controller'),
+            'runMilestones',
+          ])
+          .as('runMilestoneAttestations')
+          .use(middleware.role({ roles: ['school_admin'] }))
+      })
+      .prefix('attestations')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
       .group(() => {
         router
           .get('/:studentId/balance', [
