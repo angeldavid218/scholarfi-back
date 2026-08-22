@@ -148,6 +148,19 @@ After seed/reset, confirm:
   - `valentina.rojas@school.edu` — Valentina Rojas
 3. Confirm deterministic institution code exists: `SFA-DEMO`.
 4. Run the Classroom flow above (no tasks are pre-imported).
+
+## Custodial student wallets
+
+Student Solana wallets are **custodial**. There is no Phantom / wallet-adapter flow — students never hold or sign with a browser keypair.
+
+When `TOKEN_MODE=solana` and the institution has `cryptoWalletsEnabled`:
+
+- The API generates a keypair per student on create (or backfills existing students when a super admin turns crypto wallets on).
+- The public key is stored on `users.wallet_public_key`. The secret is encrypted with `WALLET_ENCRYPTION_KEY` (AES-256-GCM) as `users.encrypted_wallet_secret`.
+- The backend signs SPL reward mints, SAS attestations, and cNFT diploma mints server-side (`MINT_AUTHORITY_SECRET` pays fees).
+
+`TOKEN_MODE=mock` keeps an off-chain credit ledger only and does not provision keypairs. Browser self-custody is out of scope for this MVP.
+
 ## Solana leaderboard + SAS attestation (Devnet POC)
 
 Requires `SOLANA_RPC_URL` and mint/oracle secrets. Attestation code imports `sas-lib` from `node_modules` via `app/services/attestation/sas_sdk.ts`.
