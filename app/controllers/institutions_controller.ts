@@ -38,6 +38,18 @@ function institutionPayload(institution: Institution) {
   }
 }
 
+function walletPublicKeyForStudent(
+  user: User,
+  roles: string[],
+  cryptoWalletsEnabled: boolean
+): string | null {
+  if (!cryptoWalletsEnabled || !roles.includes('student')) {
+    return null
+  }
+
+  return user.walletPublicKey
+}
+
 export default class InstitutionsController {
   async index() {
     const rows = await Institution.query().orderBy('created_at', 'desc').orderBy('id', 'desc')
@@ -279,6 +291,9 @@ export default class InstitutionsController {
     const users = paginated.all()
     const userIds = users.map((u) => u.id)
 
+    const institution = await Institution.find(actor.institutionId)
+    const cryptoWalletsEnabled = institution?.cryptoWalletsEnabled ?? false
+
     const rolesByUser = new Map<number, string[]>()
     if (userIds.length > 0) {
       const roleRows = await db
@@ -299,12 +314,16 @@ export default class InstitutionsController {
 
     return {
       data: {
-        items: users.map((u) => ({
-          id: u.id,
-          email: u.email,
-          fullName: u.fullName,
-          roles: rolesByUser.get(u.id) ?? [],
-        })),
+        items: users.map((u) => {
+          const roles = rolesByUser.get(u.id) ?? []
+          return {
+            id: u.id,
+            email: u.email,
+            fullName: u.fullName,
+            roles,
+            walletPublicKey: walletPublicKeyForStudent(u, roles, cryptoWalletsEnabled),
+          }
+        }),
         meta: paginated.getMeta(),
       },
     }
@@ -406,6 +425,8 @@ export default class InstitutionsController {
         return createdUser
       })
 
+      await user.refresh()
+
       return {
         data: {
           id: user.id,
@@ -414,6 +435,11 @@ export default class InstitutionsController {
           institutionId: user.institutionId,
           isActive: user.isActive,
           role: payload.role,
+          walletPublicKey: walletPublicKeyForStudent(
+            user,
+            [payload.role],
+            institution.cryptoWalletsEnabled
+          ),
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },

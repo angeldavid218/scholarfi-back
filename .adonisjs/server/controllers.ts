@@ -18,6 +18,7 @@ export const controllers = {
   Leaderboard: () => import('#controllers/leaderboard_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   NgoInstitutions: () => import('#controllers/ngo_institutions_controller'),
+  PartnerDocs: () => import('#controllers/partner_docs_controller'),
   Profile: () => import('#controllers/profile_controller'),
   Redemptions: () => import('#controllers/redemptions_controller'),
   Rewards: () => import('#controllers/rewards_controller'),

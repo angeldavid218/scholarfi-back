@@ -4,6 +4,11 @@ type ParamValue = string | number | bigint | boolean
 
 export type ScannedRoutes = {
   ALL: {
+    'partnerDocsLogin': { paramsTuple?: []; params?: {} }
+    'partnerDocsStoreLogin': { paramsTuple?: []; params?: {} }
+    'partnerDocsLogout': { paramsTuple?: []; params?: {} }
+    'partnerDocsIndex': { paramsTuple?: []; params?: {} }
+    'partnerDocsShow': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }
@@ -67,6 +72,7 @@ export type ScannedRoutes = {
     'updateCatalogReward': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
     'listMyAchievements': { paramsTuple?: []; params?: {} }
+    'publicDemoConfig': { paramsTuple?: []; params?: {} }
     'diplomaMetadata': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'previewBestDiploma': { paramsTuple?: []; params?: {} }
@@ -85,6 +91,9 @@ export type ScannedRoutes = {
     'profile.changePassword': { paramsTuple?: []; params?: {} }
   }
   GET: {
+    'partnerDocsLogin': { paramsTuple?: []; params?: {} }
+    'partnerDocsIndex': { paramsTuple?: []; params?: {} }
+    'partnerDocsShow': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
     'index': { paramsTuple?: []; params?: {} }
     'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
@@ -114,6 +123,7 @@ export type ScannedRoutes = {
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
     'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
     'listMyAchievements': { paramsTuple?: []; params?: {} }
+    'publicDemoConfig': { paramsTuple?: []; params?: {} }
     'diplomaMetadata': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'previewBestDiploma': { paramsTuple?: []; params?: {} }
@@ -126,6 +136,9 @@ export type ScannedRoutes = {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
+    'partnerDocsLogin': { paramsTuple?: []; params?: {} }
+    'partnerDocsIndex': { paramsTuple?: []; params?: {} }
+    'partnerDocsShow': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
     'index': { paramsTuple?: []; params?: {} }
     'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
@@ -155,6 +168,7 @@ export type ScannedRoutes = {
     'listCatalogRewards': { paramsTuple?: []; params?: {} }
     'listStudentLeaderboard': { paramsTuple?: []; params?: {} }
     'listMyAchievements': { paramsTuple?: []; params?: {} }
+    'publicDemoConfig': { paramsTuple?: []; params?: {} }
     'diplomaMetadata': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'previewBestDiploma': { paramsTuple?: []; params?: {} }
@@ -167,6 +181,8 @@ export type ScannedRoutes = {
     'profile.profile.show': { paramsTuple?: []; params?: {} }
   }
   POST: {
+    'partnerDocsStoreLogin': { paramsTuple?: []; params?: {} }
+    'partnerDocsLogout': { paramsTuple?: []; params?: {} }
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.store': { paramsTuple?: []; params?: {} }
     'auth.access_token.destroy': { paramsTuple?: []; params?: {} }

@@ -7,6 +7,66 @@ import type { InferInput, SimpleError } from '@vinejs/vine/types'
 export type ParamValue = string | number | bigint | boolean
 
 export interface Registry {
+  'partnerDocsLogin': {
+    methods: ["GET","HEAD"]
+    pattern: '/partner/docs/login'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['showLogin']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['showLogin']>>>
+    }
+  }
+  'partnerDocsStoreLogin': {
+    methods: ["POST"]
+    pattern: '/partner/docs/login'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['storeLogin']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['storeLogin']>>>
+    }
+  }
+  'partnerDocsLogout': {
+    methods: ["POST"]
+    pattern: '/partner/docs/logout'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['destroyLogin']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['destroyLogin']>>>
+    }
+  }
+  'partnerDocsIndex': {
+    methods: ["GET","HEAD"]
+    pattern: '/partner/docs'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['index']>>>
+    }
+  }
+  'partnerDocsShow': {
+    methods: ["GET","HEAD"]
+    pattern: '/partner/docs/:slug'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { slug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/partner_docs_controller').default['show']>>>
+    }
+  }
   'auth.new_account.store': {
     methods: ["POST"]
     pattern: '/api/v1/auth/signup'
@@ -761,6 +821,18 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/achievements_controller').default['me']>>>
+    }
+  }
+  'publicDemoConfig': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/public/demo-config'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/demo_config_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/demo_config_controller').default['show']>>>
     }
   }
   'diplomaMetadata': {

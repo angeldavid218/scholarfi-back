@@ -2,6 +2,11 @@
 import type { routes } from './index.ts'
 
 export interface ApiDefinition {
+  partnerDocsLogin: typeof routes['partnerDocsLogin']
+  partnerDocsStoreLogin: typeof routes['partnerDocsStoreLogin']
+  partnerDocsLogout: typeof routes['partnerDocsLogout']
+  partnerDocsIndex: typeof routes['partnerDocsIndex']
+  partnerDocsShow: typeof routes['partnerDocsShow']
   auth: {
     newAccount: {
       store: typeof routes['auth.new_account.store']
@@ -71,6 +76,7 @@ export interface ApiDefinition {
   updateCatalogReward: typeof routes['updateCatalogReward']
   listStudentLeaderboard: typeof routes['listStudentLeaderboard']
   listMyAchievements: typeof routes['listMyAchievements']
+  publicDemoConfig: typeof routes['publicDemoConfig']
   diplomaMetadata: typeof routes['diplomaMetadata']
   diplomaArtwork: typeof routes['diplomaArtwork']
   previewBestDiploma: typeof routes['previewBestDiploma']

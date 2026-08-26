@@ -18,6 +18,31 @@ router.get('/', () => {
 router
   .group(() => {
     router
+      .get('/login', [() => import('#controllers/partner_docs_controller'), 'showLogin'])
+      .as('partnerDocsLogin')
+    router
+      .post('/login', [() => import('#controllers/partner_docs_controller'), 'storeLogin'])
+      .as('partnerDocsStoreLogin')
+
+    router
+      .group(() => {
+        router
+          .post('/logout', [() => import('#controllers/partner_docs_controller'), 'destroyLogin'])
+          .as('partnerDocsLogout')
+        router
+          .get('/', [() => import('#controllers/partner_docs_controller'), 'index'])
+          .as('partnerDocsIndex')
+        router
+          .get('/:slug', [() => import('#controllers/partner_docs_controller'), 'show'])
+          .as('partnerDocsShow')
+      })
+      .use(middleware.partnerDocsAuth())
+  })
+  .prefix('/partner/docs')
+
+router
+  .group(() => {
+    router
       .group(() => {
         router.post('signup', [controllers.NewAccount, 'store'])
         router.post('login', [controllers.AccessToken, 'store'])

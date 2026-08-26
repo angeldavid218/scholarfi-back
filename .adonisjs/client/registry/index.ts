@@ -6,6 +6,36 @@ import type { ApiDefinition } from './tree.d.ts'
 const placeholder: any = {}
 
 const routes = {
+  'partnerDocsLogin': {
+    methods: ["GET","HEAD"],
+    pattern: '/partner/docs/login',
+    tokens: [{"old":"/partner/docs/login","type":0,"val":"partner","end":""},{"old":"/partner/docs/login","type":0,"val":"docs","end":""},{"old":"/partner/docs/login","type":0,"val":"login","end":""}],
+    types: placeholder as Registry['partnerDocsLogin']['types'],
+  },
+  'partnerDocsStoreLogin': {
+    methods: ["POST"],
+    pattern: '/partner/docs/login',
+    tokens: [{"old":"/partner/docs/login","type":0,"val":"partner","end":""},{"old":"/partner/docs/login","type":0,"val":"docs","end":""},{"old":"/partner/docs/login","type":0,"val":"login","end":""}],
+    types: placeholder as Registry['partnerDocsStoreLogin']['types'],
+  },
+  'partnerDocsLogout': {
+    methods: ["POST"],
+    pattern: '/partner/docs/logout',
+    tokens: [{"old":"/partner/docs/logout","type":0,"val":"partner","end":""},{"old":"/partner/docs/logout","type":0,"val":"docs","end":""},{"old":"/partner/docs/logout","type":0,"val":"logout","end":""}],
+    types: placeholder as Registry['partnerDocsLogout']['types'],
+  },
+  'partnerDocsIndex': {
+    methods: ["GET","HEAD"],
+    pattern: '/partner/docs',
+    tokens: [{"old":"/partner/docs","type":0,"val":"partner","end":""},{"old":"/partner/docs","type":0,"val":"docs","end":""}],
+    types: placeholder as Registry['partnerDocsIndex']['types'],
+  },
+  'partnerDocsShow': {
+    methods: ["GET","HEAD"],
+    pattern: '/partner/docs/:slug',
+    tokens: [{"old":"/partner/docs/:slug","type":0,"val":"partner","end":""},{"old":"/partner/docs/:slug","type":0,"val":"docs","end":""},{"old":"/partner/docs/:slug","type":1,"val":"slug","end":""}],
+    types: placeholder as Registry['partnerDocsShow']['types'],
+  },
   'auth.new_account.store': {
     methods: ["POST"],
     pattern: '/api/v1/auth/signup',
@@ -383,6 +413,12 @@ const routes = {
     pattern: '/api/v1/achievements/me',
     tokens: [{"old":"/api/v1/achievements/me","type":0,"val":"api","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"v1","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"achievements","end":""},{"old":"/api/v1/achievements/me","type":0,"val":"me","end":""}],
     types: placeholder as Registry['listMyAchievements']['types'],
+  },
+  'publicDemoConfig': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/public/demo-config',
+    tokens: [{"old":"/api/v1/public/demo-config","type":0,"val":"api","end":""},{"old":"/api/v1/public/demo-config","type":0,"val":"v1","end":""},{"old":"/api/v1/public/demo-config","type":0,"val":"public","end":""},{"old":"/api/v1/public/demo-config","type":0,"val":"demo-config","end":""}],
+    types: placeholder as Registry['publicDemoConfig']['types'],
   },
   'diplomaMetadata': {
     methods: ["GET","HEAD"],
