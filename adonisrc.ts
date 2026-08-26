@@ -109,7 +109,12 @@ export default defineConfig({
   | the production build.
   |
   */
-  metaFiles: [],
+  metaFiles: [
+    {
+      pattern: 'docs/partners/**',
+      reloadServer: false,
+    },
+  ],
 
   hooks: {
     init: [

@@ -69,6 +69,10 @@ export default await Env.create(new URL('../', import.meta.url), {
   CLASSROOM_NIGHTLY_SYNC_CRON: Env.schema.string.optional(),
   CLASSROOM_NIGHTLY_SYNC_TIMEZONE: Env.schema.string.optional(),
 
+  // Partner documentation portal (/partner/docs)
+  PARTNER_DOCS_USERNAME: Env.schema.string.optional(),
+  PARTNER_DOCS_PASSWORD: Env.schema.string.optional(),
+
   // Variables for configuring @adonisjs/queue
   QUEUE_DRIVER: Env.schema.enum.optional(['redis', 'database', 'sync'] as const),
 

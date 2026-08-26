@@ -84,6 +84,8 @@ test.group('Institutions provision users', (group) => {
     response.assertStatus(200)
     const body = response.body() as any
     assert.equal(body.data.role, 'teacher')
+    assert.property(body.data, 'walletPublicKey')
+    assert.isNull(body.data.walletPublicKey)
     assert.equal(body.data.institutionId, institutionId)
   })
 
@@ -118,6 +120,7 @@ test.group('Institutions provision users', (group) => {
     response.assertStatus(200)
     const body = response.body() as any
     const studentId = body.data.id as number
+    assert.property(body.data, 'walletPublicKey')
     const row = await db.from('token_balances').where('user_id', studentId).first()
     assert.isNotNull(row)
     assert.equal(Number(row.balance), 0)
@@ -284,5 +287,7 @@ test.group('Institutions provision users', (group) => {
     assert.equal(searchBody.data.meta.total, 1)
     assert.equal(searchBody.data.items[0].fullName, 'Ana Busqueda Teacher')
     assert.deepEqual(searchBody.data.items[0].roles.sort(), ['teacher'])
+    assert.property(searchBody.data.items[0], 'walletPublicKey')
+    assert.isNull(searchBody.data.items[0].walletPublicKey)
   })
 })

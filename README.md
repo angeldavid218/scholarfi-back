@@ -98,6 +98,27 @@ Sync no longer blocks the HTTP request. Grades/rewards run via `SyncClassroomTas
 
 Bearer token auth (`Authorization: Bearer …`) after `POST /auth/login`.
 
+## Partner documentation (Cloud Campus)
+
+Password-protected integration guide for partners — **not** part of the public API surface.
+
+1. Set in `.env`:
+
+   ```env
+   PARTNER_DOCS_USERNAME=cloud-campus
+   PARTNER_DOCS_PASSWORD=<strong-password>
+   ```
+
+2. Bootstrap the Cloud Campus `super_admin` service account (once per environment):
+
+   ```bash
+   node ace partner:bootstrap-cloud-campus cloud-campus-integration@your-domain.com
+   ```
+
+3. Open `http://localhost:3333/partner/docs` and sign in with the docs credentials.
+
+Source markdown lives in [docs/partners/cloud-campus/](docs/partners/cloud-campus/). In production, restrict `/partner/docs` further at the reverse proxy if needed (IP allowlist).
+
 ## Production notes
 
 - **PostgreSQL SSL:** when `NODE_ENV=production`, the `pg` client enables SSL (`rejectUnauthorized: false`) for managed hosts (e.g. Railway, Render).

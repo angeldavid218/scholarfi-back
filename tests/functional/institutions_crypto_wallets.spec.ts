@@ -149,7 +149,10 @@ test.group('Institutions crypto wallets toggle', (group) => {
       })
 
     response.assertStatus(200)
-    const studentId = (response.body() as any).data.id as number
+    const body = response.body() as any
+    const studentId = body.data.id as number
+    assert.property(body.data, 'walletPublicKey')
+    assert.isNull(body.data.walletPublicKey)
     const row = await db.from('token_balances').where('user_id', studentId).first()
     assert.isNull(row)
   })
@@ -169,7 +172,9 @@ test.group('Institutions crypto wallets toggle', (group) => {
       })
 
     response.assertStatus(200)
-    const studentId = (response.body() as any).data.id as number
+    const body = response.body() as any
+    const studentId = body.data.id as number
+    assert.property(body.data, 'walletPublicKey')
     const row = await db.from('token_balances').where('user_id', studentId).first()
     assert.isNotNull(row)
     assert.equal(Number(row.balance), 0)
