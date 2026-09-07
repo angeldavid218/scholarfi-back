@@ -1,6 +1,7 @@
 import db from '@adonisjs/lucid/services/db'
 import {
   findInstitutionGroup,
+  findInstitutionStudentByEmail,
   findOrCreateSubject,
   upsertGroupStudent,
   upsertGroupTeacher,
@@ -154,23 +155,13 @@ export async function linkGroupStudentsByEmail(
   let linked = 0
 
   for (const rawEmail of emails) {
-    const email = rawEmail.trim().toLowerCase()
-    const student = await db
-      .from('users')
-      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
-      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
-      .where('users.institution_id', institutionId)
-      .andWhere('roles.key', 'student')
-      .whereRaw('LOWER(users.email) = ?', [email])
-      .select('users.id as id')
-      .first()
-
+    const student = await findInstitutionStudentByEmail(institutionId, rawEmail)
     if (!student) continue
 
     await upsertGroupStudent({
       institutionId,
       groupId,
-      studentId: student.id as number,
+      studentId: student.id,
     })
     linked += 1
   }
@@ -178,7 +169,7 @@ export async function linkGroupStudentsByEmail(
   return linked
 }
 
-export type PersistClassroomUserIdsResult = {
+export interface PersistClassroomUserIdsResult {
   linked: number
   alreadySet: number
   notFound: number
@@ -210,18 +201,7 @@ export async function persistClassroomUserIdsFromRoster(input: {
       .select('id', 'email', 'institution_id')
       .first()
 
-    const student = await db
-      .from('users')
-      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
-      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
-      .where('users.institution_id', input.institutionId)
-      .andWhere('roles.key', 'student')
-      .whereRaw('LOWER(users.email) = ?', [email])
-      .select(
-        'users.id as id',
-        'users.google_classroom_user_id as google_classroom_user_id'
-      )
-      .first()
+    const student = await findInstitutionStudentByEmail(input.institutionId, email)
 
     if (!student) {
       result.notFound += 1
@@ -233,7 +213,7 @@ export async function persistClassroomUserIdsFromRoster(input: {
       continue
     }
 
-    if (student.google_classroom_user_id === googleUserId) {
+    if (student.googleClassroomUserId === googleUserId) {
       result.alreadySet += 1
       continue
     }

@@ -1,25 +1,13 @@
 import googleClassroomConfig, { assertGoogleClassroomConfig } from '#config/google_classroom'
+import ClassroomSyncRun from '#models/classroom_sync_run'
 import {
   gcLogError,
   gcLogInfo,
 } from '#services/integrations/google_classroom/logger'
-import Institution from '#models/institution'
-import Task from '#models/task'
 import {
-  assertTeacherCanFundTaskReward,
-  getTeacherCreditPoolSummary,
-} from '#services/credits/teacher_credit_pool_service'
-import {
-  InsufficientInstitutionCreditsError,
-  InsufficientTeacherCreditsError,
-} from '#services/credits/types'
-import { assertInstitutionCanFundTaskReward } from '#services/credits/institution_credit_pool_service'
-import {
-  getGoogleClassroomCourseWork,
   listGoogleClassroomCourseWork,
   listGoogleClassroomCourses,
 } from '#services/integrations/google_classroom/client'
-import { upsertGoogleClassroomGroup } from '#services/integrations/google_classroom/group_link_service'
 import { syncClassroomStudentsForTeacher } from '#services/integrations/google_classroom/student_roster_sync_service'
 import {
   buildGoogleAuthUrl,
@@ -27,50 +15,57 @@ import {
   ensureMockTeacherIntegration,
   exchangeGoogleAuthCode,
   getTeacherIntegration,
-  getTeacherRefreshToken,
   upsertTeacherIntegration,
   fetchGoogleUserInfo,
 } from '#services/integrations/google_classroom/oauth_service'
 import { verifyOAuthState } from '#services/integrations/google_classroom/oauth_state'
-import ClassroomSyncRun from '#models/classroom_sync_run'
 import { enqueueAllClassroomSyncsForTeacher } from '#services/integrations/google_classroom/sync_all_service'
 import {
   enqueueClassroomSyncTask,
   serializeClassroomSyncRun,
 } from '#services/integrations/google_classroom/sync_job_service'
-import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
-import type { GoogleClassroomSyncMetadata } from '#services/integrations/google_classroom/types'
+import {
+  ClassroomCourseWorkNotFoundError,
+  ClassroomNotConnectedError,
+  ClassroomTaskAlreadyImportedError,
+  importTaskFromClassroom,
+  InstitutionInactiveError,
+} from '#services/integrations/google_classroom/import_task_service'
+import {
+  requireClassroomRefreshToken,
+  requireInstitutionId,
+  respondClassroomForbidden,
+  respondClassroomUnavailable,
+  respondClassroomUnprocessable,
+  unknownErrorMessage,
+} from '#services/integrations/google_classroom/classroom_http'
+import {
+  InsufficientInstitutionCreditsError,
+  InsufficientTeacherCreditsError,
+} from '#services/credits/types'
 import {
   createTaskFromClassroomValidator,
   listClassroomCourseWorkValidator,
 } from '#validators/google_classroom'
 import type { HttpContext } from '@adonisjs/core/http'
-import { DateTime } from 'luxon'
 
 export default class GoogleClassroomController {
   async connect({ auth, response, request }: HttpContext) {
     const user = auth.getUserOrFail()
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
-          requestId: request.id(),
-        },
-      })
-    }
+    const institutionId = requireInstitutionId(user, { request, response })
+    if (institutionId == null) return
 
     if (googleClassroomConfig.mockMode) {
       try {
-        await ensureMockTeacherIntegration(user.id, user.institutionId)
+        await ensureMockTeacherIntegration(user.id, institutionId)
       } catch (error) {
-        return response.serviceUnavailable({
-          error: {
+        return respondClassroomUnavailable(
+          { request, response },
+          {
             code: 'GOOGLE_CLASSROOM_NOT_CONFIGURED',
-            message: error instanceof Error ? error.message : 'Mock Classroom is not configured',
-            requestId: request.id(),
-          },
-        })
+            message: unknownErrorMessage(error, 'Mock Classroom is not configured'),
+          }
+        )
       }
 
       return {
@@ -85,18 +80,18 @@ export default class GoogleClassroomController {
     try {
       assertGoogleClassroomConfig()
     } catch (error) {
-      return response.serviceUnavailable({
-        error: {
+      return respondClassroomUnavailable(
+        { request, response },
+        {
           code: 'GOOGLE_CLASSROOM_NOT_CONFIGURED',
-          message: error instanceof Error ? error.message : 'Google Classroom is not configured',
-          requestId: request.id(),
-        },
-      })
+          message: unknownErrorMessage(error, 'Google Classroom is not configured'),
+        }
+      )
     }
 
     const authUrl = buildGoogleAuthUrl({
       teacherId: user.id,
-      institutionId: user.institutionId,
+      institutionId,
     })
 
     return { data: { authUrl } }
@@ -136,7 +131,7 @@ export default class GoogleClassroomController {
 
       return response.redirect(`${redirectBase}?connected=1`)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'oauth_callback_failed'
+      const message = unknownErrorMessage(error, 'oauth_callback_failed')
       return response.redirect(`${redirectBase}?error=${encodeURIComponent(message)}`)
     }
   }
@@ -165,16 +160,12 @@ export default class GoogleClassroomController {
 
   async listCourses({ auth, response, request }: HttpContext) {
     const user = auth.getUserOrFail()
-    const refreshToken = await getTeacherRefreshToken(user.id)
-    if (!refreshToken) {
-      return response.unprocessableEntity({
-        error: {
-          code: 'GOOGLE_CLASSROOM_NOT_CONNECTED',
-          message: 'Connect Google Classroom before listing courses',
-          requestId: request.id(),
-        },
-      })
-    }
+    const refreshToken = await requireClassroomRefreshToken(
+      user.id,
+      { request, response },
+      'Connect Google Classroom before listing courses'
+    )
+    if (!refreshToken) return
 
     const courses = await listGoogleClassroomCourses(refreshToken)
     return { data: courses }
@@ -183,16 +174,12 @@ export default class GoogleClassroomController {
   async listCourseWork({ auth, request, response, params }: HttpContext) {
     await request.validateUsing(listClassroomCourseWorkValidator)
     const user = auth.getUserOrFail()
-    const refreshToken = await getTeacherRefreshToken(user.id)
-    if (!refreshToken) {
-      return response.unprocessableEntity({
-        error: {
-          code: 'GOOGLE_CLASSROOM_NOT_CONNECTED',
-          message: 'Connect Google Classroom before listing coursework',
-          requestId: request.id(),
-        },
-      })
-    }
+    const refreshToken = await requireClassroomRefreshToken(
+      user.id,
+      { request, response },
+      'Connect Google Classroom before listing coursework'
+    )
+    if (!refreshToken) return
 
     const courseWork = await listGoogleClassroomCourseWork(refreshToken, params.courseId)
     return { data: courseWork }
@@ -200,32 +187,20 @@ export default class GoogleClassroomController {
 
   async syncStudents({ auth, response, request }: HttpContext) {
     const user = auth.getUserOrFail()
+    const institutionId = requireInstitutionId(user, { request, response })
+    if (institutionId == null) return
 
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
-          requestId: request.id(),
-        },
-      })
-    }
-
-    const refreshToken = await getTeacherRefreshToken(user.id)
-    if (!refreshToken) {
-      return response.unprocessableEntity({
-        error: {
-          code: 'GOOGLE_CLASSROOM_NOT_CONNECTED',
-          message: 'Connect Google Classroom before syncing students',
-          requestId: request.id(),
-        },
-      })
-    }
+    const refreshToken = await requireClassroomRefreshToken(
+      user.id,
+      { request, response },
+      'Connect Google Classroom before syncing students'
+    )
+    if (!refreshToken) return
 
     try {
       const summary = await syncClassroomStudentsForTeacher({
         teacherId: user.id,
-        institutionId: user.institutionId,
+        institutionId,
         refreshToken,
       })
       return { data: summary }
@@ -235,14 +210,14 @@ export default class GoogleClassroomController {
         {
           requestId: request.id(),
           teacherId: user.id,
-          institutionId: user.institutionId,
+          institutionId,
         },
         error
       )
       return response.badRequest({
         error: {
           code: 'CLASSROOM_STUDENT_SYNC_FAILED',
-          message: error instanceof Error ? error.message : 'Failed to sync Classroom students',
+          message: unknownErrorMessage(error, 'Failed to sync Classroom students'),
           requestId: request.id(),
         },
       })
@@ -252,169 +227,83 @@ export default class GoogleClassroomController {
   async createTaskFromClassroom({ auth, request, response }: HttpContext) {
     const payload = await request.validateUsing(createTaskFromClassroomValidator)
     const user = auth.getUserOrFail()
-
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
-          requestId: request.id(),
-        },
-      })
-    }
-
-    const institution = await Institution.find(user.institutionId)
-    if (!institution || institution.status !== 'active') {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_INACTIVE',
-          message: 'Institution must be active to create tasks',
-          requestId: request.id(),
-        },
-      })
-    }
-
-    const refreshToken = await getTeacherRefreshToken(user.id)
-    if (!refreshToken) {
-      return response.unprocessableEntity({
-        error: {
-          code: 'GOOGLE_CLASSROOM_NOT_CONNECTED',
-          message: 'Connect Google Classroom before importing tasks',
-          requestId: request.id(),
-        },
-      })
-    }
-
-    const existing = await Task.query()
-      .where('institution_id', user.institutionId)
-      .andWhere('external_source', 'google_classroom')
-      .andWhere('external_id', payload.courseWorkId)
-      .first()
-
-    if (existing) {
-      return response.conflict({
-        error: {
-          code: 'CLASSROOM_TASK_ALREADY_IMPORTED',
-          message: 'This Google Classroom assignment is already linked in ScholarFi',
-          requestId: request.id(),
-          details: { taskId: existing.id },
-        },
-      })
-    }
+    const institutionId = requireInstitutionId(user, { request, response })
+    if (institutionId == null) return
 
     try {
-      const teacherPool = await getTeacherCreditPoolSummary(user.id)
-      if (teacherPool && teacherPool.allocatedCredits > 0) {
-        await assertTeacherCanFundTaskReward(user.id, payload.rewardAmount)
-      } else {
-        await assertInstitutionCanFundTaskReward(user.institutionId, payload.rewardAmount)
-      }
+      const task = await importTaskFromClassroom({
+        teacherId: user.id,
+        institutionId,
+        courseId: payload.courseId,
+        courseWorkId: payload.courseWorkId,
+        courseName: payload.courseName,
+        section: payload.section,
+        title: payload.title,
+        description: payload.description,
+        rewardAmount: payload.rewardAmount,
+        minGrade: payload.minGrade,
+        maxPoints: payload.maxPoints,
+        dueAt: payload.dueAt,
+      })
+      return { data: task }
     } catch (error) {
-      if (error instanceof InsufficientTeacherCreditsError) {
-        return response.unprocessableEntity({
+      if (error instanceof InstitutionInactiveError) {
+        return respondClassroomForbidden(
+          { request, response },
+          { code: error.code, message: error.message }
+        )
+      }
+      if (error instanceof ClassroomNotConnectedError) {
+        return respondClassroomUnprocessable(
+          { request, response },
+          { code: error.code, message: error.message }
+        )
+      }
+      if (error instanceof ClassroomTaskAlreadyImportedError) {
+        return response.conflict({
           error: {
             code: error.code,
-            message: 'La recompensa supera tu presupuesto docente disponible',
+            message: error.message,
             requestId: request.id(),
+            details: { taskId: error.taskId },
           },
         })
       }
+      if (error instanceof InsufficientTeacherCreditsError) {
+        return respondClassroomUnprocessable(
+          { request, response },
+          {
+            code: error.code,
+            message: 'La recompensa supera tu presupuesto docente disponible',
+          }
+        )
+      }
       if (error instanceof InsufficientInstitutionCreditsError) {
-        return response.unprocessableEntity({
-          error: {
+        return respondClassroomUnprocessable(
+          { request, response },
+          {
             code: error.code,
             message: 'La recompensa supera el presupuesto disponible de la institución',
+          }
+        )
+      }
+      if (error instanceof ClassroomCourseWorkNotFoundError) {
+        return response.notFound({
+          error: {
+            code: error.code,
+            message: error.message,
             requestId: request.id(),
           },
         })
       }
       throw error
     }
-
-    const coursework =
-      payload.maxPoints != null
-        ? {
-            maxPoints: payload.maxPoints,
-            title: payload.title,
-            description: payload.description ?? '',
-          }
-        : await getGoogleClassroomCourseWork(refreshToken, payload.courseId, payload.courseWorkId)
-
-    if (!coursework) {
-      return response.notFound({
-        error: {
-          code: 'CLASSROOM_COURSEWORK_NOT_FOUND',
-          message: 'Google Classroom assignment not found',
-          requestId: request.id(),
-        },
-      })
-    }
-
-    const groupId = await upsertGoogleClassroomGroup({
-      institutionId: user.institutionId,
-      teacherId: user.id,
-      courseId: payload.courseId,
-      courseName: payload.courseName,
-      section: payload.section ?? null,
-    })
-
-    const syncMetadata: GoogleClassroomSyncMetadata = {
-      courseId: payload.courseId,
-      courseWorkId: payload.courseWorkId,
-      minGrade: payload.minGrade,
-      maxPoints: coursework.maxPoints ?? payload.maxPoints ?? null,
-      rewardMode: 'fifo_until_budget',
-      lastSyncAt: null,
-      lastSyncSummary: null,
-    }
-
-    const task = await Task.create({
-      institutionId: user.institutionId,
-      createdByTeacherId: user.id,
-      title: payload.title || coursework.title,
-      description: payload.description || coursework.description || payload.title,
-      rewardAmount: payload.rewardAmount,
-      dueAt: payload.dueAt ? DateTime.fromISO(payload.dueAt) : null,
-      status: 'active',
-      groupId,
-      externalSource: 'google_classroom',
-      externalId: payload.courseWorkId,
-      syncMetadata,
-    })
-
-    await ensureClassroomTaskGroupSubmissions({
-      institutionId: user.institutionId,
-      taskId: task.id,
-      groupId,
-    })
-
-    return {
-      data: {
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        rewardAmount: task.rewardAmount,
-        dueAt: task.dueAt,
-        status: task.status,
-        groupId: task.groupId,
-        externalSource: task.externalSource,
-        externalId: task.externalId,
-        syncMetadata: task.syncMetadata,
-      },
-    }
   }
 
   async syncTask({ auth, request, response, params }: HttpContext) {
     const user = auth.getUserOrFail()
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
-          requestId: request.id(),
-        },
-      })
-    }
+    const institutionId = requireInstitutionId(user, { request, response })
+    if (institutionId == null) return
 
     const taskId = Number(params.id)
     if (!Number.isFinite(taskId)) {
@@ -432,13 +321,13 @@ export default class GoogleClassroomController {
         requestId: request.id(),
         taskId,
         teacherId: user.id,
-        institutionId: user.institutionId,
+        institutionId,
       })
 
       const enqueued = await enqueueClassroomSyncTask({
         taskId,
         teacherId: user.id,
-        institutionId: user.institutionId,
+        institutionId,
         requestId: request.id(),
       })
 
@@ -451,38 +340,30 @@ export default class GoogleClassroomController {
         },
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'sync_failed'
       gcLogError(
         'Classroom sync HTTP enqueue failed',
         {
           requestId: request.id(),
           taskId,
           teacherId: user.id,
-          institutionId: user.institutionId,
+          institutionId,
         },
         error
       )
-      return response.unprocessableEntity({
-        error: {
+      return respondClassroomUnprocessable(
+        { request, response },
+        {
           code: 'CLASSROOM_SYNC_FAILED',
-          message,
-          requestId: request.id(),
-        },
-      })
+          message: unknownErrorMessage(error, 'sync_failed'),
+        }
+      )
     }
   }
 
   async showSyncRun({ auth, request, response, params }: HttpContext) {
     const user = auth.getUserOrFail()
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
-          requestId: request.id(),
-        },
-      })
-    }
+    const institutionId = requireInstitutionId(user, { request, response })
+    if (institutionId == null) return
 
     const runId = Number(params.runId)
     if (!Number.isFinite(runId)) {
@@ -498,7 +379,7 @@ export default class GoogleClassroomController {
     const run = await ClassroomSyncRun.query()
       .where('id', runId)
       .andWhere('teacher_id', user.id)
-      .andWhere('institution_id', user.institutionId)
+      .andWhere('institution_id', institutionId)
       .first()
 
     if (!run) {
@@ -516,26 +397,19 @@ export default class GoogleClassroomController {
 
   async syncAll({ auth, request, response }: HttpContext) {
     const user = auth.getUserOrFail()
-    if (!user.institutionId) {
-      return response.forbidden({
-        error: {
-          code: 'INSTITUTION_SCOPE_REQUIRED',
-          message: 'Teacher must belong to an institution',
-          requestId: request.id(),
-        },
-      })
-    }
+    const institutionId = requireInstitutionId(user, { request, response })
+    if (institutionId == null) return
 
     try {
       gcLogInfo('Classroom sync-all HTTP enqueue received', {
         requestId: request.id(),
         teacherId: user.id,
-        institutionId: user.institutionId,
+        institutionId,
       })
 
       const enqueued = await enqueueAllClassroomSyncsForTeacher({
         teacherId: user.id,
-        institutionId: user.institutionId,
+        institutionId,
         requestId: request.id(),
       })
 
@@ -546,23 +420,22 @@ export default class GoogleClassroomController {
         },
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'sync_failed'
       gcLogError(
         'Classroom sync-all HTTP enqueue failed',
         {
           requestId: request.id(),
           teacherId: user.id,
-          institutionId: user.institutionId,
+          institutionId,
         },
         error
       )
-      return response.unprocessableEntity({
-        error: {
+      return respondClassroomUnprocessable(
+        { request, response },
+        {
           code: 'CLASSROOM_SYNC_FAILED',
-          message,
-          requestId: request.id(),
-        },
-      })
+          message: unknownErrorMessage(error, 'sync_failed'),
+        }
+      )
     }
   }
 }

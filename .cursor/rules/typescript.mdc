@@ -1,0 +1,21 @@
+---
+description: TypeScript style and typing conventions
+globs: '**/*.{ts,tsx}'
+alwaysApply: false
+---
+
+# TypeScript
+
+- Prefer `interface` for object shapes; use `type` for unions/intersections
+- Prefer named exports over default exports
+- Avoid `any`; use `unknown` and narrow
+- Type function params and public return values explicitly when inference is unclear
+- Colocate types next to usage; shared types live in a dedicated module only when reused
+
+```typescript
+// ✅ GOOD
+interface UserCardProps {
+  name: string
+  role?: 'admin' | 'member'
+}
+```

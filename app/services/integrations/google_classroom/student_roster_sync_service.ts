@@ -9,12 +9,12 @@ import {
   persistClassroomUserIdsFromRoster,
   upsertGoogleClassroomGroup,
 } from '#services/integrations/google_classroom/group_link_service'
-import { upsertGroupStudent } from '#services/group_upsert_service'
+import { ensureStudentRoleId, upsertGroupStudent } from '#services/group_upsert_service'
 import { maybeCreateStudentWallet } from '#services/institution_crypto_wallets_service'
 import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
 import { gcLogInfo } from '#services/integrations/google_classroom/logger'
 
-export type ClassroomStudentRosterSyncSummary = {
+export interface ClassroomStudentRosterSyncSummary {
   courses: number
   created: number
   activated: number
@@ -23,25 +23,7 @@ export type ClassroomStudentRosterSyncSummary = {
   errors: Array<{ email: string | null; message: string }>
 }
 
-async function ensureStudentRoleId(): Promise<number> {
-  const existing = await db.from('roles').where('key', 'student').first()
-  if (existing) return existing.id as number
-
-  const inserted = await db
-    .table('roles')
-    .insert({
-      key: 'student',
-      label: 'Student',
-      created_at: new Date(),
-      updated_at: null,
-    })
-    .returning('id')
-
-  const row = inserted[0] as { id: number } | number
-  return typeof row === 'number' ? row : row.id
-}
-
-type StudentLookup = {
+interface StudentLookup {
   id: number
   email: string
   accountStatus: string

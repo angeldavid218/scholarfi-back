@@ -251,11 +251,12 @@ export async function upsertGroupStudent(
   await insertQuery
 }
 
-export type InstitutionStudentRow = {
+export interface InstitutionStudentRow {
   id: number
   email: string
   fullName: string | null
   registrationNumber: string | null
+  googleClassroomUserId?: string | null
 }
 
 export type FindOrCreateStudentResult =
@@ -267,7 +268,7 @@ export function normalizeRegistrationNumber(value: string | null | undefined): s
   return trimmed.length > 0 ? trimmed : null
 }
 
-async function ensureStudentRoleId(trx?: TransactionClientContract): Promise<number> {
+export async function ensureStudentRoleId(trx?: TransactionClientContract): Promise<number> {
   let query = db.from('roles').where('key', 'student')
   if (trx) query = query.useTransaction(trx)
 
@@ -308,7 +309,8 @@ export async function findInstitutionStudentByEmail(
       'users.id as id',
       'users.email as email',
       'users.full_name as fullName',
-      'users.registration_number as registrationNumber'
+      'users.registration_number as registrationNumber',
+      'users.google_classroom_user_id as googleClassroomUserId'
     )
 
   if (trx) query = query.useTransaction(trx)

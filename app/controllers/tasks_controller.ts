@@ -1,10 +1,6 @@
 import Institution from '#models/institution'
 import Task from '#models/task'
-import { assertInstitutionCanFundTaskReward } from '#services/credits/institution_credit_pool_service'
-import {
-  assertTeacherCanFundTaskReward,
-  getTeacherCreditPoolSummary,
-} from '#services/credits/teacher_credit_pool_service'
+import { assertPreferredTaskRewardFunding } from '#services/credits/task_reward_funding'
 import {
   InsufficientInstitutionCreditsError,
   InsufficientTeacherCreditsError,
@@ -52,12 +48,11 @@ export default class TasksController {
     }
 
     try {
-      const teacherPool = await getTeacherCreditPoolSummary(user.id)
-      if (teacherPool && teacherPool.allocatedCredits > 0) {
-        await assertTeacherCanFundTaskReward(user.id, payload.rewardAmount)
-      } else {
-        await assertInstitutionCanFundTaskReward(user.institutionId, payload.rewardAmount)
-      }
+      await assertPreferredTaskRewardFunding({
+        teacherId: user.id,
+        institutionId: user.institutionId,
+        rewardAmount: payload.rewardAmount,
+      })
     } catch (error) {
       if (error instanceof InsufficientTeacherCreditsError) {
         return response.unprocessableEntity({

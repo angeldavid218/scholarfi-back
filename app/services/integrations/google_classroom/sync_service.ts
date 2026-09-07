@@ -1,15 +1,17 @@
 import Task from '#models/task'
 import db from '@adonisjs/lucid/services/db'
-import { getInstitutionCreditPoolSummary } from '#services/credits/institution_credit_pool_service'
 import { issueRewardForSubmission } from '#services/credits/reward_issuance_service'
-import { getTeacherCreditPoolSummary } from '#services/credits/teacher_credit_pool_service'
+import {
+  remainingCreditsForFundingSource,
+  resolvePreferredRewardFunding,
+} from '#services/credits/task_reward_funding'
 import {
   InsufficientInstitutionCreditsError,
   InsufficientTeacherCreditsError,
-  type RewardFundingSource,
 } from '#services/credits/types'
 import googleClassroomConfig from '#config/google_classroom'
-import { buildClassroomGradeMaps, resolveClassroomGradeForUser } from '#services/integrations/google_classroom/client'
+import { buildClassroomGradeMaps } from '#services/integrations/google_classroom/client'
+import { resolveClassroomGradeForUser } from '#services/integrations/google_classroom/grade_maps'
 import {
   linkGroupStudentsByEmail,
   persistClassroomUserIdsFromRoster,
@@ -26,6 +28,10 @@ import {
   markTeacherIntegrationSynced,
 } from '#services/integrations/google_classroom/oauth_service'
 import { ensureClassroomTaskGroupSubmissions } from '#services/integrations/google_classroom/roster_submission_service'
+import {
+  evaluateClassroomRewardEligibility,
+  type ClassroomSyncSkipReason,
+} from '#services/integrations/google_classroom/sync_eligibility'
 import type {
   GoogleClassroomSyncMetadata,
   GoogleClassroomSyncResult,
@@ -33,7 +39,7 @@ import type {
 import { DateTime } from 'luxon'
 import { randomUUID } from 'node:crypto'
 
-type SubmissionRow = {
+interface SubmissionRow {
   id: number
   student_id: number
   status: string
@@ -41,12 +47,6 @@ type SubmissionRow = {
   email: string
   google_classroom_user_id: string | null
 }
-
-type SyncSkipReason =
-  | 'already_rewarded'
-  | 'no_grade'
-  | 'grade_below_minimum'
-  | 'budget_exhausted'
 
 function isClassroomTask(task: Task): boolean {
   return task.externalSource === 'google_classroom' && Boolean(task.externalId)
@@ -84,45 +84,6 @@ async function submissionAlreadyRewarded(submissionId: number): Promise<boolean>
   return Boolean(institutionRow)
 }
 
-/**
- * Same funding rule as task create/import: use the teacher pool when the teacher
- * has allocated credits; otherwise fund from the institution pool.
- */
-async function resolveSyncFunding(input: {
-  teacherId: number
-  institutionId: number
-}): Promise<{
-  fundingSource: RewardFundingSource
-  remainingCredits: number
-}> {
-  const teacherPool = await getTeacherCreditPoolSummary(input.teacherId)
-  if (teacherPool && teacherPool.allocatedCredits > 0) {
-    return {
-      fundingSource: 'teacher',
-      remainingCredits: teacherPool.remainingCredits,
-    }
-  }
-
-  const institutionPool = await getInstitutionCreditPoolSummary(input.institutionId)
-  return {
-    fundingSource: 'institution',
-    remainingCredits: institutionPool.remainingCredits,
-  }
-}
-
-async function refreshRemainingCredits(input: {
-  fundingSource: RewardFundingSource
-  teacherId: number
-  institutionId: number
-}): Promise<number> {
-  if (input.fundingSource === 'teacher') {
-    const pool = await getTeacherCreditPoolSummary(input.teacherId)
-    return pool?.remainingCredits ?? 0
-  }
-  const pool = await getInstitutionCreditPoolSummary(input.institutionId)
-  return pool.remainingCredits
-}
-
 function logCtx(
   input: { taskId: number; teacherId: number; institutionId: number; requestId?: string },
   syncRunId: string,
@@ -137,19 +98,6 @@ function logCtx(
     courseId: metadata?.courseId,
     courseWorkId: metadata?.courseWorkId,
   }
-}
-
-function resolveSubmissionGradeFromMaps(
-  submission: SubmissionRow,
-  gradeByGoogleUserId: Map<string, number | null>,
-  gradeByEmail: Map<string, number | null>
-): { grade: number | null | undefined; gradeFound: boolean; lookupKey: string } {
-  return resolveClassroomGradeForUser({
-    email: submission.email,
-    googleClassroomUserId: submission.google_classroom_user_id,
-    gradeByEmail,
-    gradeByGoogleUserId,
-  })
 }
 
 export async function syncGoogleClassroomTask(input: {
@@ -249,7 +197,7 @@ export async function syncGoogleClassroomTask(input: {
     })
 
     // Token/budget assignment BEFORE loading the FIFO queue
-    let funding = await resolveSyncFunding({
+    let funding = await resolvePreferredRewardFunding({
       teacherId: input.teacherId,
       institutionId: input.institutionId,
     })
@@ -310,11 +258,12 @@ export async function syncGoogleClassroomTask(input: {
     }
 
     for (const [index, submission] of scholarfiSubmissions.entries()) {
-      const { grade, gradeFound, lookupKey } = resolveSubmissionGradeFromMaps(
-        submission,
+      const { grade, gradeFound, lookupKey } = resolveClassroomGradeForUser({
+        email: submission.email,
+        googleClassroomUserId: submission.google_classroom_user_id,
+        gradeByEmail,
         gradeByGoogleUserId,
-        gradeByEmail
-      )
+      })
 
       gcLogDebug('Evaluating submission for Classroom sync', ctx, {
         position: index + 1,
@@ -337,23 +286,19 @@ export async function syncGoogleClassroomTask(input: {
           updated_at: new Date(),
         })
 
-      let skipReason: SyncSkipReason | null = null
-
-      if (await submissionAlreadyRewarded(submission.id)) {
-        result.skippedAlreadyRewarded += 1
-        skipReason = 'already_rewarded'
-      } else if (grade == null) {
-        result.skippedNoGrade += 1
-        skipReason = 'no_grade'
-      } else if (grade < metadata.minGrade) {
-        result.skippedLowGrade += 1
-        skipReason = 'grade_below_minimum'
-      } else if (funding.remainingCredits < rewardAmount || rewardAmount <= 0) {
-        result.skippedBudgetExhausted += 1
-        skipReason = 'budget_exhausted'
-      }
+      let skipReason: ClassroomSyncSkipReason | null = evaluateClassroomRewardEligibility({
+        alreadyRewarded: await submissionAlreadyRewarded(submission.id),
+        grade,
+        minGrade: metadata.minGrade,
+        remainingCredits: funding.remainingCredits,
+        rewardAmount,
+      })
 
       if (skipReason) {
+        if (skipReason === 'already_rewarded') result.skippedAlreadyRewarded += 1
+        else if (skipReason === 'no_grade') result.skippedNoGrade += 1
+        else if (skipReason === 'grade_below_minimum') result.skippedLowGrade += 1
+        else result.skippedBudgetExhausted += 1
         await db
           .from('submissions')
           .where('id', submission.id)
@@ -434,7 +379,7 @@ export async function syncGoogleClassroomTask(input: {
         result.rewardedSubmissionIds.push(submission.id)
         funding = {
           ...funding,
-          remainingCredits: await refreshRemainingCredits({
+          remainingCredits: await remainingCreditsForFundingSource({
             fundingSource: funding.fundingSource,
             teacherId: input.teacherId,
             institutionId: input.institutionId,

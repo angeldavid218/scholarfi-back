@@ -9,12 +9,12 @@ import {
   type EnqueueClassroomSyncResult,
 } from '#services/integrations/google_classroom/sync_job_service'
 
-export type EnqueueAllClassroomSyncsResult = {
+export interface EnqueueAllClassroomSyncsResult {
   tasks: number
   runs: EnqueueClassroomSyncResult[]
 }
 
-export type EnqueueAllClassroomSyncsForConnectedTeachersResult = {
+export interface EnqueueAllClassroomSyncsForConnectedTeachersResult {
   teachers: number
   teacherFailures: number
   tasks: number

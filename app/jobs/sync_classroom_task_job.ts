@@ -3,12 +3,18 @@ import {
   gcLogError,
   gcLogInfo,
 } from '#services/integrations/google_classroom/logger'
+import { unknownErrorMessage } from '#services/integrations/google_classroom/classroom_http'
 import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
-import type { GoogleClassroomSyncResult } from '#services/integrations/google_classroom/types'
+import {
+  markClassroomSyncRunCompleted,
+  markClassroomSyncRunFailed,
+  markClassroomSyncRunRunning,
+  persistClassroomSyncRunErrorMessage,
+} from '#services/integrations/google_classroom/sync_run_status'
 import { Job } from '@adonisjs/queue'
 import type { JobOptions } from '@adonisjs/queue/types'
 
-export type SyncClassroomTaskJobPayload = {
+export interface SyncClassroomTaskJobPayload {
   runId: number
   taskId: number
   teacherId: number
@@ -28,7 +34,7 @@ export default class SyncClassroomTaskJob extends Job<SyncClassroomTaskJobPayloa
   async execute() {
     const { runId, taskId, teacherId, institutionId, requestId } = this.payload
 
-    await markRunRunning(runId)
+    await markClassroomSyncRunRunning(runId)
 
     gcLogInfo('Classroom sync job started', {
       requestId,
@@ -48,12 +54,14 @@ export default class SyncClassroomTaskJob extends Job<SyncClassroomTaskJobPayloa
         institutionId,
         requestId,
       })
-      await markRunCompleted(runId, result)
+      await markClassroomSyncRunCompleted(runId, result)
     } catch (error) {
       // Persist the underlying sync error so failed() does not replace it with
       // the generic "max retries" message from the queue runtime.
-      const message = error instanceof Error ? error.message : 'sync_failed'
-      await persistRunErrorMessage(runId, message)
+      await persistClassroomSyncRunErrorMessage(
+        runId,
+        unknownErrorMessage(error, 'sync_failed')
+      )
       throw error
     }
   }
@@ -78,48 +86,6 @@ export default class SyncClassroomTaskJob extends Job<SyncClassroomTaskJobPayloa
       (error.message && !error.message.includes('maximum number of retry')
         ? error.message
         : 'sync_failed')
-    await markRunFailed(runId, message)
+    await markClassroomSyncRunFailed(runId, message)
   }
-}
-
-async function markRunRunning(runId: number): Promise<void> {
-  const run = await ClassroomSyncRun.find(runId)
-  if (!run) return
-  if (run.status === 'completed' || run.status === 'failed') return
-  run.status = 'running'
-  await run.save()
-}
-
-async function markRunCompleted(runId: number, result: GoogleClassroomSyncResult): Promise<void> {
-  const run = await ClassroomSyncRun.findOrFail(runId)
-  run.status = 'completed'
-  run.resultJson = result
-  run.errorMessage = null
-  await run.save()
-
-  gcLogInfo('Classroom sync run completed', {
-    requestId: run.requestId ?? undefined,
-    taskId: run.taskId,
-    teacherId: run.teacherId,
-    institutionId: run.institutionId,
-  }, {
-    runId,
-    rewarded: result.rewarded,
-    budgetRemaining: result.budgetRemaining,
-  })
-}
-
-async function persistRunErrorMessage(runId: number, message: string): Promise<void> {
-  const run = await ClassroomSyncRun.find(runId)
-  if (!run) return
-  run.errorMessage = message
-  await run.save()
-}
-
-async function markRunFailed(runId: number, message: string): Promise<void> {
-  const run = await ClassroomSyncRun.find(runId)
-  if (!run) return
-  run.status = 'failed'
-  run.errorMessage = message
-  await run.save()
 }
