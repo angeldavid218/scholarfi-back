@@ -5,29 +5,38 @@ import { ensureMockTeacherIntegration } from '#services/integrations/google_clas
 import { seedInstitutionCredits } from '../helpers/institution_credits.js'
 import { test } from '@japa/runner'
 
+// Cache to avoid repeated DB queries for the same role within a test
+const roleCache = new Map<string, number>()
+
 async function ensureRole(roleKey: string, roleLabel: string) {
-  // Check if role exists first
-  const existingRole = await db.from('roles').where('key', roleKey).first()
-  if (existingRole) return existingRole.id as number
-
-  // Use INSERT ... ON CONFLICT to handle race conditions without transaction abort
-  // Note: This uses PostgreSQL-specific syntax
-  const result = await db.raw(
-    `INSERT INTO roles (key, label, created_at, updated_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT (key) DO UPDATE SET key = EXCLUDED.key
-     RETURNING id`,
-    [roleKey, roleLabel, new Date(), null]
-  )
-
-  // Access the result rows (type assertion needed for Knex raw queries)
-  const rows = (result as any).rows
-  if (rows && rows.length > 0) {
-    const created = rows[0] as { id: number }
-    return created.id
+  // Check cache first
+  if (roleCache.has(roleKey)) {
+    return roleCache.get(roleKey)!
   }
 
-  throw new Error(`Failed to create or fetch role ${roleKey}`)
+  // Check if role exists in DB
+  const existingRole = await db.from('roles').where('key', roleKey).first()
+  if (existingRole) {
+    const id = existingRole.id as number
+    roleCache.set(roleKey, id)
+    return id
+  }
+
+  // Create new role
+  const inserted = await db
+    .table('roles')
+    .insert({
+      key: roleKey,
+      label: roleLabel,
+      created_at: new Date(),
+      updated_at: null,
+    })
+    .returning('id')
+
+  const created = inserted[0] as { id: number } | number
+  const id = typeof created === 'number' ? created : created.id
+  roleCache.set(roleKey, id)
+  return id
 }
 
 async function assignRoleToUser(userId: number, roleKey: string, roleLabel: string) {
@@ -101,7 +110,10 @@ async function connectMockClassroom(teacherId: number, institutionId: number) {
 }
 
 test.group('Google Classroom connector', (group) => {
-  group.each.setup(() => testUtils.db().withGlobalTransaction())
+  group.each.setup(() => {
+    roleCache.clear() // Clear cache before each test
+    return testUtils.db().withGlobalTransaction()
+  })
 
   test('teacher can view connection status and list mock courses', async ({ client, assert }) => {
     const institutionId = await createInstitution('GC-STATUS')
