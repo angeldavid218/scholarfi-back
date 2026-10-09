@@ -204,13 +204,10 @@ export async function syncClassroomStudentsForTeacher(input: {
         }
 
         if (member.fullName) {
-          await db
-            .from('users')
-            .where('id', existing.id)
-            .update({
-              full_name: member.fullName,
-              updated_at: new Date(),
-            })
+          await db.from('users').where('id', existing.id).update({
+            full_name: member.fullName,
+            updated_at: new Date(),
+          })
         }
 
         await upsertGroupStudent({

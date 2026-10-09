@@ -57,10 +57,7 @@ export default class PartnerBootstrapCloudCampus extends BaseCommand {
     const user = await User.findByOrFail('email', normalizedEmail)
     const roleId = await ensureSuperAdminRole()
 
-    await db
-      .from('user_roles')
-      .where('user_id', user.id)
-      .delete()
+    await db.from('user_roles').where('user_id', user.id).delete()
 
     await db.table('user_roles').insert({
       user_id: user.id,

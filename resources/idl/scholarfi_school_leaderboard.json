@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "init_school",
-      "discriminator": [
-        70,
-        61,
-        188,
-        227,
-        225,
-        174,
-        245,
-        71
-      ],
+      "discriminator": [70, 61, 188, 227, 225, 174, 245, 71],
       "accounts": [
         {
           "name": "global_config",
@@ -26,14 +17,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
@@ -45,14 +29,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  99,
-                  104,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [115, 99, 104, 111, 111, 108]
               },
               {
                 "kind": "arg",
@@ -83,26 +60,14 @@
         {
           "name": "name_hash",
           "type": {
-            "array": [
-              "u8",
-              32
-            ]
+            "array": ["u8", 32]
           }
         }
       ]
     },
     {
       "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
       "accounts": [
         {
           "name": "global_config",
@@ -111,14 +76,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
@@ -144,16 +102,7 @@
     },
     {
       "name": "record_score",
-      "discriminator": [
-        30,
-        181,
-        94,
-        137,
-        7,
-        160,
-        236,
-        158
-      ],
+      "discriminator": [30, 181, 94, 137, 7, 160, 236, 158],
       "accounts": [
         {
           "name": "global_config",
@@ -161,14 +110,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
@@ -180,14 +122,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  99,
-                  104,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [115, 99, 104, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -204,17 +139,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  114,
-                  111,
-                  99,
-                  101,
-                  115,
-                  115,
-                  101,
-                  100
-                ]
+                "value": [112, 114, 111, 99, 101, 115, 115, 101, 100]
               },
               {
                 "kind": "arg",
@@ -230,15 +155,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  117,
-                  100,
-                  101,
-                  110,
-                  116
-                ]
+                "value": [115, 116, 117, 100, 101, 110, 116]
               },
               {
                 "kind": "account",
@@ -269,10 +186,7 @@
         {
           "name": "submission_hash",
           "type": {
-            "array": [
-              "u8",
-              32
-            ]
+            "array": ["u8", 32]
           }
         },
         {
@@ -287,16 +201,7 @@
     },
     {
       "name": "set_paused",
-      "discriminator": [
-        91,
-        60,
-        125,
-        192,
-        176,
-        225,
-        166,
-        218
-      ],
+      "discriminator": [91, 60, 125, 192, 176, 225, 166, 218],
       "accounts": [
         {
           "name": "global_config",
@@ -305,14 +210,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
-                ]
+                "value": [99, 111, 110, 102, 105, 103]
               }
             ]
           }
@@ -333,55 +231,19 @@
   "accounts": [
     {
       "name": "GlobalConfig",
-      "discriminator": [
-        149,
-        8,
-        156,
-        202,
-        160,
-        252,
-        176,
-        217
-      ]
+      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217]
     },
     {
       "name": "ProcessedAchievement",
-      "discriminator": [
-        157,
-        19,
-        8,
-        126,
-        15,
-        157,
-        9,
-        197
-      ]
+      "discriminator": [157, 19, 8, 126, 15, 157, 9, 197]
     },
     {
       "name": "SchoolBoard",
-      "discriminator": [
-        163,
-        76,
-        241,
-        94,
-        186,
-        31,
-        254,
-        188
-      ]
+      "discriminator": [163, 76, 241, 94, 186, 31, 254, 188]
     },
     {
       "name": "StudentScore",
-      "discriminator": [
-        64,
-        69,
-        64,
-        99,
-        5,
-        103,
-        81,
-        17
-      ]
+      "discriminator": [64, 69, 64, 99, 5, 103, 81, 17]
     }
   ],
   "errors": [
@@ -414,9 +276,7 @@
   "types": [
     {
       "name": "GlobalConfig",
-      "docs": [
-        "Singleton program config: who may admin vs who may publish scores."
-      ],
+      "docs": ["Singleton program config: who may admin vs who may publish scores."],
       "type": {
         "kind": "struct",
         "fields": [
@@ -445,19 +305,14 @@
     },
     {
       "name": "ProcessedAchievement",
-      "docs": [
-        "Idempotency marker: one submission_hash → one score credit."
-      ],
+      "docs": ["Idempotency marker: one submission_hash → one score credit."],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "submission_hash",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
@@ -485,9 +340,7 @@
     },
     {
       "name": "SchoolBoard",
-      "docs": [
-        "Aggregate on-chain standing for one institution (school)."
-      ],
+      "docs": ["Aggregate on-chain standing for one institution (school)."],
       "type": {
         "kind": "struct",
         "fields": [
@@ -498,10 +351,7 @@
           {
             "name": "name_hash",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
@@ -529,9 +379,7 @@
     },
     {
       "name": "StudentScore",
-      "docs": [
-        "Per-student aggregate under one school (outstanding-student ranking)."
-      ],
+      "docs": ["Per-student aggregate under one school (outstanding-student ranking)."],
       "type": {
         "kind": "struct",
         "fields": [

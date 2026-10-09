@@ -19,12 +19,12 @@ Content-Type: application/json
 
 **Role:** `school_admin` (must belong to the target institution)
 
-| Field | Type | Rules |
-|-------|------|-------|
-| fullName | string | 2–180 chars |
-| email | string | valid email, globally unique |
-| password | string | 8–32 chars |
-| role | enum | `teacher`, `student`, `school_admin` |
+| Field    | Type   | Rules                                |
+| -------- | ------ | ------------------------------------ |
+| fullName | string | 2–180 chars                          |
+| email    | string | valid email, globally unique         |
+| password | string | 8–32 chars                           |
+| role     | enum   | `teacher`, `student`, `school_admin` |
 
 **Response (200)**
 
@@ -130,8 +130,8 @@ Content-Type: application/json
 
 ## Errors
 
-| Status | Code | When |
-|--------|------|------|
-| 403 | `INSTITUTION_SCOPE_REQUIRED` | Admin not tied to a school |
-| 403 | `INSTITUTION_INACTIVE` | School not active |
-| 409 | `EMAIL_TAKEN` | Email already exists |
+| Status | Code                         | When                       |
+| ------ | ---------------------------- | -------------------------- |
+| 403    | `INSTITUTION_SCOPE_REQUIRED` | Admin not tied to a school |
+| 403    | `INSTITUTION_INACTIVE`       | School not active          |
+| 409    | `EMAIL_TAKEN`                | Email already exists       |

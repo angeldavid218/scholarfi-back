@@ -17,9 +17,11 @@ function bindings(ctx: GoogleClassroomLogContext): Record<string, unknown> {
     integration: INTEGRATION,
     ...(ctx.requestId ? { requestId: ctx.requestId } : {}),
     ...(ctx.syncRunId ? { syncRunId: ctx.syncRunId } : {}),
-    ...(ctx.taskId != null ? { taskId: ctx.taskId } : {}),
-    ...(ctx.teacherId != null ? { teacherId: ctx.teacherId } : {}),
-    ...(ctx.institutionId != null ? { institutionId: ctx.institutionId } : {}),
+    ...(ctx.taskId !== null && ctx.taskId !== undefined ? { taskId: ctx.taskId } : {}),
+    ...(ctx.teacherId !== null && ctx.teacherId !== undefined ? { teacherId: ctx.teacherId } : {}),
+    ...(ctx.institutionId !== null && ctx.institutionId !== undefined
+      ? { institutionId: ctx.institutionId }
+      : {}),
     ...(ctx.courseId ? { courseId: ctx.courseId } : {}),
     ...(ctx.courseWorkId ? { courseWorkId: ctx.courseWorkId } : {}),
   }

@@ -50,7 +50,10 @@ test.group('Partner docs portal', (group) => {
     assert.include(index.text(), 'Integration model')
   })
 
-  test('renders nested documentation page for authenticated session', async ({ client, assert }) => {
+  test('renders nested documentation page for authenticated session', async ({
+    client,
+    assert,
+  }) => {
     const page = await client
       .get('/partner/docs/authentication')
       .withSession(authenticatedSession())

@@ -1,4 +1,7 @@
-import { clearGoogleClassroomAccessTokenCache, getGoogleClassroomAccessToken } from '#services/integrations/google_classroom/client'
+import {
+  clearGoogleClassroomAccessTokenCache,
+  getGoogleClassroomAccessToken,
+} from '#services/integrations/google_classroom/client'
 import { test } from '@japa/runner'
 
 test.group('Google Classroom client helpers', () => {

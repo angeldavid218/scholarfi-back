@@ -339,7 +339,9 @@ export async function allocateToTeacher(
 
     const summary = await getTeacherCreditPoolSummary(params.teacherId, trx)
     if (!summary) {
-      throw new Error(`Teacher credit pool missing after allocation for teacher ${params.teacherId}`)
+      throw new Error(
+        `Teacher credit pool missing after allocation for teacher ${params.teacherId}`
+      )
     }
 
     return summary

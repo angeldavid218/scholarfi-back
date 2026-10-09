@@ -7,11 +7,11 @@ export type ClassroomSyncRunStatus = 'queued' | 'running' | 'completed' | 'faile
 export default class ClassroomSyncRun extends ClassroomSyncRunSchema {
   @column({
     prepare: (value: unknown) => {
-      if (value == null) return null
+      if (value === null || value === undefined) return null
       return typeof value === 'string' ? value : JSON.stringify(value)
     },
     consume: (value: unknown) => {
-      if (value == null) return null
+      if (value === null || value === undefined) return null
       if (typeof value === 'object') return value
       if (typeof value === 'string') {
         try {

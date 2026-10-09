@@ -10,7 +10,8 @@ import type {
 import { test } from '@japa/runner'
 
 function submission(
-  overrides: Partial<GoogleClassroomStudentSubmission> & Pick<GoogleClassroomStudentSubmission, 'id' | 'userId'>
+  overrides: Partial<GoogleClassroomStudentSubmission> &
+    Pick<GoogleClassroomStudentSubmission, 'id' | 'userId'>
 ): GoogleClassroomStudentSubmission {
   return {
     state: 'TURNED_IN',
@@ -89,7 +90,9 @@ test.group('Google Classroom grade maps', () => {
       9
     )
     assert.equal(
-      resolveSubmissionGrade(submission({ id: '2', userId: 'a', assignedGrade: null, draftGrade: 7 })),
+      resolveSubmissionGrade(
+        submission({ id: '2', userId: 'a', assignedGrade: null, draftGrade: 7 })
+      ),
       7
     )
     assert.isNull(resolveSubmissionGrade(submission({ id: '3', userId: 'a' })))
@@ -126,9 +129,7 @@ test.group('Google Classroom grade maps', () => {
   test('mock maps index email userIds and gc-user roster ids', ({ assert }) => {
     const email = 'sofia.hernandez@scholarfi.test'
     const googleId = 'gc-user-sofia-hernandez-scholarfi-test'
-    const roster: ClassroomRosterMember[] = [
-      { googleUserId: googleId, email, fullName: 'Sofia' },
-    ]
+    const roster: ClassroomRosterMember[] = [{ googleUserId: googleId, email, fullName: 'Sofia' }]
     const maps = buildGradeMapsFromSubmissions({
       mockMode: true,
       roster,

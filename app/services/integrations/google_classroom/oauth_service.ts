@@ -183,17 +183,14 @@ export async function upsertTeacherIntegration(input: {
 
   const existing = await getTeacherIntegration(input.teacherId)
   if (existing) {
-    await db
-      .from('teacher_integrations')
-      .where('id', existing.id)
-      .update({
-        external_user_id: input.externalUserId,
-        external_email: input.externalEmail,
-        encrypted_refresh_token: encrypted,
-        scopes,
-        connected_at: new Date(),
-        updated_at: new Date(),
-      })
+    await db.from('teacher_integrations').where('id', existing.id).update({
+      external_user_id: input.externalUserId,
+      external_email: input.externalEmail,
+      encrypted_refresh_token: encrypted,
+      scopes,
+      connected_at: new Date(),
+      updated_at: new Date(),
+    })
 
     const updated = await getTeacherIntegration(input.teacherId)
     if (!updated) throw new Error('Failed to reload teacher integration')

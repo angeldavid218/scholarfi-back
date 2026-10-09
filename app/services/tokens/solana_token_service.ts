@@ -261,9 +261,9 @@ export default class SolanaTokenService implements TokenService {
       throw new Error(`Solana mint failed: ${detailed}`)
     }
 
-    const persist = async (trx?: DbTransaction) => {
-      await ensureBalanceRow(params.userId, trx)
-      const inserted = await tbl('token_transactions', trx)
+    const persist = async (innerTrx?: DbTransaction) => {
+      await ensureBalanceRow(params.userId, innerTrx)
+      const inserted = await tbl('token_transactions', innerTrx)
         .insert({
           institution_id: params.institutionId,
           user_id: params.userId,
@@ -284,7 +284,7 @@ export default class SolanaTokenService implements TokenService {
       const row = inserted[0] as { id: number } | number
       const txId = typeof row === 'number' ? row : row.id
 
-      await fromTbl('token_balances', trx)
+      await fromTbl('token_balances', innerTrx)
         .where('user_id', params.userId)
         .update({
           balance: db.raw('token_balances.balance + ?', [params.amount]),
@@ -303,7 +303,7 @@ export default class SolanaTokenService implements TokenService {
     if (params.client) {
       return persist(params.client)
     }
-    return db.transaction(async (trx) => persist(trx))
+    return db.transaction(async (innerTrx) => persist(innerTrx))
   }
 
   async getBalance(userId: string): Promise<number> {
@@ -439,9 +439,9 @@ export default class SolanaTokenService implements TokenService {
       }
     }
 
-    const persist = async (trx?: DbTransaction) => {
-      await ensureBalanceRow(params.userId, trx)
-      const inserted = await tbl('token_transactions', trx)
+    const persist = async (innerTrx?: DbTransaction) => {
+      await ensureBalanceRow(params.userId, innerTrx)
+      const inserted = await tbl('token_transactions', innerTrx)
         .insert({
           institution_id: params.institutionId,
           user_id: params.userId,
@@ -462,7 +462,7 @@ export default class SolanaTokenService implements TokenService {
       const row = inserted[0] as { id: number } | number
       const txId = typeof row === 'number' ? row : row.id
 
-      await fromTbl('token_balances', trx)
+      await fromTbl('token_balances', innerTrx)
         .where('user_id', params.userId)
         .update({
           balance: db.raw('token_balances.balance - ?', [params.amount]),
@@ -480,7 +480,7 @@ export default class SolanaTokenService implements TokenService {
     if (params.client) {
       return persist(params.client)
     }
-    return db.transaction(async (trx) => persist(trx))
+    return db.transaction(async (innerTrx) => persist(innerTrx))
   }
 
   async getTransactionHistory(userId: string, institutionId: number): Promise<TokenLedgerRow[]> {

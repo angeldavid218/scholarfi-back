@@ -41,9 +41,7 @@ export async function issueAchievementAttestation(
   const subHash = submissionHash(params.submissionId)
   const tHash = taskHash(params.taskId)
   const seasonId =
-    params.seasonId !== undefined
-      ? BigInt(params.seasonId)
-      : await getActiveSeasonId(connection)
+    params.seasonId !== undefined ? BigInt(params.seasonId) : await getActiveSeasonId(connection)
 
   const data = buildAchievementData({
     institutionId: params.institutionId,

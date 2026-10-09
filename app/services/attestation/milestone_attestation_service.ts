@@ -66,7 +66,11 @@ function explorerAttestationUrl(pda: string): string {
   return `https://explorer.solana.com/address/${pda}?cluster=devnet`
 }
 
-function studentDisplayName(fullName: string | null, email: string | null, studentId: number): string {
+function studentDisplayName(
+  fullName: string | null,
+  email: string | null,
+  studentId: number
+): string {
   const name = typeof fullName === 'string' ? fullName.trim() : ''
   const mail = typeof email === 'string' ? email : ''
   return name || (mail.includes('@') ? mail.split('@')[0] : mail) || `Estudiante #${studentId}`
@@ -167,11 +171,7 @@ export async function listMilestoneCandidatesForInstitution(
     .select('tt.user_id as student_id')
     .select(db.raw('COUNT(*)::int as rewarded_count'))
     .select('u.full_name', 'u.email')
-    .select(
-      'saa.status as attestation_status',
-      'saa.attestation_pda',
-      'saa.attestation_signature'
-    )
+    .select('saa.status as attestation_status', 'saa.attestation_pda', 'saa.attestation_signature')
     .orderBy('rewarded_count', 'desc')
 
   return rows.map((row) => {
@@ -179,8 +179,7 @@ export async function listMilestoneCandidatesForInstitution(
     const rewardedCount = Number(row.rewarded_count ?? 0)
     const attestationStatus =
       typeof row.attestation_status === 'string' ? row.attestation_status : null
-    const attestationPda =
-      typeof row.attestation_pda === 'string' ? row.attestation_pda : null
+    const attestationPda = typeof row.attestation_pda === 'string' ? row.attestation_pda : null
     const attestationSignature =
       typeof row.attestation_signature === 'string' ? row.attestation_signature : null
 
@@ -248,7 +247,9 @@ export function summarizeMilestoneAttestResults(
   }
 }
 
-export function toMilestoneAttestResultView(result: MilestoneAttestResult): MilestoneAttestResultView {
+export function toMilestoneAttestResultView(
+  result: MilestoneAttestResult
+): MilestoneAttestResultView {
   return {
     ...result,
     explorerUrl: result.attestationPda ? explorerAttestationUrl(result.attestationPda) : null,
@@ -334,8 +335,7 @@ export async function getStudentAchievementsForUi(params: {
     {
       key: FIRST_5_ACTIVITIES_KEY,
       title: FIRST_5_ACTIVITIES_TITLE,
-      description:
-        'Completa y recibe recompensa por tus primeras 2 actividades.',
+      description: 'Completa y recibe recompensa por tus primeras 2 actividades.',
       threshold: FIRST_5_ACTIVITIES_THRESHOLD,
       progress,
       unlocked,
@@ -539,7 +539,11 @@ export async function attestFirst5MilestonesBatch(params?: {
   limit?: number
 }): Promise<MilestoneAttestResult[]> {
   if (params?.studentId && params?.institutionId) {
-    return [await attestFirst5ActivitiesForStudent(params as { studentId: number; institutionId: number })]
+    return [
+      await attestFirst5ActivitiesForStudent(
+        params as { studentId: number; institutionId: number }
+      ),
+    ]
   }
 
   if (params?.studentId) {

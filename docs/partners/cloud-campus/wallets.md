@@ -35,12 +35,12 @@ Content-Type: application/json
 
 ## When wallets are created
 
-| Event | Wallet created? |
-|-------|-----------------|
-| Enable crypto wallets on institution | Backfill for all existing students |
-| Provision new student (`POST /institutions/users`) | Yes, if crypto enabled |
-| Assign `student` role to existing user | Yes, if crypto enabled |
-| Provision teacher or school_admin | No |
+| Event                                              | Wallet created?                    |
+| -------------------------------------------------- | ---------------------------------- |
+| Enable crypto wallets on institution               | Backfill for all existing students |
+| Provision new student (`POST /institutions/users`) | Yes, if crypto enabled             |
+| Assign `student` role to existing user             | Yes, if crypto enabled             |
+| Provision teacher or school_admin                  | No                                 |
 
 ## Reading wallet public keys
 

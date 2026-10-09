@@ -4,7 +4,8 @@ import { maybeCreateStudentWallet } from '#services/institution_crypto_wallets_s
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { randomBytes } from 'node:crypto'
 
-export type GroupExternalSource = 'manual' | 'csv_import' | 'google_classroom' | 'moodle' | 'cloud_campus'
+export type GroupExternalSource =
+  'manual' | 'csv_import' | 'google_classroom' | 'moodle' | 'cloud_campus'
 
 function normalizeSubjectName(name: string): string {
   return name.trim().replace(/\s+/g, ' ')
@@ -73,9 +74,7 @@ export async function findInstitutionGroup(
   }
 
   if (className || section) {
-    let fallback = db
-      .from('groups')
-      .where('institution_id', input.institutionId)
+    let fallback = db.from('groups').where('institution_id', input.institutionId)
 
     if (trx) fallback = fallback.useTransaction(trx)
 
@@ -260,8 +259,7 @@ export interface InstitutionStudentRow {
 }
 
 export type FindOrCreateStudentResult =
-  | { ok: true; student: InstitutionStudentRow; created: boolean }
-  | { ok: false; message: string }
+  { ok: true; student: InstitutionStudentRow; created: boolean } | { ok: false; message: string }
 
 export function normalizeRegistrationNumber(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? ''
@@ -330,7 +328,7 @@ async function findRegistrationNumberConflict(
     .where('institution_id', institutionId)
     .whereRaw('LOWER(registration_number) = ?', [registrationNumber.toLowerCase()])
 
-  if (excludeUserId != null) {
+  if (excludeUserId !== null && excludeUserId !== undefined) {
     query = query.whereNot('id', excludeUserId)
   }
   if (trx) query = query.useTransaction(trx)
@@ -373,13 +371,10 @@ async function backfillStudentRegistrationNumber(
   }
 
   if (!dryRun) {
-    await db
-      .from('users')
-      .where('id', student.id)
-      .update({
-        registration_number: registrationNumber,
-        updated_at: new Date(),
-      })
+    await db.from('users').where('id', student.id).update({
+      registration_number: registrationNumber,
+      updated_at: new Date(),
+    })
   }
 
   return {
@@ -447,10 +442,7 @@ export async function findOrCreateInstitutionStudent(input: {
     }
   }
 
-  const globalUser = await db
-    .from('users')
-    .whereRaw('LOWER(email) = ?', [normalizedEmail])
-    .first()
+  const globalUser = await db.from('users').whereRaw('LOWER(email) = ?', [normalizedEmail]).first()
 
   if (globalUser) {
     if (globalUser.institution_id !== input.institutionId) {

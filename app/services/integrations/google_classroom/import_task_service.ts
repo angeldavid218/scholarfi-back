@@ -102,7 +102,7 @@ export async function importTaskFromClassroom(
   })
 
   const coursework =
-    input.maxPoints != null
+    input.maxPoints !== null && input.maxPoints !== undefined
       ? {
           maxPoints: input.maxPoints,
           title: input.title,

@@ -98,10 +98,10 @@ Students then log in with email + default password and change it from the header
 
 When `GOOGLE_CLASSROOM_MOCK=true`, roster emails come from fixtures in `fixtures/demo_students.ts`:
 
-| Name | Email | Seeded by |
-|------|-------|-----------|
+| Name            | Email                            | Seeded by    |
+| --------------- | -------------------------------- | ------------ |
 | Sofia Hernandez | `sofia.hernandez@scholarfi.test` | `demo:reset` |
-| Valentina Rojas | `valentina.rojas@school.edu` | `demo:reset` |
+| Valentina Rojas | `valentina.rojas@school.edu`     | `demo:reset` |
 
 ## 7. Pilot checklist
 

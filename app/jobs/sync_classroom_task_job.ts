@@ -1,8 +1,5 @@
 import ClassroomSyncRun from '#models/classroom_sync_run'
-import {
-  gcLogError,
-  gcLogInfo,
-} from '#services/integrations/google_classroom/logger'
+import { gcLogError, gcLogInfo } from '#services/integrations/google_classroom/logger'
 import { unknownErrorMessage } from '#services/integrations/google_classroom/classroom_http'
 import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
 import {
@@ -36,16 +33,20 @@ export default class SyncClassroomTaskJob extends Job<SyncClassroomTaskJobPayloa
 
     await markClassroomSyncRunRunning(runId)
 
-    gcLogInfo('Classroom sync job started', {
-      requestId,
-      taskId,
-      teacherId,
-      institutionId,
-    }, {
-      runId,
-      jobId: this.context.jobId,
-      attempt: this.context.attempt,
-    })
+    gcLogInfo(
+      'Classroom sync job started',
+      {
+        requestId,
+        taskId,
+        teacherId,
+        institutionId,
+      },
+      {
+        runId,
+        jobId: this.context.jobId,
+        attempt: this.context.attempt,
+      }
+    )
 
     try {
       const result = await syncGoogleClassroomTask({
@@ -58,10 +59,7 @@ export default class SyncClassroomTaskJob extends Job<SyncClassroomTaskJobPayloa
     } catch (error) {
       // Persist the underlying sync error so failed() does not replace it with
       // the generic "max retries" message from the queue runtime.
-      await persistClassroomSyncRunErrorMessage(
-        runId,
-        unknownErrorMessage(error, 'sync_failed')
-      )
+      await persistClassroomSyncRunErrorMessage(runId, unknownErrorMessage(error, 'sync_failed'))
       throw error
     }
   }

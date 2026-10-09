@@ -1,5 +1,11 @@
-import { assertInstitutionCanFundTaskReward, getInstitutionCreditPoolSummary } from '#services/credits/institution_credit_pool_service'
-import { assertTeacherCanFundTaskReward, getTeacherCreditPoolSummary } from '#services/credits/teacher_credit_pool_service'
+import {
+  assertInstitutionCanFundTaskReward,
+  getInstitutionCreditPoolSummary,
+} from '#services/credits/institution_credit_pool_service'
+import {
+  assertTeacherCanFundTaskReward,
+  getTeacherCreditPoolSummary,
+} from '#services/credits/teacher_credit_pool_service'
 import type { DbTransaction, RewardFundingSource } from '#services/credits/types'
 
 export interface ResolvePreferredRewardFundingInput {

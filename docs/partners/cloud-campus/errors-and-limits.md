@@ -19,25 +19,25 @@ Include `requestId` when contacting ScholarFi support.
 
 ## Common codes
 
-| Code | HTTP | Meaning |
-|------|------|---------|
-| `UNAUTHORIZED` | 401 | Missing or invalid Bearer token |
-| `FORBIDDEN_ROLE` | 403 | Authenticated but wrong role |
-| `INSTITUTION_SCOPE_REQUIRED` | 403 | School admin not tied to an institution |
-| `INSTITUTION_INACTIVE` | 403 | School must be active |
-| `INSTITUTION_NOT_FOUND` | 404 | Invalid institution id |
-| `EMAIL_TAKEN` | 409 | Email already registered |
-| `INSTITUTION_CODE_TAKEN` | 409 | Institution code already exists |
-| `VALIDATION_ERROR` | 422 | Request body failed validation |
+| Code                         | HTTP | Meaning                                 |
+| ---------------------------- | ---- | --------------------------------------- |
+| `UNAUTHORIZED`               | 401  | Missing or invalid Bearer token         |
+| `FORBIDDEN_ROLE`             | 403  | Authenticated but wrong role            |
+| `INSTITUTION_SCOPE_REQUIRED` | 403  | School admin not tied to an institution |
+| `INSTITUTION_INACTIVE`       | 403  | School must be active                   |
+| `INSTITUTION_NOT_FOUND`      | 404  | Invalid institution id                  |
+| `EMAIL_TAKEN`                | 409  | Email already registered                |
+| `INSTITUTION_CODE_TAKEN`     | 409  | Institution code already exists         |
+| `VALIDATION_ERROR`           | 422  | Request body failed validation          |
 
 ## Pagination
 
 List endpoints such as `GET /institutions/users` accept:
 
-| Param | Default | Max |
-|-------|---------|-----|
-| page | 1 | — |
-| perPage | 10 | 100 |
+| Param   | Default | Max |
+| ------- | ------- | --- |
+| page    | 1       | —   |
+| perPage | 10      | 100 |
 
 ## Rate limits
 
@@ -49,12 +49,12 @@ No hard rate limits are enforced in v1. Cloud Campus should:
 
 ## Idempotency
 
-| Operation | Idempotent? | Notes |
-|-----------|-------------|-------|
-| Create institution | No | Unique `code` required |
-| Provision user | No | Unique `email` required |
-| Enable crypto wallets | Yes | Re-enabling is safe; backfill runs again |
-| Sync group members | Yes | Replaces membership set |
+| Operation             | Idempotent? | Notes                                    |
+| --------------------- | ----------- | ---------------------------------------- |
+| Create institution    | No          | Unique `code` required                   |
+| Provision user        | No          | Unique `email` required                  |
+| Enable crypto wallets | Yes         | Re-enabling is safe; backfill runs again |
+| Sync group members    | Yes         | Replaces membership set                  |
 
 ## Data constraints
 

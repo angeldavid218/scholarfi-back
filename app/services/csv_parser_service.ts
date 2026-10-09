@@ -6,12 +6,7 @@ export type ParsedCsv = {
 }
 
 export type GroupImportField =
-  | 'student_email'
-  | 'student_name'
-  | 'registration_number'
-  | 'subject'
-  | 'section'
-  | 'class_name'
+  'student_email' | 'student_name' | 'registration_number' | 'subject' | 'section' | 'class_name'
 
 export type GroupImportColumnMapping = Partial<Record<GroupImportField, string>>
 
@@ -57,8 +52,25 @@ const FIELD_ALIASES: Record<GroupImportField, string[]> = {
     'id_estudiante',
   ],
   subject: ['subject', 'materia', 'asignatura', 'disciplina', 'curso_materia'],
-  section: ['section', 'grupo', 'seccion', 'sección', 'grupo_seccion', 'paralelo', 'salon', 'salón'],
-  class_name: ['class_name', 'curso', 'clase', 'nombre_clase', 'nombre_curso', 'class', 'titulo_clase'],
+  section: [
+    'section',
+    'grupo',
+    'seccion',
+    'sección',
+    'grupo_seccion',
+    'paralelo',
+    'salon',
+    'salón',
+  ],
+  class_name: [
+    'class_name',
+    'curso',
+    'clase',
+    'nombre_clase',
+    'nombre_curso',
+    'class',
+    'titulo_clase',
+  ],
 }
 
 function trimHeader(raw: string): string {
@@ -144,8 +156,12 @@ export function validateGroupImportColumnMapping(mapping: GroupImportColumnMappi
     return 'Debes asignar la columna de materia o de nombre de clase'
   }
 
-  const assignedColumns = GROUP_IMPORT_FIELDS.map((field) => mapping[field]).filter(Boolean) as string[]
-  const duplicates = assignedColumns.filter((column, index) => assignedColumns.indexOf(column) !== index)
+  const assignedColumns = GROUP_IMPORT_FIELDS.map((field) => mapping[field]).filter(
+    Boolean
+  ) as string[]
+  const duplicates = assignedColumns.filter(
+    (column, index) => assignedColumns.indexOf(column) !== index
+  )
   if (duplicates.length > 0) {
     return `No puedes usar la misma columna para varios campos: ${[...new Set(duplicates)].join(', ')}`
   }

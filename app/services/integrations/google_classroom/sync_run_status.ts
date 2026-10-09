@@ -1,7 +1,5 @@
 import ClassroomSyncRun from '#models/classroom_sync_run'
-import {
-  gcLogInfo,
-} from '#services/integrations/google_classroom/logger'
+import { gcLogInfo } from '#services/integrations/google_classroom/logger'
 import type { GoogleClassroomSyncResult } from '#services/integrations/google_classroom/types'
 
 export async function markClassroomSyncRunRunning(runId: number): Promise<void> {

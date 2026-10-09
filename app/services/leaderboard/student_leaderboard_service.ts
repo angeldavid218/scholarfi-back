@@ -1,5 +1,5 @@
 import db from '@adonisjs/lucid/services/db'
-import User from '#models/user'
+import type User from '#models/user'
 
 export type StudentLeaderboardEntry = {
   rank: number
@@ -53,9 +53,7 @@ export async function getInstitutionStudentLeaderboard(params: {
     const fullName = typeof row.full_name === 'string' ? row.full_name.trim() : ''
     const email = typeof row.email === 'string' ? row.email : ''
     const displayName =
-      fullName ||
-      (email.includes('@') ? email.split('@')[0] : email) ||
-      `Estudiante #${studentId}`
+      fullName || (email.includes('@') ? email.split('@')[0] : email) || `Estudiante #${studentId}`
 
     return {
       rank: index + 1,

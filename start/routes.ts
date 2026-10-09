@@ -273,10 +273,7 @@ router
     router
       .group(() => {
         router
-          .get('/:runId', [
-            () => import('#controllers/google_classroom_controller'),
-            'showSyncRun',
-          ])
+          .get('/:runId', [() => import('#controllers/google_classroom_controller'), 'showSyncRun'])
           .as('showClassroomSyncRun')
           .use(middleware.role({ roles: ['teacher'] }))
       })
@@ -438,7 +435,10 @@ router
           .as('createCatalogReward')
           .use(middleware.role({ roles: ['school_admin'] }))
         router
-          .patch('/catalog/:id', [() => import('#controllers/catalog_rewards_controller'), 'update'])
+          .patch('/catalog/:id', [
+            () => import('#controllers/catalog_rewards_controller'),
+            'update',
+          ])
           .as('updateCatalogReward')
           .use(middleware.role({ roles: ['school_admin'] }))
       })
@@ -449,10 +449,7 @@ router
     router
       .group(() => {
         router
-          .get('/students', [
-            () => import('#controllers/leaderboard_controller'),
-            'students',
-          ])
+          .get('/students', [() => import('#controllers/leaderboard_controller'), 'students'])
           .as('listStudentLeaderboard')
           .use(middleware.role({ roles: ['student', 'teacher', 'school_admin'] }))
       })
@@ -472,17 +469,11 @@ router
       .use(middleware.tenantScope())
 
     router
-      .get('/public/demo-config', [
-        () => import('#controllers/demo_config_controller'),
-        'show',
-      ])
+      .get('/public/demo-config', [() => import('#controllers/demo_config_controller'), 'show'])
       .as('publicDemoConfig')
 
     router
-      .get('/public/diplomas/:id', [
-        () => import('#controllers/diplomas_controller'),
-        'metadata',
-      ])
+      .get('/public/diplomas/:id', [() => import('#controllers/diplomas_controller'), 'metadata'])
       .as('diplomaMetadata')
 
     router
@@ -584,9 +575,11 @@ router
 
     router
       .group(() => {
-        router
-          .get('/profile', [controllers.Profile, 'show'])
-          .use(middleware.role({ roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'] }))
+        router.get('/profile', [controllers.Profile, 'show']).use(
+          middleware.role({
+            roles: ['super_admin', 'school_admin', 'teacher', 'student', 'ngo_admin'],
+          })
+        )
         router
           .patch('/password', [() => import('#controllers/profile_controller'), 'updatePassword'])
           .as('changePassword')

@@ -57,7 +57,10 @@ async function loginToken(client: any, email: string) {
 test.group('Institution credit pools', (group) => {
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
-  test('super admin allocates credits and school admin can view pool', async ({ client, assert }) => {
+  test('super admin allocates credits and school admin can view pool', async ({
+    client,
+    assert,
+  }) => {
     const institutionId = await createInstitution('POOL-VIEW')
 
     const superAdmin = await User.create({

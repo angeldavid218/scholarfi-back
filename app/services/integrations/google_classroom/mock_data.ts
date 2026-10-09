@@ -56,7 +56,9 @@ export function mockCourseWorkForCourse(courseId: string): GoogleClassroomCourse
   return MOCK_COURSEWORK[courseId] ?? []
 }
 
-export function mockSubmissionsForCourseWork(courseWorkId: string): GoogleClassroomStudentSubmission[] {
+export function mockSubmissionsForCourseWork(
+  courseWorkId: string
+): GoogleClassroomStudentSubmission[] {
   const specific = MOCK_SUBMISSIONS[courseWorkId]
   if (specific && specific.length > 0) {
     return specific

@@ -62,7 +62,7 @@ function parseSyncMetadata(task: Task): GoogleClassroomSyncMetadata {
     }
   }
 
-  if (!raw?.courseId || !raw?.courseWorkId || raw.minGrade == null) {
+  if (!raw?.courseId || !raw?.courseWorkId || raw.minGrade === null || raw.minGrade === undefined) {
     throw new Error('Task is missing Google Classroom sync metadata')
   }
   return raw
@@ -163,11 +163,9 @@ export async function syncGoogleClassroomTask(input: {
     // Classroom tasks use a GC-linked group that may be empty until roster emails are enrolled.
     // Students often exist via CSV in a different group — link them here by email first.
     if (task.groupId && emailByUserId.size > 0) {
-      const linked = await linkGroupStudentsByEmail(
-        input.institutionId,
-        task.groupId,
-        [...emailByUserId.values()]
-      )
+      const linked = await linkGroupStudentsByEmail(input.institutionId, task.groupId, [
+        ...emailByUserId.values(),
+      ])
       gcLogInfo('Classroom roster students linked to task group', ctx, {
         groupId: task.groupId,
         rosterEmailCount: emailByUserId.size,
@@ -339,14 +337,11 @@ export async function syncGoogleClassroomTask(input: {
             client: trx,
           })
 
-          await trx
-            .from('submissions')
-            .where('id', submission.id)
-            .update({
-              status: 'approved',
-              reward_skipped_reason: null,
-              updated_at: new Date(),
-            })
+          await trx.from('submissions').where('id', submission.id).update({
+            status: 'approved',
+            reward_skipped_reason: null,
+            updated_at: new Date(),
+          })
 
           await trx.table('submission_validations').insert({
             submission_id: submission.id,

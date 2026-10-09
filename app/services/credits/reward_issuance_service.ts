@@ -61,7 +61,7 @@ export async function issueRewardForSubmission(
     let idempotent = false
 
     if (fundingSource === 'teacher') {
-      if (params.teacherId == null) {
+      if (params.teacherId === null || params.teacherId === undefined) {
         throw new Error('teacherId is required when fundingSource is teacher')
       }
 
@@ -98,11 +98,7 @@ export async function issueRewardForSubmission(
     })
 
     if (institutionCreditEntryId && minted.transactionId) {
-      await linkCreditEntryToTokenTransaction(
-        institutionCreditEntryId,
-        minted.transactionId,
-        trx
-      )
+      await linkCreditEntryToTokenTransaction(institutionCreditEntryId, minted.transactionId, trx)
     }
 
     if (teacherCreditEntryId && minted.transactionId) {

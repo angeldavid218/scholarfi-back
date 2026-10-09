@@ -14,9 +14,8 @@ const CLAIM_FAILURE = {
 
 export default class StudentRegistrationController {
   async store({ request, response, serialize }: HttpContext) {
-    const { email, registrationNumber, password } = await request.validateUsing(
-      registerStudentValidator
-    )
+    const { email, registrationNumber, password } =
+      await request.validateUsing(registerStudentValidator)
 
     const normalizedEmail = email.trim().toLowerCase()
     const normalizedRegistration = normalizeRegistrationNumber(registrationNumber)

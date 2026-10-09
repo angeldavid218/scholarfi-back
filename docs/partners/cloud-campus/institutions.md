@@ -44,18 +44,18 @@ Content-Type: application/json
 
 **Role:** `super_admin`
 
-| Field | Type | Rules |
-|-------|------|-------|
-| name | string | 2–180 chars |
-| code | string | 2–50 chars, unique |
+| Field | Type   | Rules              |
+| ----- | ------ | ------------------ |
+| name  | string | 2–180 chars        |
+| code  | string | 2–50 chars, unique |
 
 **Response (200):** institution object with `status: "draft"`.
 
 **Errors**
 
-| Status | Code | When |
-|--------|------|------|
-| 409 | `INSTITUTION_CODE_TAKEN` | Code already exists |
+| Status | Code                     | When                |
+| ------ | ------------------------ | ------------------- |
+| 409    | `INSTITUTION_CODE_TAKEN` | Code already exists |
 
 ## Update status
 
@@ -93,7 +93,7 @@ Creates a user with the `school_admin` role scoped to the institution.
 
 **Errors**
 
-| Status | Code | When |
-|--------|------|------|
-| 404 | `INSTITUTION_NOT_FOUND` | Invalid institution id |
-| 409 | `EMAIL_TAKEN` | Email already registered |
+| Status | Code                    | When                     |
+| ------ | ----------------------- | ------------------------ |
+| 404    | `INSTITUTION_NOT_FOUND` | Invalid institution id   |
+| 409    | `EMAIL_TAKEN`           | Email already registered |

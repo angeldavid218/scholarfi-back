@@ -1,8 +1,5 @@
 import Task from '#models/task'
-import {
-  gcLogError,
-  gcLogInfo,
-} from '#services/integrations/google_classroom/logger'
+import { gcLogError, gcLogInfo } from '#services/integrations/google_classroom/logger'
 import { listConnectedClassroomTeachers } from '#services/integrations/google_classroom/oauth_service'
 import {
   enqueueClassroomSyncTask,
@@ -34,13 +31,17 @@ export async function enqueueAllClassroomSyncsForTeacher(input: {
     .whereNotNull('external_id')
     .orderBy('id', 'asc')
 
-  gcLogInfo('Classroom sync-all enqueue started', {
-    requestId: input.requestId,
-    teacherId: input.teacherId,
-    institutionId: input.institutionId,
-  }, {
-    tasks: tasks.length,
-  })
+  gcLogInfo(
+    'Classroom sync-all enqueue started',
+    {
+      requestId: input.requestId,
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+    },
+    {
+      tasks: tasks.length,
+    }
+  )
 
   const runs: EnqueueClassroomSyncResult[] = []
   for (const task of tasks) {
@@ -66,14 +67,18 @@ export async function enqueueAllClassroomSyncsForTeacher(input: {
     }
   }
 
-  gcLogInfo('Classroom sync-all enqueue finished', {
-    requestId: input.requestId,
-    teacherId: input.teacherId,
-    institutionId: input.institutionId,
-  }, {
-    tasks: tasks.length,
-    runs: runs.length,
-  })
+  gcLogInfo(
+    'Classroom sync-all enqueue finished',
+    {
+      requestId: input.requestId,
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+    },
+    {
+      tasks: tasks.length,
+      runs: runs.length,
+    }
+  )
 
   return { tasks: tasks.length, runs }
 }
@@ -86,11 +91,15 @@ export async function enqueueAllClassroomSyncsForConnectedTeachers(input?: {
   let tasks = 0
   let teacherFailures = 0
 
-  gcLogInfo('Classroom nightly sync-all started', {
-    requestId: input?.requestId,
-  }, {
-    teachers: teachers.length,
-  })
+  gcLogInfo(
+    'Classroom nightly sync-all started',
+    {
+      requestId: input?.requestId,
+    },
+    {
+      teachers: teachers.length,
+    }
+  )
 
   for (const teacher of teachers) {
     try {
@@ -115,14 +124,18 @@ export async function enqueueAllClassroomSyncsForConnectedTeachers(input?: {
     }
   }
 
-  gcLogInfo('Classroom nightly sync-all finished', {
-    requestId: input?.requestId,
-  }, {
-    teachers: teachers.length,
-    teacherFailures,
-    tasks,
-    runs: runs.length,
-  })
+  gcLogInfo(
+    'Classroom nightly sync-all finished',
+    {
+      requestId: input?.requestId,
+    },
+    {
+      teachers: teachers.length,
+      teacherFailures,
+      tasks,
+      runs: runs.length,
+    }
+  )
 
   return {
     teachers: teachers.length,
