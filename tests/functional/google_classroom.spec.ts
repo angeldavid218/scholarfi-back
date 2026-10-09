@@ -5,38 +5,58 @@ import { ensureMockTeacherIntegration } from '#services/integrations/google_clas
 import { seedInstitutionCredits } from '../helpers/institution_credits.js'
 import { test } from '@japa/runner'
 
-// Cache to avoid repeated DB queries for the same role within a test
+// Cache and pending promises to avoid race conditions in concurrent role creation
 const roleCache = new Map<string, number>()
+const rolePending = new Map<string, Promise<number>>()
 
-async function ensureRole(roleKey: string, roleLabel: string) {
+async function ensureRole(roleKey: string, roleLabel: string): Promise<number> {
   // Check cache first
   if (roleCache.has(roleKey)) {
     return roleCache.get(roleKey)!
   }
 
-  // Check if role exists in DB
-  const existingRole = await db.from('roles').where('key', roleKey).first()
-  if (existingRole) {
-    const id = existingRole.id as number
-    roleCache.set(roleKey, id)
-    return id
+  // Check if there's already a pending creation for this role
+  if (rolePending.has(roleKey)) {
+    return rolePending.get(roleKey)!
   }
 
-  // Create new role
-  const inserted = await db
-    .table('roles')
-    .insert({
-      key: roleKey,
-      label: roleLabel,
-      created_at: new Date(),
-      updated_at: null,
-    })
-    .returning('id')
+  // Create a promise for this role creation
+  const promise = (async () => {
+    // Check if role exists in DB
+    const existingRole = await db.from('roles').where('key', roleKey).first()
+    if (existingRole) {
+      const id = existingRole.id as number
+      roleCache.set(roleKey, id)
+      return id
+    }
 
-  const created = inserted[0] as { id: number } | number
-  const id = typeof created === 'number' ? created : created.id
-  roleCache.set(roleKey, id)
-  return id
+    // Create new role
+    const inserted = await db
+      .table('roles')
+      .insert({
+        key: roleKey,
+        label: roleLabel,
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+
+    const created = inserted[0] as { id: number } | number
+    const id = typeof created === 'number' ? created : created.id
+    roleCache.set(roleKey, id)
+    return id
+  })()
+
+  // Store the pending promise
+  rolePending.set(roleKey, promise)
+
+  try {
+    const id = await promise
+    return id
+  } finally {
+    // Clean up pending promise after completion
+    rolePending.delete(roleKey)
+  }
 }
 
 async function assignRoleToUser(userId: number, roleKey: string, roleLabel: string) {
@@ -112,6 +132,7 @@ async function connectMockClassroom(teacherId: number, institutionId: number) {
 test.group('Google Classroom connector', (group) => {
   group.each.setup(() => {
     roleCache.clear() // Clear cache before each test
+    rolePending.clear() // Clear pending promises before each test
     return testUtils.db().withGlobalTransaction()
   })
 
