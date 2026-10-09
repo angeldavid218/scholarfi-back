@@ -7,16 +7,16 @@ import { test } from '@japa/runner'
 
 async function ensureRole(roleKey: string, roleLabel: string) {
   // Use ON CONFLICT DO NOTHING to avoid transaction-aborting errors in test transactions
-  const inserted = await db.raw(
+  const result = (await db.raw(
     `INSERT INTO roles (key, label, created_at, updated_at)
      VALUES (?, ?, ?, ?)
      ON CONFLICT (key) DO NOTHING
      RETURNING id`,
     [roleKey, roleLabel, new Date(), null]
-  )
+  )) as any
 
-  if (inserted.rows.length > 0) {
-    const created = inserted.rows[0] as { id: number } | number
+  if (result.rows && result.rows.length > 0) {
+    const created = result.rows[0] as { id: number } | number
     return typeof created === 'number' ? created : created.id
   }
 
