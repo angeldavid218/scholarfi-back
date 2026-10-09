@@ -1,11 +1,12 @@
 import { DateTime } from 'luxon'
 import tokenConfig, { assertCnftMintConfig } from '#config/token'
 import Institution from '#models/institution'
-import StudentDiplomaMint, {
-  OUTSTANDING_STUDENT_DIPLOMA_KIND,
-} from '#models/student_diploma_mint'
+import StudentDiplomaMint, { OUTSTANDING_STUDENT_DIPLOMA_KIND } from '#models/student_diploma_mint'
 import User from '#models/user'
-import { isInstitutionOnChainExecution, makeTokenServiceForInstitution } from '#services/tokens/factory'
+import {
+  isInstitutionOnChainExecution,
+  makeTokenServiceForInstitution,
+} from '#services/tokens/factory'
 import { getInstitutionStudentLeaderboard } from '#services/leaderboard/student_leaderboard_service'
 import { createCnftUmi } from '#services/cnft/umi_client'
 import { mintearCnft, truncateUtf8Bytes, MAX_CNFT_NAME_BYTES } from '#services/cnft/cnft_funciones'

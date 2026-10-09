@@ -1,8 +1,5 @@
 import { enqueueAllClassroomSyncsForConnectedTeachers } from '#services/integrations/google_classroom/sync_all_service'
-import {
-  gcLogError,
-  gcLogInfo,
-} from '#services/integrations/google_classroom/logger'
+import { gcLogError, gcLogInfo } from '#services/integrations/google_classroom/logger'
 import { Job } from '@adonisjs/queue'
 import type { JobOptions } from '@adonisjs/queue/types'
 
@@ -22,23 +19,31 @@ export default class SyncAllClassroomTasksJob extends Job<SyncAllClassroomTasksJ
   async execute() {
     const requestId = this.payload.requestId ?? 'nightly-classroom-sync'
 
-    gcLogInfo('Classroom nightly sync job started', {
-      requestId,
-    }, {
-      jobId: this.context.jobId,
-      attempt: this.context.attempt,
-    })
+    gcLogInfo(
+      'Classroom nightly sync job started',
+      {
+        requestId,
+      },
+      {
+        jobId: this.context.jobId,
+        attempt: this.context.attempt,
+      }
+    )
 
     const result = await enqueueAllClassroomSyncsForConnectedTeachers({ requestId })
 
-    gcLogInfo('Classroom nightly sync job finished', {
-      requestId,
-    }, {
-      teachers: result.teachers,
-      teacherFailures: result.teacherFailures,
-      tasks: result.tasks,
-      runs: result.runs.length,
-    })
+    gcLogInfo(
+      'Classroom nightly sync job finished',
+      {
+        requestId,
+      },
+      {
+        teachers: result.teachers,
+        teacherFailures: result.teacherFailures,
+        tasks: result.tasks,
+        runs: result.runs.length,
+      }
+    )
   }
 
   async failed(error: Error) {

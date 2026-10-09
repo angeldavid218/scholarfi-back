@@ -4,15 +4,15 @@ Beyond school/user/wallet onboarding, Cloud Campus may integrate with these Scho
 
 ## Available today
 
-| Capability | Endpoint | Role |
-|------------|----------|------|
-| Allocate institution credits | `POST /institutions/:id/credit-pool/allocate` | super_admin |
-| View institution credit pool | `GET /institutions/:id/credit-pool` | super_admin |
-| View own school credit pool | `GET /institutions/credit-pool` | school_admin |
-| Student reward balance | `GET /students/:studentId/balance` | school_admin |
-| Student transactions | `GET /students/:studentId/transactions` | school_admin |
-| Student leaderboard | `GET /leaderboard/students` | student, teacher, school_admin |
-| Token health | `GET /token/health` | school_admin, super_admin |
+| Capability                   | Endpoint                                      | Role                           |
+| ---------------------------- | --------------------------------------------- | ------------------------------ |
+| Allocate institution credits | `POST /institutions/:id/credit-pool/allocate` | super_admin                    |
+| View institution credit pool | `GET /institutions/:id/credit-pool`           | super_admin                    |
+| View own school credit pool  | `GET /institutions/credit-pool`               | school_admin                   |
+| Student reward balance       | `GET /students/:studentId/balance`            | school_admin                   |
+| Student transactions         | `GET /students/:studentId/transactions`       | school_admin                   |
+| Student leaderboard          | `GET /leaderboard/students`                   | student, teacher, school_admin |
+| Token health                 | `GET /token/health`                           | school_admin, super_admin      |
 
 Credits fund the reward economy inside ScholarFi. Cloud Campus typically does not post rewards directly in v1; schools use ScholarFi teacher/admin flows for tasks and submissions.
 
@@ -27,13 +27,13 @@ These endpoints serve the ScholarFi product UI. Cloud Campus may deep-link or em
 
 ## Planned / out of scope for v1
 
-| Item | Notes |
-|------|-------|
+| Item                                          | Notes                                                 |
+| --------------------------------------------- | ----------------------------------------------------- |
 | `POST /integrations/cloud-campus/sync-roster` | Bulk roster sync with `external_source: cloud_campus` |
-| Partner API keys | v1 uses Bearer tokens from service account |
-| Webhooks (reward posted, wallet created) | Not implemented |
-| OpenAPI spec | Manual partner docs for now |
-| Task/submission import from Cloud Campus | Requires product design |
+| Partner API keys                              | v1 uses Bearer tokens from service account            |
+| Webhooks (reward posted, wallet created)      | Not implemented                                       |
+| OpenAPI spec                                  | Manual partner docs for now                           |
+| Task/submission import from Cloud Campus      | Requires product design                               |
 
 ## Natural next integrations
 

@@ -125,9 +125,7 @@ export default class RedemptionsController {
     const userIds = [...new Set(items.map((r) => r.userId))]
 
     const catalogRows =
-      rewardIds.length > 0
-        ? await CatalogReward.query().whereIn('id', rewardIds)
-        : []
+      rewardIds.length > 0 ? await CatalogReward.query().whereIn('id', rewardIds) : []
     const catalogById = new Map(catalogRows.map((c) => [c.id, c]))
 
     const studentRows =

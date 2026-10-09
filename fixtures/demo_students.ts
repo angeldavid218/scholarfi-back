@@ -82,7 +82,10 @@ const COURSE_ID_BY_CLASS_NAME: Record<string, string> = {
 
 /** Stable mock Google user ids for demo students (used by roster sync fixtures). */
 export function classroomMockGoogleUserIdForEmail(email: string): string {
-  return `gc-user-${email.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+  return `gc-user-${email
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')}`
 }
 
 /**

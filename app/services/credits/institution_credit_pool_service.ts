@@ -129,11 +129,7 @@ export async function debitInstitutionPoolForReward(
     const remaining = allocated - utilized
 
     if (remaining < params.amount) {
-      throw new InsufficientInstitutionCreditsError(
-        params.institutionId,
-        params.amount,
-        remaining
-      )
+      throw new InsufficientInstitutionCreditsError(params.institutionId, params.amount, remaining)
     }
 
     await fromTbl('institution_credit_pools', trx)

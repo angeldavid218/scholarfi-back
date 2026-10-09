@@ -488,9 +488,8 @@ test.group('Google Classroom connector', (group) => {
   test('persistClassroomUserIdsFromRoster links google ids by email and skips conflicts', async ({
     assert,
   }) => {
-    const { persistClassroomUserIdsFromRoster } = await import(
-      '#services/integrations/google_classroom/group_link_service'
-    )
+    const { persistClassroomUserIdsFromRoster } =
+      await import('#services/integrations/google_classroom/group_link_service')
 
     const institutionId = await createInstitution('GC-USERID')
     const student = await User.create({
@@ -742,9 +741,8 @@ test.group('Google Classroom connector', (group) => {
     client,
     assert,
   }) => {
-    const { enqueueAllClassroomSyncsForConnectedTeachers } = await import(
-      '#services/integrations/google_classroom/sync_all_service'
-    )
+    const { enqueueAllClassroomSyncsForConnectedTeachers } =
+      await import('#services/integrations/google_classroom/sync_all_service')
 
     const institutionA = await createInstitution('GC-NIGHT-A')
     const institutionB = await createInstitution('GC-NIGHT-B')

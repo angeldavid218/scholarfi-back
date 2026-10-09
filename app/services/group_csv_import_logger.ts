@@ -15,11 +15,13 @@ function bindings(ctx: GroupCsvImportLogContext): Record<string, unknown> {
   return {
     integration: INTEGRATION,
     ...(ctx.requestId ? { requestId: ctx.requestId } : {}),
-    ...(ctx.institutionId != null ? { institutionId: ctx.institutionId } : {}),
-    ...(ctx.teacherId != null ? { teacherId: ctx.teacherId } : {}),
-    ...(ctx.runId != null ? { runId: ctx.runId } : {}),
+    ...(ctx.institutionId !== null && ctx.institutionId !== undefined
+      ? { institutionId: ctx.institutionId }
+      : {}),
+    ...(ctx.teacherId !== null && ctx.teacherId !== undefined ? { teacherId: ctx.teacherId } : {}),
+    ...(ctx.runId !== null && ctx.runId !== undefined ? { runId: ctx.runId } : {}),
     ...(ctx.filename ? { filename: ctx.filename } : {}),
-    ...(ctx.dryRun != null ? { dryRun: ctx.dryRun } : {}),
+    ...(ctx.dryRun !== null && ctx.dryRun !== undefined ? { dryRun: ctx.dryRun } : {}),
   }
 }
 

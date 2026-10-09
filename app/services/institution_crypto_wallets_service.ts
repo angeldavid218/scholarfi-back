@@ -22,10 +22,7 @@ export async function isInstitutionCryptoWalletsEnabled(
   institutionId: number,
   trx?: TransactionClientContract
 ): Promise<boolean> {
-  let query = db
-    .from('institutions')
-    .where('id', institutionId)
-    .select('crypto_wallets_enabled')
+  let query = db.from('institutions').where('id', institutionId).select('crypto_wallets_enabled')
 
   if (trx) query = query.useTransaction(trx)
 

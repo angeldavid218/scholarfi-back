@@ -16,9 +16,7 @@ AdonisJS 7 + TypeScript API for the ScholarFi demo simulator. All app routes are
 npm install
 ```
 
-
 1. Copy environment template:
-
 
 ```bash
 cp .env.example .env
@@ -81,20 +79,19 @@ Sync no longer blocks the HTTP request. Grades/rewards run via `SyncClassroomTas
 1. Start the API: `npm run dev` (or `npm start`) — also upserts the nightly `nightly-classroom-sync` schedule (02:00 America/Mexico_City)
 2. Start the worker in a second terminal: `npm run queue:work` (`node ace queue:work --queue=classroom`) — processes per-task jobs **and** due cron schedules
 
-| `QUEUE_DRIVER` | Behavior |
-|----------------|----------|
+| `QUEUE_DRIVER`                     | Behavior                                                  |
+| ---------------------------------- | --------------------------------------------------------- |
 | `database` (default outside tests) | Enqueue to DB queue tables; requires `npm run queue:work` |
-| `sync` (default in tests) | Process the job inline in the API process (no worker) |
+| `sync` (default in tests)          | Process the job inline in the API process (no worker)     |
 
-
-| Area | Prefix | Roles (high level) |
-|------|--------|-------------------|
-| Auth | `/auth` | signup, login, logout |
-| Institutions | `/institutions` | super admin: list/create/status/bootstrap; school admin: users, roles, teacher–student links |
-| Tasks | `/tasks` | teacher CRUD/summary; student available tasks |
-| Submissions | `/submissions` | student submit; teacher/admin queues and actions |
-| Rewards | `/rewards` | student balance; school admin post/history |
-| Account | `/account/profile` | all authenticated roles |
+| Area         | Prefix             | Roles (high level)                                                                           |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------------- |
+| Auth         | `/auth`            | signup, login, logout                                                                        |
+| Institutions | `/institutions`    | super admin: list/create/status/bootstrap; school admin: users, roles, teacher–student links |
+| Tasks        | `/tasks`           | teacher CRUD/summary; student available tasks                                                |
+| Submissions  | `/submissions`     | student submit; teacher/admin queues and actions                                             |
+| Rewards      | `/rewards`         | student balance; school admin post/history                                                   |
+| Account      | `/account/profile` | all authenticated roles                                                                      |
 
 Bearer token auth (`Authorization: Bearer …`) after `POST /auth/login`.
 
@@ -162,11 +159,13 @@ After seed/reset, confirm:
 
 1. Run `node ace demo:reset`
 2. Confirm deterministic users exist:
-  - `demo.super@scholarfi.test` (platform super admin — `/super` for institutions)
-  - `demo.admin@scholarfi.test`
-  - `demo.teacher@scholarfi.test`
-  - `sofia.hernandez@scholarfi.test` — Sofia Hernandez
-  - `valentina.rojas@school.edu` — Valentina Rojas
+
+- `demo.super@scholarfi.test` (platform super admin — `/super` for institutions)
+- `demo.admin@scholarfi.test`
+- `demo.teacher@scholarfi.test`
+- `sofia.hernandez@scholarfi.test` — Sofia Hernandez
+- `valentina.rojas@school.edu` — Valentina Rojas
+
 3. Confirm deterministic institution code exists: `SFA-DEMO`.
 4. Run the Classroom flow above (no tasks are pre-imported).
 
@@ -223,18 +222,15 @@ node ace cnft:setup-tree
 
 ### Demo seed users
 
-
-| Role         | Name              | Email                            | Password         | Institution             |
-| ------------ | ----------------- | -------------------------------- | ---------------- | ----------------------- |
-| Super Admin  | Demo Super Admin  | `demo.super@scholarfi.test`      | `DemoPass123!`   | — (platform; no tenant) |
-| School Admin | Demo School Admin | `demo.admin@scholarfi.test`      | `DemoPass123!`   | `SFA-DEMO`              |
-| Teacher      | Demo Teacher      | `demo.teacher@scholarfi.test`    | `DemoPass123!`   | `SFA-DEMO`              |
-| Student      | Sofia Hernandez   | `sofia.hernandez@scholarfi.test` | `DemoPass123!`   | `SFA-DEMO`              |
-| Student      | Valentina Rojas   | `valentina.rojas@school.edu`     | `DemoPass123!`   | `SFA-DEMO`              |
+| Role         | Name              | Email                            | Password       | Institution             |
+| ------------ | ----------------- | -------------------------------- | -------------- | ----------------------- |
+| Super Admin  | Demo Super Admin  | `demo.super@scholarfi.test`      | `DemoPass123!` | — (platform; no tenant) |
+| School Admin | Demo School Admin | `demo.admin@scholarfi.test`      | `DemoPass123!` | `SFA-DEMO`              |
+| Teacher      | Demo Teacher      | `demo.teacher@scholarfi.test`    | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | Sofia Hernandez   | `sofia.hernandez@scholarfi.test` | `DemoPass123!` | `SFA-DEMO`              |
+| Student      | Valentina Rojas   | `valentina.rojas@school.edu`     | `DemoPass123!` | `SFA-DEMO`              |
 
 Classroom mock pilot roster CSV: `fixtures/demo_classroom_roster.csv` (see `docs/google-classroom-setup.md` pilot checklist).
-
-
 
 ## Frontend pairing
 

@@ -85,7 +85,10 @@ async function loginSchoolAdmin(client: any, email: string, institutionId: numbe
 test.group('Institutions crypto wallets toggle', (group) => {
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
-  test('super admin can enable and disable institution crypto wallets', async ({ client, assert }) => {
+  test('super admin can enable and disable institution crypto wallets', async ({
+    client,
+    assert,
+  }) => {
     const institutionId = await createInstitution(String(Date.now()))
     const token = await createSuperAdmin(client, `super-cw-${Date.now()}@example.com`)
 
@@ -134,9 +137,18 @@ test.group('Institutions crypto wallets toggle', (group) => {
     })
   })
 
-  test('student provision skips wallet row when crypto wallets disabled', async ({ client, assert }) => {
-    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: false })
-    const token = await loginSchoolAdmin(client, `school-admin-cw-off-${Date.now()}@example.com`, institutionId)
+  test('student provision skips wallet row when crypto wallets disabled', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution(String(Date.now()), {
+      cryptoWalletsEnabled: false,
+    })
+    const token = await loginSchoolAdmin(
+      client,
+      `school-admin-cw-off-${Date.now()}@example.com`,
+      institutionId
+    )
 
     const response = await client
       .post('/api/v1/institutions/users')
@@ -157,9 +169,18 @@ test.group('Institutions crypto wallets toggle', (group) => {
     assert.isNull(row)
   })
 
-  test('student provision creates wallet row when crypto wallets enabled', async ({ client, assert }) => {
-    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: true })
-    const token = await loginSchoolAdmin(client, `school-admin-cw-on-${Date.now()}@example.com`, institutionId)
+  test('student provision creates wallet row when crypto wallets enabled', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution(String(Date.now()), {
+      cryptoWalletsEnabled: true,
+    })
+    const token = await loginSchoolAdmin(
+      client,
+      `school-admin-cw-on-${Date.now()}@example.com`,
+      institutionId
+    )
 
     const response = await client
       .post('/api/v1/institutions/users')
@@ -181,8 +202,14 @@ test.group('Institutions crypto wallets toggle', (group) => {
   })
 
   test('role assignment to student follows crypto wallets flag', async ({ client, assert }) => {
-    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: true })
-    const token = await loginSchoolAdmin(client, `school-admin-role-cw-${Date.now()}@example.com`, institutionId)
+    const institutionId = await createInstitution(String(Date.now()), {
+      cryptoWalletsEnabled: true,
+    })
+    const token = await loginSchoolAdmin(
+      client,
+      `school-admin-role-cw-${Date.now()}@example.com`,
+      institutionId
+    )
 
     const teacher = await User.create({
       email: `teacher-to-student-${Date.now()}@example.com`,
@@ -202,8 +229,13 @@ test.group('Institutions crypto wallets toggle', (group) => {
     assert.isNotNull(row)
   })
 
-  test('enabling crypto wallets backfills wallets for existing students', async ({ client, assert }) => {
-    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: false })
+  test('enabling crypto wallets backfills wallets for existing students', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution(String(Date.now()), {
+      cryptoWalletsEnabled: false,
+    })
 
     const studentOne = await User.create({
       email: `backfill-student-1-${Date.now()}@example.com`,

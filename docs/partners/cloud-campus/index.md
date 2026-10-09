@@ -6,10 +6,10 @@ This guide describes how Cloud Campus integrates with the ScholarFi backend to o
 
 All API routes are prefixed with `/api/v1`.
 
-| Environment | Example base URL |
-|-------------|------------------|
-| Local | `http://localhost:3333/api/v1` |
-| Production | Provided by ScholarFi ops |
+| Environment | Example base URL               |
+| ----------- | ------------------------------ |
+| Local       | `http://localhost:3333/api/v1` |
+| Production  | Provided by ScholarFi ops      |
 
 ## Versioning
 

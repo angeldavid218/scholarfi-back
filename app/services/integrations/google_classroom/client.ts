@@ -1,7 +1,5 @@
 import googleClassroomConfig from '#config/google_classroom'
-import {
-  buildGradeMapsFromSubmissions,
-} from '#services/integrations/google_classroom/grade_maps'
+import { buildGradeMapsFromSubmissions } from '#services/integrations/google_classroom/grade_maps'
 import {
   gcLogDebug,
   gcLogError,
@@ -68,7 +66,15 @@ function formatDueDate(value: unknown): string | null {
   const year = asOptionalNumber(value.year)
   const month = asOptionalNumber(value.month)
   const day = asOptionalNumber(value.day)
-  if (year == null || month == null || day == null) return null
+  if (
+    year === null ||
+    year === undefined ||
+    month === null ||
+    month === undefined ||
+    day === null ||
+    day === undefined
+  )
+    return null
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
@@ -76,7 +82,8 @@ function formatDueTime(value: unknown): string | null {
   if (!isRecord(value)) return null
   const hours = asOptionalNumber(value.hours)
   const minutes = asOptionalNumber(value.minutes)
-  if (hours == null || minutes == null) return null
+  if (hours === null || hours === undefined || minutes === null || minutes === undefined)
+    return null
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 }
 
@@ -400,10 +407,14 @@ export async function buildClassroomGradeMaps(input: {
   })
 
   if (!googleClassroomConfig.mockMode && maps.unresolvedUserIds > 0) {
-    gcLogWarn('Some Classroom submission userIds could not be mapped to email', input.logCtx ?? {}, {
-      unresolvedUserIds: maps.unresolvedUserIds,
-      rosterSize: maps.emailByUserId.size,
-    })
+    gcLogWarn(
+      'Some Classroom submission userIds could not be mapped to email',
+      input.logCtx ?? {},
+      {
+        unresolvedUserIds: maps.unresolvedUserIds,
+        rosterSize: maps.emailByUserId.size,
+      }
+    )
   }
 
   return {

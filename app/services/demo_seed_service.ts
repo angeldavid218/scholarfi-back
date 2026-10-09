@@ -204,37 +204,46 @@ export async function seedDemoBaseline(options: { forceReset: boolean }) {
     })
     await assignRole(teacherId, teacherRole, trx)
 
-    await db.table('teacher_credit_pools').useTransaction(trx).insert({
-      institution_id: institution.id,
-      teacher_id: teacherId,
-      allocated_credits: 5_000,
-      utilized_credits: 0,
-      created_at: ts(1).toJSDate(),
-      updated_at: ts(1).toJSDate(),
-    })
+    await db
+      .table('teacher_credit_pools')
+      .useTransaction(trx)
+      .insert({
+        institution_id: institution.id,
+        teacher_id: teacherId,
+        allocated_credits: 5_000,
+        utilized_credits: 0,
+        created_at: ts(1).toJSDate(),
+        updated_at: ts(1).toJSDate(),
+      })
 
-    await db.table('institution_credit_entries').useTransaction(trx).insert({
-      institution_id: institution.id,
-      entry_type: 'teacher_delegate',
-      amount: 5_000,
-      submission_id: null,
-      token_transaction_id: null,
-      actor_user_id: schoolAdminId,
-      notes: 'Demo seed teacher budget',
-      created_at: ts(1).toJSDate(),
-    })
+    await db
+      .table('institution_credit_entries')
+      .useTransaction(trx)
+      .insert({
+        institution_id: institution.id,
+        entry_type: 'teacher_delegate',
+        amount: 5_000,
+        submission_id: null,
+        token_transaction_id: null,
+        actor_user_id: schoolAdminId,
+        notes: 'Demo seed teacher budget',
+        created_at: ts(1).toJSDate(),
+      })
 
-    await db.table('teacher_credit_entries').useTransaction(trx).insert({
-      institution_id: institution.id,
-      teacher_id: teacherId,
-      entry_type: 'admin_allocate',
-      amount: 5_000,
-      submission_id: null,
-      token_transaction_id: null,
-      actor_user_id: schoolAdminId,
-      notes: 'Demo seed teacher budget',
-      created_at: ts(1).toJSDate(),
-    })
+    await db
+      .table('teacher_credit_entries')
+      .useTransaction(trx)
+      .insert({
+        institution_id: institution.id,
+        teacher_id: teacherId,
+        entry_type: 'admin_allocate',
+        amount: 5_000,
+        submission_id: null,
+        token_transaction_id: null,
+        actor_user_id: schoolAdminId,
+        notes: 'Demo seed teacher budget',
+        created_at: ts(1).toJSDate(),
+      })
 
     const studentIdsByEmail = new Map<string, number>()
     for (const student of DEMO_STUDENTS) {

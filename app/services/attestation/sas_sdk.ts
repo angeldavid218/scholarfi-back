@@ -20,7 +20,7 @@ export {
   type Schema,
 } from 'sas-lib'
 
-import { deriveSchemaPda } from 'sas-lib'
+import { type deriveSchemaPda } from 'sas-lib'
 
 const requireFromApp = createRequire(import.meta.url)
 const requireFromSas = createRequire(requireFromApp.resolve('sas-lib/package.json'))

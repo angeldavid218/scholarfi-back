@@ -82,7 +82,10 @@ test.group('Account profile', (group) => {
     assert.deepEqual(payload.roles.sort(), ['school_admin', 'teacher'])
   })
 
-  test('authenticated user can change password with current password', async ({ client, assert }) => {
+  test('authenticated user can change password with current password', async ({
+    client,
+    assert,
+  }) => {
     const user = await User.create({
       email: 'change-password-user@example.com',
       password: 'Secret123!',

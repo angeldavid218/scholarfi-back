@@ -1,4 +1,7 @@
-import { loadPartnerDocPage, listPartnerDocPages } from '#services/partner_docs/partner_docs_service'
+import {
+  loadPartnerDocPage,
+  listPartnerDocPages,
+} from '#services/partner_docs/partner_docs_service'
 import { test } from '@japa/runner'
 
 test.group('Partner docs service', () => {

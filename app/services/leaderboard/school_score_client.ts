@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import {
-  Connection,
+  type Connection,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -101,7 +101,10 @@ export function configPda(programId: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync([Buffer.from('config')], programId)
 }
 
-export function schoolPda(programId: PublicKey, institutionId: bigint | number): [PublicKey, number] {
+export function schoolPda(
+  programId: PublicKey,
+  institutionId: bigint | number
+): [PublicKey, number] {
   const buf = Buffer.alloc(8)
   buf.writeBigUInt64LE(BigInt(institutionId))
   return PublicKey.findProgramAddressSync([Buffer.from('school'), buf], programId)

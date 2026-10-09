@@ -123,7 +123,9 @@ test.group('School groups and CSV import', (group) => {
     client,
     assert,
   }) => {
-    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: false })
+    const institutionId = await createInstitution(String(Date.now()), {
+      cryptoWalletsEnabled: false,
+    })
 
     const teacher = await User.create({
       email: `teacher-provision-off-${Date.now()}@example.com`,
@@ -171,7 +173,9 @@ test.group('School groups and CSV import', (group) => {
   })
 
   test('teacher imports CSV and creates wallet when crypto enabled', async ({ client, assert }) => {
-    const institutionId = await createInstitution(String(Date.now()), { cryptoWalletsEnabled: true })
+    const institutionId = await createInstitution(String(Date.now()), {
+      cryptoWalletsEnabled: true,
+    })
 
     const teacher = await User.create({
       email: `teacher-provision-${Date.now()}@example.com`,

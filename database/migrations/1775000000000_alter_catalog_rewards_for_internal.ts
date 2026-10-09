@@ -5,7 +5,10 @@ export default class extends BaseSchema {
     this.schema.alterTable('catalog_rewards', (table) => {
       table.boolean('is_active').notNullable().defaultTo(true)
       table.string('source', 32).notNullable().defaultTo('internal')
-      table.index(['institution_id', 'is_active', 'source'], 'catalog_rewards_institution_active_source_idx')
+      table.index(
+        ['institution_id', 'is_active', 'source'],
+        'catalog_rewards_institution_active_source_idx'
+      )
     })
   }
 

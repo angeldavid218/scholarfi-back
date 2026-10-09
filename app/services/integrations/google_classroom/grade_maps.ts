@@ -35,8 +35,10 @@ export function isLikelyClassroomNumericUserId(userId: string): boolean {
 export function resolveSubmissionGrade(
   submission: GoogleClassroomStudentSubmission
 ): number | null {
-  if (submission.assignedGrade != null) return submission.assignedGrade
-  if (submission.draftGrade != null) return submission.draftGrade
+  if (submission.assignedGrade !== null && submission.assignedGrade !== undefined)
+    return submission.assignedGrade
+  if (submission.draftGrade !== null && submission.draftGrade !== undefined)
+    return submission.draftGrade
   return null
 }
 

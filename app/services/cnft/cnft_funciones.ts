@@ -138,8 +138,7 @@ async function obtenerAssetConProof(
     try {
       return await pedirProof(opts.umiRespaldo, id)
     } catch {
-      const msg =
-        errorPrincipal instanceof Error ? errorPrincipal.message : String(errorPrincipal)
+      const msg = errorPrincipal instanceof Error ? errorPrincipal.message : String(errorPrincipal)
       throw new Error(`${msg} El proveedor de respaldo tampoco sirvió el proof.`)
     }
   }

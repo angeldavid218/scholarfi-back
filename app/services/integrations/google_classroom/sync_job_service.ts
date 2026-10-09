@@ -2,9 +2,7 @@ import SyncClassroomTaskJob from '#jobs/sync_classroom_task_job'
 import googleClassroomConfig from '#config/google_classroom'
 import ClassroomSyncRun from '#models/classroom_sync_run'
 import Task from '#models/task'
-import {
-  gcLogInfo,
-} from '#services/integrations/google_classroom/logger'
+import { gcLogInfo } from '#services/integrations/google_classroom/logger'
 import { unknownErrorMessage } from '#services/integrations/google_classroom/classroom_http'
 import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
 import {
@@ -48,15 +46,19 @@ export async function enqueueClassroomSyncTask(input: {
     .first()
 
   if (existing) {
-    gcLogInfo('Classroom sync enqueue deduped', {
-      requestId: input.requestId,
-      taskId: input.taskId,
-      teacherId: input.teacherId,
-      institutionId: input.institutionId,
-    }, {
-      runId: existing.id,
-      status: existing.status,
-    })
+    gcLogInfo(
+      'Classroom sync enqueue deduped',
+      {
+        requestId: input.requestId,
+        taskId: input.taskId,
+        teacherId: input.teacherId,
+        institutionId: input.institutionId,
+      },
+      {
+        runId: existing.id,
+        status: existing.status,
+      }
+    )
     return {
       runId: existing.id,
       taskId: input.taskId,
@@ -76,18 +78,23 @@ export async function enqueueClassroomSyncTask(input: {
     requestId: input.requestId ?? null,
   })
 
-  const queueDriver = env.get('QUEUE_DRIVER') ?? (env.get('NODE_ENV') === 'test' ? 'sync' : 'database')
+  const queueDriver =
+    env.get('QUEUE_DRIVER') ?? (env.get('NODE_ENV') === 'test' ? 'sync' : 'database')
 
-  gcLogInfo('Classroom sync enqueued', {
-    requestId: input.requestId,
-    taskId: input.taskId,
-    teacherId: input.teacherId,
-    institutionId: input.institutionId,
-  }, {
-    runId: run.id,
-    driver: queueDriver,
-    mockMode: googleClassroomConfig.mockMode,
-  })
+  gcLogInfo(
+    'Classroom sync enqueued',
+    {
+      requestId: input.requestId,
+      taskId: input.taskId,
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+    },
+    {
+      runId: run.id,
+      driver: queueDriver,
+      mockMode: googleClassroomConfig.mockMode,
+    }
+  )
 
   // Mock fixtures live in this API process. Running inline avoids a stale
   // `queue:work` worker that still has old demo student emails (no_grade for everyone).

@@ -1,9 +1,6 @@
 import googleClassroomConfig, { assertGoogleClassroomConfig } from '#config/google_classroom'
 import ClassroomSyncRun from '#models/classroom_sync_run'
-import {
-  gcLogError,
-  gcLogInfo,
-} from '#services/integrations/google_classroom/logger'
+import { gcLogError, gcLogInfo } from '#services/integrations/google_classroom/logger'
 import {
   listGoogleClassroomCourseWork,
   listGoogleClassroomCourses,
@@ -53,7 +50,7 @@ export default class GoogleClassroomController {
   async connect({ auth, response, request }: HttpContext) {
     const user = auth.getUserOrFail()
     const institutionId = requireInstitutionId(user, { request, response })
-    if (institutionId == null) return
+    if (institutionId === null) return
 
     if (googleClassroomConfig.mockMode) {
       try {
@@ -188,7 +185,7 @@ export default class GoogleClassroomController {
   async syncStudents({ auth, response, request }: HttpContext) {
     const user = auth.getUserOrFail()
     const institutionId = requireInstitutionId(user, { request, response })
-    if (institutionId == null) return
+    if (institutionId === null) return
 
     const refreshToken = await requireClassroomRefreshToken(
       user.id,
@@ -228,7 +225,7 @@ export default class GoogleClassroomController {
     const payload = await request.validateUsing(createTaskFromClassroomValidator)
     const user = auth.getUserOrFail()
     const institutionId = requireInstitutionId(user, { request, response })
-    if (institutionId == null) return
+    if (institutionId === null) return
 
     try {
       const task = await importTaskFromClassroom({
@@ -303,7 +300,7 @@ export default class GoogleClassroomController {
   async syncTask({ auth, request, response, params }: HttpContext) {
     const user = auth.getUserOrFail()
     const institutionId = requireInstitutionId(user, { request, response })
-    if (institutionId == null) return
+    if (institutionId === null) return
 
     const taskId = Number(params.id)
     if (!Number.isFinite(taskId)) {
@@ -363,7 +360,7 @@ export default class GoogleClassroomController {
   async showSyncRun({ auth, request, response, params }: HttpContext) {
     const user = auth.getUserOrFail()
     const institutionId = requireInstitutionId(user, { request, response })
-    if (institutionId == null) return
+    if (institutionId === null) return
 
     const runId = Number(params.runId)
     if (!Number.isFinite(runId)) {
@@ -398,7 +395,7 @@ export default class GoogleClassroomController {
   async syncAll({ auth, request, response }: HttpContext) {
     const user = auth.getUserOrFail()
     const institutionId = requireInstitutionId(user, { request, response })
-    if (institutionId == null) return
+    if (institutionId === null) return
 
     try {
       gcLogInfo('Classroom sync-all HTTP enqueue received', {

@@ -5,9 +5,7 @@ import {
   getTeacherCreditPoolSummary,
   listTeacherCreditPoolsForInstitution,
 } from '#services/credits/teacher_credit_pool_service'
-import {
-  InsufficientInstitutionBudgetToAssignError,
-} from '#services/credits/types'
+import { InsufficientInstitutionBudgetToAssignError } from '#services/credits/types'
 import {
   allocateEqualTeacherCreditsValidator,
   allocateTeacherCreditsValidator,
@@ -103,7 +101,10 @@ export default class TeacherCreditsController {
           },
         })
       }
-      if (error instanceof Error && error.message === 'Total amount too small to split among teachers') {
+      if (
+        error instanceof Error &&
+        error.message === 'Total amount too small to split among teachers'
+      ) {
         return response.unprocessableEntity({
           error: {
             code: 'ALLOCATION_TOO_SMALL',

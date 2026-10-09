@@ -2,10 +2,7 @@ import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
 export type DbTransaction = TransactionClientContract
 
-export type InstitutionCreditEntryType =
-  | 'platform_allocate'
-  | 'reward_issue'
-  | 'teacher_delegate'
+export type InstitutionCreditEntryType = 'platform_allocate' | 'reward_issue' | 'teacher_delegate'
 
 export type TeacherCreditEntryType = 'admin_allocate' | 'reward_issue'
 
@@ -97,9 +94,7 @@ export class InsufficientInstitutionCreditsError extends Error {
     readonly requested: number,
     readonly remaining: number
   ) {
-    super(
-      `Institution ${institutionId} has ${remaining} credits remaining; ${requested} requested`
-    )
+    super(`Institution ${institutionId} has ${remaining} credits remaining; ${requested} requested`)
     this.name = 'InsufficientInstitutionCreditsError'
   }
 }

@@ -203,10 +203,7 @@ test.group('Student registration via matrícula', (group) => {
     assert.equal(body.error.code, 'ACCOUNT_PENDING_REGISTRATION')
   })
 
-  test('CSV import rejects duplicate matrícula in same institution', async ({
-    client,
-    assert,
-  }) => {
+  test('CSV import rejects duplicate matrícula in same institution', async ({ client, assert }) => {
     const institutionId = await createInstitution(`dup-${Date.now()}`)
 
     const teacher = await User.create({

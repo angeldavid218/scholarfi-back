@@ -340,8 +340,7 @@ export async function createAchievementAttestation(params: {
   const schema = await fetchSchemaAccount(params.connection, params.schemaPda)
   const dataBytes = serializeAttestationData(schema, params.data as Record<string, unknown>)
   const expiry =
-    params.expiryUnix ??
-    Math.floor(Date.now() / 1000) + getSasExpiryDays() * 24 * 60 * 60
+    params.expiryUnix ?? Math.floor(Date.now() / 1000) + getSasExpiryDays() * 24 * 60 * 60
 
   const signer = await toTransactionSigner(params.authorizedSigner)
   const ix = asKitInstruction(
@@ -470,8 +469,7 @@ export async function createMilestoneAttestation(params: {
   const schema = await fetchSchemaAccount(params.connection, params.schemaPda)
   const dataBytes = serializeAttestationData(schema, params.data as Record<string, unknown>)
   const expiry =
-    params.expiryUnix ??
-    Math.floor(Date.now() / 1000) + getSasExpiryDays() * 24 * 60 * 60
+    params.expiryUnix ?? Math.floor(Date.now() / 1000) + getSasExpiryDays() * 24 * 60 * 60
 
   const signer = await toTransactionSigner(params.authorizedSigner)
   const ix = asKitInstruction(

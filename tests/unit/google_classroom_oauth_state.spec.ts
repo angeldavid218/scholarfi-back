@@ -1,4 +1,7 @@
-import { signOAuthState, verifyOAuthState } from '#services/integrations/google_classroom/oauth_state'
+import {
+  signOAuthState,
+  verifyOAuthState,
+} from '#services/integrations/google_classroom/oauth_state'
 import { test } from '@japa/runner'
 
 test.group('Google Classroom OAuth state', () => {

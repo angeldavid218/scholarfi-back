@@ -11,7 +11,10 @@ import {
   resolveSchemaPda,
 } from '#services/attestation/sas_attestation_client'
 import { hashToHex, submissionHash, taskHash } from '#services/attestation/hashes'
-import { getActiveSeasonId, recordScoreForSubmission } from '#services/leaderboard/leaderboard_score_service'
+import {
+  getActiveSeasonId,
+  recordScoreForSubmission,
+} from '#services/leaderboard/leaderboard_score_service'
 
 export default class SasAttest extends BaseCommand {
   static commandName = 'sas:attest'
@@ -130,7 +133,9 @@ export default class SasAttest extends BaseCommand {
         this.logger.success(`record_score: ${scored.signature}`)
       }
       this.logger.info(`SchoolBoard: ${explorerAddressUrl(scored.schoolBoardPda)}`)
-      this.logger.info(`ProcessedAchievement: ${explorerAddressUrl(scored.processedAchievementPda)}`)
+      this.logger.info(
+        `ProcessedAchievement: ${explorerAddressUrl(scored.processedAchievementPda)}`
+      )
       if (scored.signature) this.logger.info(`leaderboard tx: ${explorerTxUrl(scored.signature)}`)
     }
   }

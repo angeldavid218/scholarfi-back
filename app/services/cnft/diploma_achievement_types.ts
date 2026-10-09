@@ -10,8 +10,7 @@ export const DIPLOMA_ACHIEVEMENT_TYPES = {
     meritLine:
       'por su destacado desempeño académico, demostrando constancia, dedicación y compromiso con su formación',
     closingLine: 'En reconocimiento a su esfuerzo y excelencia académica.',
-    subtitle:
-      'En reconocimiento a su destacado desempeño, constancia y compromiso académico.',
+    subtitle: 'En reconocimiento a su destacado desempeño, constancia y compromiso académico.',
   },
   progreso_academico: {
     key: 'progreso_academico',
@@ -58,7 +57,8 @@ export const DIPLOMA_ACHIEVEMENT_TYPES = {
 export type DiplomaAchievementTypeKey = keyof typeof DIPLOMA_ACHIEVEMENT_TYPES
 
 /** Ranking #1 outstanding student → Excelencia Académica (MVP). */
-export const OUTSTANDING_STUDENT_ACHIEVEMENT_TYPE: DiplomaAchievementTypeKey = 'excelencia_academica'
+export const OUTSTANDING_STUDENT_ACHIEVEMENT_TYPE: DiplomaAchievementTypeKey =
+  'excelencia_academica'
 
 export function resolveAchievementType(kind: string): DiplomaAchievementTypeKey {
   if (kind in DIPLOMA_ACHIEVEMENT_TYPES) {

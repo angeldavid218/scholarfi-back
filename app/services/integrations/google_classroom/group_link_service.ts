@@ -31,14 +31,11 @@ export async function upsertGoogleClassroomGroup(input: {
       .first()
 
     if (existing) {
-      await trx
-        .from('groups')
-        .where('id', existing.id)
-        .update({
-          name: subjectName,
-          section,
-          updated_at: new Date(),
-        })
+      await trx.from('groups').where('id', existing.id).update({
+        name: subjectName,
+        section,
+        updated_at: new Date(),
+      })
 
       await upsertGroupTeacher(
         {
@@ -65,17 +62,14 @@ export async function upsertGoogleClassroomGroup(input: {
     )
 
     if (existingBySubjectSection) {
-      await trx
-        .from('groups')
-        .where('id', existingBySubjectSection.id)
-        .update({
-          name: subjectName,
-          section,
-          external_source: 'google_classroom',
-          external_id: input.courseId,
-          sync_metadata: classroomGroupSyncMetadata(),
-          updated_at: new Date(),
-        })
+      await trx.from('groups').where('id', existingBySubjectSection.id).update({
+        name: subjectName,
+        section,
+        external_source: 'google_classroom',
+        external_id: input.courseId,
+        sync_metadata: classroomGroupSyncMetadata(),
+        updated_at: new Date(),
+      })
 
       await upsertGroupTeacher(
         {
@@ -218,13 +212,10 @@ export async function persistClassroomUserIdsFromRoster(input: {
       continue
     }
 
-    await db
-      .from('users')
-      .where('id', student.id)
-      .update({
-        google_classroom_user_id: googleUserId,
-        updated_at: new Date(),
-      })
+    await db.from('users').where('id', student.id).update({
+      google_classroom_user_id: googleUserId,
+      updated_at: new Date(),
+    })
     result.linked += 1
   }
 

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair, type PublicKey } from '@solana/web3.js'
 
 /** Canonical 32-byte hash linking off-chain submission ↔ SAS ↔ leaderboard. */
 export function submissionHash(submissionId: number | string): Buffer {

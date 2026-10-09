@@ -10,12 +10,12 @@ export type PartnerDocPage = {
 }
 
 const PAGE_TITLES: Record<string, string> = {
-  index: 'Overview',
-  authentication: 'Authentication',
+  'index': 'Overview',
+  'authentication': 'Authentication',
   'onboarding-flow': 'Onboarding flow',
-  institutions: 'Institutions',
-  users: 'Users',
-  wallets: 'Wallets',
+  'institutions': 'Institutions',
+  'users': 'Users',
+  'wallets': 'Wallets',
   'groups-and-roster': 'Groups and roster',
   'extended-capabilities': 'Extended capabilities',
   'errors-and-limits': 'Errors and limits',
@@ -98,9 +98,7 @@ export function renderPartnerDocsLayout(input: {
     ? `<form method="post" action="/partner/docs/logout" class="logout"><button type="submit">Log out</button></form>`
     : ''
 
-  const error = input.errorMessage
-    ? `<p class="error">${escapeHtml(input.errorMessage)}</p>`
-    : ''
+  const error = input.errorMessage ? `<p class="error">${escapeHtml(input.errorMessage)}</p>` : ''
 
   return `<!doctype html>
 <html lang="en">

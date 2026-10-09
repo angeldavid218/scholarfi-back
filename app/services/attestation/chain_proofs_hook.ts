@@ -69,8 +69,7 @@ export async function maybeRecordLeaderboardAfterMint(
       proof.schoolBoardPda = scored.schoolBoardPda
       proof.processedAchievementPda = scored.processedAchievementPda
       proof.studentScorePda = scored.studentScorePda
-      proof.leaderboardSignature =
-        scored.signature ?? (scored.alreadyProcessed ? 'existing' : null)
+      proof.leaderboardSignature = scored.signature ?? (scored.alreadyProcessed ? 'existing' : null)
       proof.status = proof.leaderboardSignature ? 'scored' : 'failed'
       proof.errorMessage = null
     } catch (error) {
