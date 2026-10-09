@@ -6,24 +6,28 @@ import { seedInstitutionCredits } from '../helpers/institution_credits.js'
 import { test } from '@japa/runner'
 
 async function ensureRole(roleKey: string, roleLabel: string) {
-  // Use ON CONFLICT DO NOTHING to avoid transaction-aborting errors in test transactions
-  const result = (await db.raw(
+  // Check if role exists first
+  const existingRole = await db.from('roles').where('key', roleKey).first()
+  if (existingRole) return existingRole.id as number
+
+  // Use INSERT ... ON CONFLICT to handle race conditions without transaction abort
+  // Note: This uses PostgreSQL-specific syntax
+  const result = await db.raw(
     `INSERT INTO roles (key, label, created_at, updated_at)
      VALUES (?, ?, ?, ?)
-     ON CONFLICT (key) DO NOTHING
+     ON CONFLICT (key) DO UPDATE SET key = EXCLUDED.key
      RETURNING id`,
     [roleKey, roleLabel, new Date(), null]
-  )) as any
+  )
 
-  if (result.rows && result.rows.length > 0) {
-    const created = result.rows[0] as { id: number } | number
-    return typeof created === 'number' ? created : created.id
+  // Access the result rows (type assertion needed for Knex raw queries)
+  const rows = (result as any).rows
+  if (rows && rows.length > 0) {
+    const created = rows[0] as { id: number }
+    return created.id
   }
 
-  // Role already existed, fetch it
-  const role = await db.from('roles').where('key', roleKey).first()
-  if (!role) throw new Error(`Role ${roleKey} not found after ON CONFLICT`)
-  return role.id as number
+  throw new Error(`Failed to create or fetch role ${roleKey}`)
 }
 
 async function assignRoleToUser(userId: number, roleKey: string, roleLabel: string) {
