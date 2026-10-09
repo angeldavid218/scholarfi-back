@@ -8,17 +8,27 @@ import { test } from '@japa/runner'
 async function ensureRole(roleKey: string, roleLabel: string) {
   const existingRole = await db.from('roles').where('key', roleKey).first()
   if (existingRole) return existingRole.id as number
-  const inserted = await db
-    .table('roles')
-    .insert({
-      key: roleKey,
-      label: roleLabel,
-      created_at: new Date(),
-      updated_at: null,
-    })
-    .returning('id')
-  const created = inserted[0] as { id: number } | number
-  return typeof created === 'number' ? created : created.id
+
+  try {
+    const inserted = await db
+      .table('roles')
+      .insert({
+        key: roleKey,
+        label: roleLabel,
+        created_at: new Date(),
+        updated_at: null,
+      })
+      .returning('id')
+    const created = inserted[0] as { id: number } | number
+    return typeof created === 'number' ? created : created.id
+  } catch (error: any) {
+    // Handle race condition: another test might have inserted the role between our check and insert
+    if (error.code === '23505' && error.constraint === 'roles_key_unique') {
+      const role = await db.from('roles').where('key', roleKey).first()
+      if (role) return role.id as number
+    }
+    throw error
+  }
 }
 
 async function assignRoleToUser(userId: number, roleKey: string, roleLabel: string) {
