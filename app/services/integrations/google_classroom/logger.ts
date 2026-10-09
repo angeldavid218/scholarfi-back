@@ -2,7 +2,7 @@ import logger from '@adonisjs/core/services/logger'
 
 const INTEGRATION = 'google_classroom'
 
-export type GoogleClassroomLogContext = {
+export interface GoogleClassroomLogContext {
   requestId?: string | null
   syncRunId?: string
   taskId?: number
@@ -25,35 +25,30 @@ function bindings(ctx: GoogleClassroomLogContext): Record<string, unknown> {
   }
 }
 
-export function gcLogInfo(message: string, ctx: GoogleClassroomLogContext, data?: Record<string, unknown>) {
-  logger.info({ ...bindings(ctx), ...data }, message)
+export function gcLogInfo(message: string, ctx: GoogleClassroomLogContext, data?: object) {
+  logger.info({ ...bindings(ctx), ...(data as Record<string, unknown> | undefined) }, message)
 }
 
-export function gcLogDebug(message: string, ctx: GoogleClassroomLogContext, data?: Record<string, unknown>) {
-  logger.debug({ ...bindings(ctx), ...data }, message)
+export function gcLogDebug(message: string, ctx: GoogleClassroomLogContext, data?: object) {
+  logger.debug({ ...bindings(ctx), ...(data as Record<string, unknown> | undefined) }, message)
 }
 
-export function gcLogWarn(message: string, ctx: GoogleClassroomLogContext, data?: Record<string, unknown>) {
-  logger.warn({ ...bindings(ctx), ...data }, message)
+export function gcLogWarn(message: string, ctx: GoogleClassroomLogContext, data?: object) {
+  logger.warn({ ...bindings(ctx), ...(data as Record<string, unknown> | undefined) }, message)
 }
 
 export function gcLogError(
   message: string,
   ctx: GoogleClassroomLogContext,
   error: unknown,
-  data?: Record<string, unknown>
+  data?: object
 ) {
   logger.error(
     {
       ...bindings(ctx),
-      ...data,
+      ...(data as Record<string, unknown> | undefined),
       err: error instanceof Error ? { message: error.message, stack: error.stack } : error,
     },
     message
   )
-}
-
-/** True when Classroom returns a numeric user id instead of an email. */
-export function isLikelyClassroomNumericUserId(userId: string): boolean {
-  return /^\d+$/.test(userId.trim())
 }

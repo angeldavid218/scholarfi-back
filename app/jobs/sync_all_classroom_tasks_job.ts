@@ -6,7 +6,7 @@ import {
 import { Job } from '@adonisjs/queue'
 import type { JobOptions } from '@adonisjs/queue/types'
 
-export type SyncAllClassroomTasksJobPayload = {
+export interface SyncAllClassroomTasksJobPayload {
   requestId?: string
 }
 

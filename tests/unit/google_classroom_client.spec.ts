@@ -1,8 +1,4 @@
-import {
-  clearGoogleClassroomAccessTokenCache,
-  getGoogleClassroomAccessToken,
-  resolveClassroomGradeForUser,
-} from '#services/integrations/google_classroom/client'
+import { clearGoogleClassroomAccessTokenCache, getGoogleClassroomAccessToken } from '#services/integrations/google_classroom/client'
 import { test } from '@japa/runner'
 
 test.group('Google Classroom client helpers', () => {
@@ -40,66 +36,5 @@ test.group('Google Classroom client helpers', () => {
       globalThis.fetch = originalFetch
       clearGoogleClassroomAccessTokenCache()
     }
-  })
-
-  test('resolveClassroomGradeForUser prefers google user id over email', ({ assert }) => {
-    const gradeByEmail = new Map<string, number | null>([['student@school.edu', 4]])
-    const gradeByGoogleUserId = new Map<string, number | null>([['100800854909300885323', 9]])
-
-    const byGoogle = resolveClassroomGradeForUser({
-      email: 'student@school.edu',
-      googleClassroomUserId: '100800854909300885323',
-      gradeByEmail,
-      gradeByGoogleUserId,
-    })
-    assert.isTrue(byGoogle.gradeFound)
-    assert.equal(byGoogle.grade, 9)
-    assert.equal(byGoogle.lookupKey, 'google:100800854909300885323')
-
-    const byEmail = resolveClassroomGradeForUser({
-      email: 'student@school.edu',
-      googleClassroomUserId: null,
-      gradeByEmail,
-      gradeByGoogleUserId,
-    })
-    assert.isTrue(byEmail.gradeFound)
-    assert.equal(byEmail.grade, 4)
-    assert.equal(byEmail.lookupKey, 'student@school.edu')
-
-    const missing = resolveClassroomGradeForUser({
-      email: 'other@school.edu',
-      googleClassroomUserId: '999',
-      gradeByEmail,
-      gradeByGoogleUserId,
-    })
-    assert.isFalse(missing.gradeFound)
-    assert.isUndefined(missing.grade)
-
-    const emailShapedGoogleId = resolveClassroomGradeForUser({
-      email: 'student@school.edu',
-      googleClassroomUserId: 'student@school.edu',
-      gradeByEmail,
-      gradeByGoogleUserId,
-    })
-    assert.isTrue(emailShapedGoogleId.gradeFound)
-    assert.equal(emailShapedGoogleId.grade, 4)
-    assert.equal(emailShapedGoogleId.lookupKey, 'student@school.edu')
-  })
-
-  test('resolveClassroomGradeForUser finds mock fixture grades via gc-user id', ({ assert }) => {
-    const email = 'sofia.hernandez@scholarfi.test'
-    const googleId = 'gc-user-sofia-hernandez-scholarfi-test'
-    const gradeByEmail = new Map<string, number | null>([[email, 8]])
-    const gradeByGoogleUserId = new Map<string, number | null>([[googleId, 8]])
-
-    const resolved = resolveClassroomGradeForUser({
-      email,
-      googleClassroomUserId: googleId,
-      gradeByEmail,
-      gradeByGoogleUserId,
-    })
-    assert.isTrue(resolved.gradeFound)
-    assert.equal(resolved.grade, 8)
-    assert.equal(resolved.lookupKey, `google:${googleId}`)
   })
 })

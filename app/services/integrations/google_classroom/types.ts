@@ -1,11 +1,11 @@
-export type GoogleClassroomCourse = {
+export interface GoogleClassroomCourse {
   id: string
   name: string
   section: string | null
   courseState: string | null
 }
 
-export type GoogleClassroomCourseWork = {
+export interface GoogleClassroomCourseWork {
   id: string
   title: string
   description: string | null
@@ -15,7 +15,7 @@ export type GoogleClassroomCourseWork = {
   dueTime: string | null
 }
 
-export type GoogleClassroomStudentSubmission = {
+export interface GoogleClassroomStudentSubmission {
   id: string
   userId: string
   state: string | null
@@ -24,25 +24,27 @@ export type GoogleClassroomStudentSubmission = {
   late: boolean
 }
 
-export type GoogleClassroomSyncMetadata = {
+export interface GoogleClassroomSyncSummary {
+  rewarded: number
+  skippedNoSubmission: number
+  skippedLowGrade: number
+  skippedNoGrade: number
+  skippedAlreadyRewarded: number
+  skippedBudgetExhausted: number
+  budgetRemaining: number
+}
+
+export interface GoogleClassroomSyncMetadata {
   courseId: string
   courseWorkId: string
   minGrade: number
   maxPoints: number | null
   rewardMode: 'fifo_until_budget'
   lastSyncAt?: string | null
-  lastSyncSummary?: {
-    rewarded: number
-    skippedNoSubmission: number
-    skippedLowGrade: number
-    skippedNoGrade: number
-    skippedAlreadyRewarded: number
-    skippedBudgetExhausted: number
-    budgetRemaining: number
-  } | null
+  lastSyncSummary?: GoogleClassroomSyncSummary | null
 }
 
-export type GoogleClassroomSyncResult = {
+export interface GoogleClassroomSyncResult {
   taskId: number
   rewarded: number
   skippedNoSubmission: number
@@ -54,7 +56,7 @@ export type GoogleClassroomSyncResult = {
   rewardedSubmissionIds: number[]
 }
 
-export type TeacherIntegrationRow = {
+export interface TeacherIntegrationRow {
   id: number
   teacher_id: number
   institution_id: number
@@ -65,4 +67,16 @@ export type TeacherIntegrationRow = {
   scopes: string
   connected_at: Date
   last_sync_at: Date | null
+}
+
+export interface ClassroomRosterMember {
+  googleUserId: string
+  email: string
+  fullName: string | null
+}
+
+export interface ClassroomGradeMaps {
+  gradeByEmail: Map<string, number | null>
+  gradeByGoogleUserId: Map<string, number | null>
+  emailByUserId: Map<string, string>
 }

@@ -1,8 +1,7 @@
 import googleClassroomConfig from '#config/google_classroom'
 import {
-  CLASSROOM_MOCK_STUDENT_GRADES,
-  listClassroomMockRosterForCourse,
-} from '#fixtures/demo_students'
+  buildGradeMapsFromSubmissions,
+} from '#services/integrations/google_classroom/grade_maps'
 import {
   gcLogDebug,
   gcLogError,
@@ -10,98 +9,134 @@ import {
   gcLogWarn,
   type GoogleClassroomLogContext,
 } from '#services/integrations/google_classroom/logger'
+import {
+  MOCK_COURSES,
+  listClassroomMockRosterForCourse,
+  mockCourseWorkForCourse,
+  mockSubmissionsForCourseWork,
+  mockSubmissionsUsedFallback,
+} from '#services/integrations/google_classroom/mock_data'
 import { refreshGoogleAccessToken } from '#services/integrations/google_classroom/oauth_service'
 import type {
+  ClassroomGradeMaps,
+  ClassroomRosterMember,
   GoogleClassroomCourse,
   GoogleClassroomCourseWork,
   GoogleClassroomStudentSubmission,
 } from '#services/integrations/google_classroom/types'
 
-export { CLASSROOM_MOCK_STUDENT_GRADES } from '#fixtures/demo_students'
+export type { ClassroomGradeMaps, ClassroomRosterMember }
 
 const CLASSROOM_BASE = 'https://classroom.googleapis.com/v1'
 const ACCESS_TOKEN_EXPIRY_SKEW_MS = 60_000
 
-type CachedAccessToken = {
+interface CachedAccessToken {
   accessToken: string
   expiresAtMs: number
 }
 
-const accessTokenCache = new Map<string, CachedAccessToken>()
-
-export type ClassroomGradeMaps = {
-  gradeByEmail: Map<string, number | null>
-  gradeByGoogleUserId: Map<string, number | null>
-  emailByUserId: Map<string, string>
-}
-
-type ClassroomListResponse<T> = {
-  courseWork?: T[]
-  studentSubmissions?: T[]
-  courses?: T[]
-  students?: T[]
+interface ClassroomListResponse {
+  courseWork?: unknown[]
+  studentSubmissions?: unknown[]
+  courses?: unknown[]
+  students?: unknown[]
   nextPageToken?: string
 }
 
+type ClassroomCollectionKey = 'courses' | 'courseWork' | 'studentSubmissions' | 'students'
 
-const MOCK_COURSES: GoogleClassroomCourse[] = [
-  { id: 'gc-course-1', name: 'Matematicas 3A', section: '3A', courseState: 'ACTIVE' },
-]
+const accessTokenCache = new Map<string, CachedAccessToken>()
 
-/** Two published items so import-all + sync-all can unlock the first-5 milestone without a heavy roster. */
-const MOCK_COURSEWORK: Record<string, GoogleClassroomCourseWork[]> = {
-  'gc-course-1': [
-    {
-      id: 'gc-work-1',
-      title: 'Ecuaciones lineales',
-      description: 'Resolver ejercicios del capitulo 4',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: '2026-07-15',
-      dueTime: null,
-    },
-    {
-      id: 'gc-work-2',
-      title: 'Repaso unidad 2',
-      description: 'Actividad de repaso',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: null,
-      dueTime: null,
-    },
-  ],
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
-const MOCK_SUBMISSIONS: Record<string, GoogleClassroomStudentSubmission[]> = Object.fromEntries(
-  ['gc-work-1', 'gc-work-2'].map(
-    (courseWorkId) => [
-      courseWorkId,
-      CLASSROOM_MOCK_STUDENT_GRADES.map((row, index) => ({
-        id: `gc-sub-${courseWorkId}-${index}`,
-        userId: row.email,
-        state: 'TURNED_IN' as const,
-        assignedGrade: row.assignedGrade,
-        draftGrade: null,
-        late: false,
-      })),
-    ]
-  )
-)
+function asOptionalString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null
+}
 
-function mockSubmissionsForCourseWork(courseWorkId: string): GoogleClassroomStudentSubmission[] {
-  const specific = MOCK_SUBMISSIONS[courseWorkId]
-  if (specific && specific.length > 0) {
-    return specific
+function asOptionalNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function asOptionalBoolean(value: unknown): boolean {
+  return Boolean(value)
+}
+
+function formatDueDate(value: unknown): string | null {
+  if (!isRecord(value)) return null
+  const year = asOptionalNumber(value.year)
+  const month = asOptionalNumber(value.month)
+  const day = asOptionalNumber(value.day)
+  if (year == null || month == null || day == null) return null
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function formatDueTime(value: unknown): string | null {
+  if (!isRecord(value)) return null
+  const hours = asOptionalNumber(value.hours)
+  const minutes = asOptionalNumber(value.minutes)
+  if (hours == null || minutes == null) return null
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
+function mapCourse(row: unknown): GoogleClassroomCourse | null {
+  if (!isRecord(row)) return null
+  const id = asOptionalString(row.id)
+  const name = asOptionalString(row.name)
+  if (!id || !name) return null
+  return {
+    id,
+    name,
+    section: asOptionalString(row.section),
+    courseState: asOptionalString(row.courseState),
   }
+}
 
-  return CLASSROOM_MOCK_STUDENT_GRADES.map((row, index) => ({
-    id: `gc-sub-fallback-${courseWorkId}-${index}`,
-    userId: row.email,
-    state: 'TURNED_IN',
-    assignedGrade: row.assignedGrade,
-    draftGrade: null,
-    late: false,
-  }))
+function mapCourseWork(row: unknown): GoogleClassroomCourseWork | null {
+  if (!isRecord(row)) return null
+  const id = asOptionalString(row.id)
+  const title = asOptionalString(row.title)
+  if (!id || !title) return null
+  return {
+    id,
+    title,
+    description: asOptionalString(row.description),
+    maxPoints: asOptionalNumber(row.maxPoints),
+    state: asOptionalString(row.state),
+    dueDate: formatDueDate(row.dueDate),
+    dueTime: formatDueTime(row.dueTime),
+  }
+}
+
+function mapStudentSubmission(row: unknown): GoogleClassroomStudentSubmission | null {
+  if (!isRecord(row)) return null
+  const id = asOptionalString(row.id)
+  const userId = asOptionalString(row.userId)
+  if (!id || !userId) return null
+  return {
+    id,
+    userId,
+    state: asOptionalString(row.state),
+    assignedGrade: asOptionalNumber(row.assignedGrade),
+    draftGrade: asOptionalNumber(row.draftGrade),
+    late: asOptionalBoolean(row.late),
+  }
+}
+
+function mapRosterMember(row: unknown): ClassroomRosterMember | null {
+  if (!isRecord(row)) return null
+  const profile = isRecord(row.profile) ? row.profile : null
+  if (!profile) return null
+  const userId = asOptionalString(profile.id)
+  const email = asOptionalString(profile.emailAddress)
+  if (!userId || !email) return null
+  const name = isRecord(profile.name) ? asOptionalString(profile.name.fullName) : null
+  return {
+    googleUserId: userId,
+    email: email.trim().toLowerCase(),
+    fullName: name?.trim() || null,
+  }
 }
 
 async function classroomFetch<T>(
@@ -137,18 +172,16 @@ async function classroomFetch<T>(
     throw error
   }
 
-  const body = (await response.json()) as T
-  gcLogDebug('Classroom API request succeeded', logCtx ?? {}, { path })
-  return body
+  return (await response.json()) as T
 }
 
-async function listAllPages<TItem>(
+async function listAllPages(
   accessToken: string,
   path: string,
-  collectionKey: 'courses' | 'courseWork' | 'studentSubmissions' | 'students',
+  collectionKey: ClassroomCollectionKey,
   logCtx?: GoogleClassroomLogContext
-): Promise<TItem[]> {
-  const items: TItem[] = []
+): Promise<unknown[]> {
+  const items: unknown[] = []
   let pageToken: string | undefined
   let pageNumber = 0
 
@@ -157,7 +190,7 @@ async function listAllPages<TItem>(
     const query: Record<string, string> = { pageSize: '100' }
     if (pageToken) query.pageToken = pageToken
 
-    const page = await classroomFetch<ClassroomListResponse<TItem>>(accessToken, path, query, logCtx)
+    const page = await classroomFetch<ClassroomListResponse>(accessToken, path, query, logCtx)
     const chunk = page[collectionKey] ?? []
     items.push(...chunk)
     pageToken = page.nextPageToken
@@ -218,21 +251,13 @@ export async function listGoogleClassroomCourses(
   }
 
   const accessToken = await getGoogleClassroomAccessToken(refreshToken)
-  const rows = await listAllPages<{
-    id?: string
-    name?: string
-    section?: string
-    courseState?: string
-  }>(accessToken, '/courses', 'courses')
-
-  return rows
-    .filter((row) => row.id && row.name)
-    .map((row) => ({
-      id: row.id!,
-      name: row.name!,
-      section: row.section ?? null,
-      courseState: row.courseState ?? null,
-    }))
+  const rows = await listAllPages(accessToken, '/courses', 'courses')
+  const courses: GoogleClassroomCourse[] = []
+  for (const row of rows) {
+    const mapped = mapCourse(row)
+    if (mapped) courses.push(mapped)
+  }
+  return courses
 }
 
 export async function listGoogleClassroomCourseWork(
@@ -240,37 +265,21 @@ export async function listGoogleClassroomCourseWork(
   courseId: string
 ): Promise<GoogleClassroomCourseWork[]> {
   if (googleClassroomConfig.mockMode) {
-    return MOCK_COURSEWORK[courseId] ?? []
+    return mockCourseWorkForCourse(courseId)
   }
 
   const accessToken = await getGoogleClassroomAccessToken(refreshToken)
-  const rows = await listAllPages<{
-    id?: string
-    title?: string
-    description?: string
-    maxPoints?: number
-    state?: string
-    dueDate?: { year?: number; month?: number; day?: number }
-    dueTime?: { hours?: number; minutes?: number }
-  }>(accessToken, `/courses/${encodeURIComponent(courseId)}/courseWork`, 'courseWork')
-
-  return rows
-    .filter((row) => row.id && row.title)
-    .map((row) => ({
-      id: row.id!,
-      title: row.title!,
-      description: row.description ?? null,
-      maxPoints: row.maxPoints ?? null,
-      state: row.state ?? null,
-      dueDate:
-        row.dueDate?.year && row.dueDate.month && row.dueDate.day
-          ? `${row.dueDate.year}-${String(row.dueDate.month).padStart(2, '0')}-${String(row.dueDate.day).padStart(2, '0')}`
-          : null,
-      dueTime:
-        row.dueTime?.hours != null && row.dueTime.minutes != null
-          ? `${String(row.dueTime.hours).padStart(2, '0')}:${String(row.dueTime.minutes).padStart(2, '0')}`
-          : null,
-    }))
+  const rows = await listAllPages(
+    accessToken,
+    `/courses/${encodeURIComponent(courseId)}/courseWork`,
+    'courseWork'
+  )
+  const courseWork: GoogleClassroomCourseWork[] = []
+  for (const row of rows) {
+    const mapped = mapCourseWork(row)
+    if (mapped) courseWork.push(mapped)
+  }
+  return courseWork
 }
 
 export async function getGoogleClassroomCourseWork(
@@ -280,12 +289,6 @@ export async function getGoogleClassroomCourseWork(
 ): Promise<GoogleClassroomCourseWork | null> {
   const items = await listGoogleClassroomCourseWork(refreshToken, courseId)
   return items.find((item) => item.id === courseWorkId) ?? null
-}
-
-export type ClassroomRosterMember = {
-  googleUserId: string
-  email: string
-  fullName: string | null
 }
 
 export async function listGoogleClassroomCourseRoster(
@@ -312,25 +315,11 @@ export async function listGoogleClassroomCourseRoster(
 
   gcLogInfo('Listing Classroom course students for roster sync', logCtx ?? {}, { path })
 
-  const rows = await listAllPages<{
-    profile?: {
-      id?: string
-      emailAddress?: string
-      name?: { fullName?: string }
-    }
-  }>(accessToken, path, 'students', logCtx)
-
+  const rows = await listAllPages(accessToken, path, 'students', logCtx)
   const members: ClassroomRosterMember[] = []
   for (const row of rows) {
-    const userId = row.profile?.id
-    const email = row.profile?.emailAddress
-    if (!userId || !email) continue
-    const fullName = row.profile?.name?.fullName?.trim() || null
-    members.push({
-      googleUserId: userId,
-      email: email.trim().toLowerCase(),
-      fullName,
-    })
+    const mapped = mapRosterMember(row)
+    if (mapped) members.push(mapped)
   }
 
   gcLogInfo('Classroom course roster resolved', logCtx ?? {}, {
@@ -342,96 +331,6 @@ export async function listGoogleClassroomCourseRoster(
   return members
 }
 
-export async function listGoogleClassroomCourseStudentEmails(
-  refreshToken: string,
-  courseId: string,
-  logCtx?: GoogleClassroomLogContext
-): Promise<Map<string, string>> {
-  const roster = await listGoogleClassroomCourseRoster(refreshToken, courseId, logCtx)
-  const emailByUserId = new Map<string, string>()
-  for (const member of roster) {
-    emailByUserId.set(member.googleUserId, member.email)
-  }
-  return emailByUserId
-}
-
-export async function buildClassroomGradeMaps(input: {
-  refreshToken: string
-  courseId: string
-  courseWorkId: string
-  logCtx?: GoogleClassroomLogContext
-}): Promise<ClassroomGradeMaps> {
-  const submissions = await listGoogleClassroomStudentSubmissions(
-    input.refreshToken,
-    input.courseId,
-    input.courseWorkId,
-    input.logCtx
-  )
-
-  const gradeByEmail = new Map<string, number | null>()
-  const gradeByGoogleUserId = new Map<string, number | null>()
-  const emailByUserId = new Map<string, string>()
-
-  if (googleClassroomConfig.mockMode) {
-    for (const submission of submissions) {
-      const grade = resolveSubmissionGrade(submission)
-      const key = normalizeClassroomUserKey(submission.userId)
-      // Mock submissions use email as userId — grades are keyed by email only.
-      gradeByEmail.set(key, grade)
-    }
-
-    // After "Sincronizar estudiantes", users store mock google_classroom_user_id
-    // (gc-user-...). Index the same grades by that id so reward sync still matches.
-    // Do not put emails into emailByUserId — persist treats keys as Google profile ids.
-    for (const member of listClassroomMockRosterForCourse(input.courseId)) {
-      const email = member.email.trim().toLowerCase()
-      emailByUserId.set(member.googleUserId, email)
-      if (gradeByEmail.has(email)) {
-        gradeByGoogleUserId.set(member.googleUserId, gradeByEmail.get(email) ?? null)
-      }
-    }
-
-    return { gradeByEmail, gradeByGoogleUserId, emailByUserId }
-  }
-
-  const rosterEmails = await listGoogleClassroomCourseStudentEmails(
-    input.refreshToken,
-    input.courseId,
-    input.logCtx
-  )
-  for (const [userId, email] of rosterEmails) {
-    emailByUserId.set(userId, email)
-  }
-
-  let unresolvedUserIds = 0
-
-  for (const submission of submissions) {
-    const grade = resolveSubmissionGrade(submission)
-    let email: string | undefined
-
-    if (/^\d+$/.test(submission.userId.trim())) {
-      gradeByGoogleUserId.set(submission.userId.trim(), grade)
-      email = emailByUserId.get(submission.userId)
-      if (!email) unresolvedUserIds += 1
-    } else {
-      email = normalizeClassroomUserKey(submission.userId)
-    }
-
-    if (email) {
-      gradeByEmail.set(normalizeClassroomUserKey(email), grade)
-    }
-  }
-
-  if (unresolvedUserIds > 0) {
-    gcLogWarn('Some Classroom submission userIds could not be mapped to email', input.logCtx ?? {}, {
-      unresolvedUserIds,
-      rosterSize: emailByUserId.size,
-    })
-  }
-
-  return { gradeByEmail, gradeByGoogleUserId, emailByUserId }
-}
-
 export async function listGoogleClassroomStudentSubmissions(
   refreshToken: string,
   courseId: string,
@@ -440,12 +339,11 @@ export async function listGoogleClassroomStudentSubmissions(
 ): Promise<GoogleClassroomStudentSubmission[]> {
   if (googleClassroomConfig.mockMode) {
     const mockRows = mockSubmissionsForCourseWork(courseWorkId)
-    const usedFallback = !MOCK_SUBMISSIONS[courseWorkId]?.length
     gcLogInfo('Using mock Classroom student submissions', logCtx ?? {}, {
       courseId,
       courseWorkId,
       count: mockRows.length,
-      usedFallback,
+      usedFallback: mockSubmissionsUsedFallback(courseWorkId),
       fixtureEmails: mockRows.map((row) => row.userId),
     })
     return mockRows
@@ -456,25 +354,12 @@ export async function listGoogleClassroomStudentSubmissions(
 
   gcLogInfo('Listing Classroom student submissions', logCtx ?? {}, { path })
 
-  const rows = await listAllPages<{
-    id?: string
-    userId?: string
-    state?: string
-    assignedGrade?: number
-    draftGrade?: number
-    late?: boolean
-  }>(accessToken, path, 'studentSubmissions', logCtx)
-
-  const mapped = rows
-    .filter((row) => row.id && row.userId)
-    .map((row) => ({
-      id: row.id!,
-      userId: row.userId!,
-      state: row.state ?? null,
-      assignedGrade: row.assignedGrade ?? null,
-      draftGrade: row.draftGrade ?? null,
-      late: Boolean(row.late),
-    }))
+  const rows = await listAllPages(accessToken, path, 'studentSubmissions', logCtx)
+  const mapped: GoogleClassroomStudentSubmission[] = []
+  for (const row of rows) {
+    const item = mapStudentSubmission(row)
+    if (item) mapped.push(item)
+  }
 
   gcLogInfo('Classroom student submissions mapped', logCtx ?? {}, {
     rawCount: rows.length,
@@ -491,39 +376,39 @@ export async function listGoogleClassroomStudentSubmissions(
   return mapped
 }
 
-export function resolveSubmissionGrade(
-  submission: GoogleClassroomStudentSubmission
-): number | null {
-  if (submission.assignedGrade != null) return submission.assignedGrade
-  if (submission.draftGrade != null) return submission.draftGrade
-  return null
-}
+export async function buildClassroomGradeMaps(input: {
+  refreshToken: string
+  courseId: string
+  courseWorkId: string
+  logCtx?: GoogleClassroomLogContext
+}): Promise<ClassroomGradeMaps> {
+  const submissions = await listGoogleClassroomStudentSubmissions(
+    input.refreshToken,
+    input.courseId,
+    input.courseWorkId,
+    input.logCtx
+  )
 
-/** Normalize GC userId (email or numeric id) to lowercase email when possible. */
-export function normalizeClassroomUserKey(userId: string): string {
-  return userId.trim().toLowerCase()
-}
+  const roster = googleClassroomConfig.mockMode
+    ? listClassroomMockRosterForCourse(input.courseId)
+    : await listGoogleClassroomCourseRoster(input.refreshToken, input.courseId, input.logCtx)
 
-export function resolveClassroomGradeForUser(input: {
-  email: string
-  googleClassroomUserId: string | null
-  gradeByEmail: Map<string, number | null>
-  gradeByGoogleUserId: Map<string, number | null>
-}): { grade: number | null | undefined; gradeFound: boolean; lookupKey: string } {
-  const userKey = input.email.trim().toLowerCase()
-  const googleId = input.googleClassroomUserId?.trim() || null
+  const maps = buildGradeMapsFromSubmissions({
+    submissions,
+    roster,
+    mockMode: googleClassroomConfig.mockMode,
+  })
 
-  if (googleId && !googleId.includes('@') && input.gradeByGoogleUserId.has(googleId)) {
-    return {
-      grade: input.gradeByGoogleUserId.get(googleId),
-      gradeFound: true,
-      lookupKey: `google:${googleId}`,
-    }
+  if (!googleClassroomConfig.mockMode && maps.unresolvedUserIds > 0) {
+    gcLogWarn('Some Classroom submission userIds could not be mapped to email', input.logCtx ?? {}, {
+      unresolvedUserIds: maps.unresolvedUserIds,
+      rosterSize: maps.emailByUserId.size,
+    })
   }
 
   return {
-    grade: input.gradeByEmail.get(userKey),
-    gradeFound: input.gradeByEmail.has(userKey),
-    lookupKey: userKey,
+    gradeByEmail: maps.gradeByEmail,
+    gradeByGoogleUserId: maps.gradeByGoogleUserId,
+    emailByUserId: maps.emailByUserId,
   }
 }

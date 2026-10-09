@@ -5,10 +5,16 @@ import Task from '#models/task'
 import {
   gcLogInfo,
 } from '#services/integrations/google_classroom/logger'
+import { unknownErrorMessage } from '#services/integrations/google_classroom/classroom_http'
 import { syncGoogleClassroomTask } from '#services/integrations/google_classroom/sync_service'
+import {
+  markClassroomSyncRunCompleted,
+  markClassroomSyncRunFailed,
+  markClassroomSyncRunRunning,
+} from '#services/integrations/google_classroom/sync_run_status'
 import env from '#start/env'
 
-export type EnqueueClassroomSyncResult = {
+export interface EnqueueClassroomSyncResult {
   runId: number
   taskId: number
   status: string
@@ -128,10 +134,7 @@ export async function enqueueClassroomSyncTask(input: {
     // Sync adapter (and exhausted retries) may reject after job.failed() updates the run.
     await run.refresh()
     if (run.status === 'queued' || run.status === 'running') {
-      const message = error instanceof Error ? error.message : 'sync_failed'
-      run.status = 'failed'
-      run.errorMessage = message
-      await run.save()
+      await markClassroomSyncRunFailed(run.id, unknownErrorMessage(error, 'sync_failed'))
     }
   }
 
@@ -154,8 +157,7 @@ async function runMockClassroomSync(
     requestId?: string
   }
 ) {
-  run.status = 'running'
-  await run.save()
+  await markClassroomSyncRunRunning(run.id)
 
   try {
     const result = await syncGoogleClassroomTask({
@@ -164,24 +166,9 @@ async function runMockClassroomSync(
       institutionId: input.institutionId,
       requestId: input.requestId,
     })
-    run.status = 'completed'
-    run.resultJson = result
-    run.errorMessage = null
-    await run.save()
-    gcLogInfo(
-      'Classroom mock sync completed inline',
-      {
-        requestId: input.requestId,
-        taskId: input.taskId,
-        teacherId: input.teacherId,
-        institutionId: input.institutionId,
-      },
-      { runId: run.id, rewarded: result.rewarded, budgetRemaining: result.budgetRemaining }
-    )
+    await markClassroomSyncRunCompleted(run.id, result)
   } catch (error) {
-    run.status = 'failed'
-    run.errorMessage = error instanceof Error ? error.message : 'sync_failed'
-    await run.save()
+    await markClassroomSyncRunFailed(run.id, unknownErrorMessage(error, 'sync_failed'))
   }
 }
 

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import env from '#start/env'
 
-export type OAuthStatePayload = {
+export interface OAuthStatePayload {
   teacherId: number
   institutionId: number
   ts: number

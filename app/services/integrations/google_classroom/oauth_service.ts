@@ -11,7 +11,7 @@ const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
-export type GoogleTokenResponse = {
+export interface GoogleTokenResponse {
   access_token: string
   refresh_token?: string
   expires_in: number
@@ -19,7 +19,7 @@ export type GoogleTokenResponse = {
   token_type: string
 }
 
-export type GoogleUserInfo = {
+export interface GoogleUserInfo {
   id: string
   email: string
 }
@@ -46,53 +46,49 @@ export function buildGoogleAuthUrl(input: { teacherId: number; institutionId: nu
   return `${GOOGLE_AUTH_URL}?${params.toString()}`
 }
 
-export async function exchangeGoogleAuthCode(code: string): Promise<GoogleTokenResponse> {
+async function postGoogleToken(
+  params: Record<string, string>,
+  failureLabel: string
+): Promise<GoogleTokenResponse> {
   assertGoogleClassroomConfig()
-
-  const body = new URLSearchParams({
-    code,
-    client_id: googleClassroomConfig.clientId,
-    client_secret: googleClassroomConfig.clientSecret,
-    redirect_uri: googleClassroomConfig.redirectUri,
-    grant_type: 'authorization_code',
-  })
 
   const response = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
+    body: new URLSearchParams(params),
   })
 
   if (!response.ok) {
     const text = await response.text()
-    throw new Error(`Google token exchange failed: ${response.status} ${text}`)
+    throw new Error(`${failureLabel}: ${response.status} ${text}`)
   }
 
   return (await response.json()) as GoogleTokenResponse
 }
 
+export async function exchangeGoogleAuthCode(code: string): Promise<GoogleTokenResponse> {
+  return postGoogleToken(
+    {
+      code,
+      client_id: googleClassroomConfig.clientId,
+      client_secret: googleClassroomConfig.clientSecret,
+      redirect_uri: googleClassroomConfig.redirectUri,
+      grant_type: 'authorization_code',
+    },
+    'Google token exchange failed'
+  )
+}
+
 export async function refreshGoogleAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
-  assertGoogleClassroomConfig()
-
-  const body = new URLSearchParams({
-    client_id: googleClassroomConfig.clientId,
-    client_secret: googleClassroomConfig.clientSecret,
-    refresh_token: refreshToken,
-    grant_type: 'refresh_token',
-  })
-
-  const response = await fetch(GOOGLE_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  })
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Google token refresh failed: ${response.status} ${text}`)
-  }
-
-  return (await response.json()) as GoogleTokenResponse
+  return postGoogleToken(
+    {
+      client_id: googleClassroomConfig.clientId,
+      client_secret: googleClassroomConfig.clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    },
+    'Google token refresh failed'
+  )
 }
 
 export async function fetchGoogleUserInfo(accessToken: string): Promise<GoogleUserInfo> {
@@ -125,7 +121,7 @@ export async function getTeacherIntegration(
   return row ? (row as TeacherIntegrationRow) : null
 }
 
-export type ConnectedClassroomTeacher = {
+export interface ConnectedClassroomTeacher {
   teacherId: number
   institutionId: number
 }
