@@ -4,8 +4,6 @@ export const listClassroomCourseWorkValidator = vine.compile(
   vine.object({
     pageSize: vine
       .number()
-      .min(1)
-      .max(50)
       .optional()
       .transform((value) => {
         if (value === undefined) return value
