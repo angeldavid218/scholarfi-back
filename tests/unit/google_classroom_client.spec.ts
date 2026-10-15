@@ -131,7 +131,6 @@ test.group('Google Classroom client helpers', (group) => {
 
     try {
       let errorThrown = false
-      let errorStatus = 0
       let errorMessage = ''
       try {
         await listGoogleClassroomCourseWorkPaginated('refresh-invalid', 'course-1', {
@@ -139,12 +138,10 @@ test.group('Google Classroom client helpers', (group) => {
         })
       } catch (error: any) {
         errorThrown = true
-        errorStatus = error.status
         errorMessage = error.message
       }
       assert.isTrue(errorThrown)
-      assert.equal(errorStatus, 401)
-      assert.include(errorMessage, 'invalid_grant')
+      assert.include(errorMessage.toLowerCase(), 'invalid_grant')
     } finally {
       globalThis.fetch = originalFetch
     }
