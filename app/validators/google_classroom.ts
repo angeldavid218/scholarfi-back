@@ -2,8 +2,16 @@ import vine from '@vinejs/vine'
 
 export const listClassroomCourseWorkValidator = vine.compile(
   vine.object({
-    pageSize: vine.number().min(1).max(50).optional(),
-    pageToken: vine.string().trim().optional(),
+    pageSize: vine
+      .number()
+      .min(1)
+      .max(50)
+      .optional()
+      .transform((value) => {
+        if (value === undefined) return value
+        return Math.max(1, Math.min(50, value))
+      }),
+    pageToken: vine.string().trim().maxLength(512).optional(),
   })
 )
 
