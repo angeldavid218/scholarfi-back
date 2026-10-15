@@ -68,10 +68,13 @@ test.group('Google Classroom client helpers', (group) => {
         if (callCount === 1) {
           return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
         }
-        return new Response(JSON.stringify({ courseWork: [{ id: 'cw-1', title: 'Test Assignment' }] }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return new Response(
+          JSON.stringify({ courseWork: [{ id: 'cw-1', title: 'Test Assignment' }] }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
       }
       throw new Error(`Unexpected fetch: ${url}`)
     }) as typeof fetch
