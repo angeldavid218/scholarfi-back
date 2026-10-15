@@ -91,7 +91,6 @@ test.group('Google Classroom client helpers', (group) => {
   test('401 error with invalid_grant on refresh returns GOOGLE_TOKEN_EXPIRED', async ({
     assert,
   }) => {
-    let callCount = 0
     const originalFetch = globalThis.fetch
 
     globalThis.fetch = (async (input: string | URL) => {
@@ -103,23 +102,27 @@ test.group('Google Classroom client helpers', (group) => {
         )
       }
       if (url.includes('classroom.googleapis.com')) {
-        callCount += 1
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
       }
       throw new Error(`Unexpected fetch: ${url}`)
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('refresh-invalid', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return error.status === 401 && error.message.includes('invalid_grant')
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      let errorMessage = ''
+      try {
+        await listGoogleClassroomCourseWorkPaginated('refresh-invalid', 'course-1', {
+          pageSize: 10,
+        })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+        errorMessage = error.message
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 401)
+      assert.include(errorMessage, 'invalid_grant')
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -144,16 +147,16 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return error.status === 429
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 429)
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -186,19 +189,19 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return (
-            error.status === 403 &&
-            error.details?.some((d: any) => d.reason === 'rateLimitExceeded')
-          )
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      let hasRateReason = false
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+        hasRateReason = error.details?.some((d: any) => d.reason === 'rateLimitExceeded')
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 403)
+      assert.isTrue(hasRateReason)
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -231,19 +234,19 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return (
-            error.status === 403 &&
-            error.details?.some((d: any) => d.reason === 'userRateLimitExceeded')
-          )
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      let hasUserRateReason = false
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+        hasUserRateReason = error.details?.some((d: any) => d.reason === 'userRateLimitExceeded')
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 403)
+      assert.isTrue(hasUserRateReason)
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -276,18 +279,19 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return (
-            error.status === 403 && error.details?.some((d: any) => d.reason === 'quotaExceeded')
-          )
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      let hasQuotaReason = false
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+        hasQuotaReason = error.details?.some((d: any) => d.reason === 'quotaExceeded')
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 403)
+      assert.isTrue(hasQuotaReason)
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -318,19 +322,20 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return (
-            error.status === 503 ||
-            error.details?.some((d: any) => d.reason === 'RESOURCE_EXHAUSTED')
-          )
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      let hasResourceExhausted = false
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+        hasResourceExhausted =
+          error.status === 503 || error.details?.some((d: any) => d.reason === 'RESOURCE_EXHAUSTED')
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 503)
+      assert.isTrue(hasResourceExhausted)
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -353,16 +358,16 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return error.status === 404
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 404)
     } finally {
       globalThis.fetch = originalFetch
     }
@@ -385,16 +390,16 @@ test.group('Google Classroom client helpers', (group) => {
     }) as typeof fetch
 
     try {
-      await assert.rejects(
-        async () => {
-          await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', {
-            pageSize: 10,
-          })
-        },
-        (error: any) => {
-          return error.status === 403
-        }
-      )
+      let errorThrown = false
+      let errorStatus = 0
+      try {
+        await listGoogleClassroomCourseWorkPaginated('test-refresh', 'course-1', { pageSize: 10 })
+      } catch (error: any) {
+        errorThrown = true
+        errorStatus = error.status
+      }
+      assert.isTrue(errorThrown)
+      assert.equal(errorStatus, 403)
     } finally {
       globalThis.fetch = originalFetch
     }
