@@ -3,9 +3,27 @@ import {
   getGoogleClassroomAccessToken,
   listGoogleClassroomCourseWorkPaginated,
 } from '#services/integrations/google_classroom/client'
+import googleClassroomConfig from '#config/google_classroom'
 import { test } from '@japa/runner'
 
 test.group('Google Classroom client helpers', (group) => {
+  let originalMockMode: boolean
+
+  group.setup(() => {
+    originalMockMode = googleClassroomConfig.mockMode
+    Object.defineProperty(googleClassroomConfig, 'mockMode', {
+      get: () => false,
+      configurable: true,
+    })
+  })
+
+  group.teardown(() => {
+    Object.defineProperty(googleClassroomConfig, 'mockMode', {
+      get: () => originalMockMode,
+      configurable: true,
+    })
+  })
+
   group.each.teardown(() => {
     clearGoogleClassroomAccessTokenCache()
   })
