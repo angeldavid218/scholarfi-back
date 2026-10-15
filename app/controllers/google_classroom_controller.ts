@@ -258,11 +258,20 @@ export default class GoogleClassroomController {
           })
         }
 
-        if (error.status === 400 && pageToken) {
+        if (error.status === 400) {
+          if (pageToken) {
+            return response.badRequest({
+              error: {
+                code: 'INVALID_PAGE_TOKEN',
+                message: 'Invalid page token provided.',
+                requestId: request.id(),
+              },
+            })
+          }
           return response.badRequest({
             error: {
-              code: 'INVALID_PAGE_TOKEN',
-              message: 'Invalid page token provided.',
+              code: 'GOOGLE_CLASSROOM_BAD_REQUEST',
+              message: 'Invalid request to Google Classroom API.',
               requestId: request.id(),
             },
           })
