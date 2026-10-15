@@ -277,8 +277,7 @@ export default class GoogleClassroomController {
             },
           })
         }
-
-        if (error.status === 503 || (error.details?.some((d) => d.reason === 'RESOURCE_EXHAUSTED'))) {
+        if (error.status === 503 || error.details?.some((d) => d.reason === 'RESOURCE_EXHAUSTED')) {
           return response.status(429).json({
             error: {
               code: 'GOOGLE_CLASSROOM_QUOTA_EXCEEDED',

@@ -341,7 +341,7 @@ export async function listGoogleClassroomCourseWorkPaginated(
 
   let accessToken = await getGoogleClassroomAccessToken(refreshToken)
   const path = `/courses/${encodeURIComponent(courseId)}/courseWork`
-  
+
   try {
     const response = await classroomFetch<ClassroomListResponse>(accessToken, path, query)
     const rows = response.courseWork ?? []
