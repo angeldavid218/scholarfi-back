@@ -870,4 +870,137 @@ test.group('Google Classroom connector', (group) => {
     assert.isAtLeast(result.teachers, 2)
     assert.isAtLeast(result.tasks, 2)
   })
+
+  test('coursework pagination returns first page with default page size', async ({
+    client,
+    assert,
+  }) => {
+    const institutionId = await createInstitution('GC-PAGE-1')
+    const teacher = await User.create({
+      email: 'gc-page-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Page Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+
+    const token = await loginToken(client, teacher.email)
+    const response = await client
+      .get('/api/v1/integrations/google-classroom/courses/gc-course-1/coursework')
+      .header('Authorization', `Bearer ${token}`)
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    assert.isArray(body.data)
+    assert.isAtMost(body.data.length, 10)
+    assert.property(body, 'nextPageToken')
+  })
+
+  test('coursework pagination with custom page size', async ({ client, assert }) => {
+    const institutionId = await createInstitution('GC-PAGE-2')
+    const teacher = await User.create({
+      email: 'gc-page-size-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Page Size Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+
+    const token = await loginToken(client, teacher.email)
+    const response = await client
+      .get('/api/v1/integrations/google-classroom/courses/gc-course-1/coursework')
+      .header('Authorization', `Bearer ${token}`)
+      .qs({ pageSize: 1 })
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    assert.isArray(body.data)
+    assert.lengthOf(body.data, 1)
+    assert.isNotNull(body.nextPageToken)
+  })
+
+  test('coursework pagination with page token', async ({ client, assert }) => {
+    const institutionId = await createInstitution('GC-PAGE-3')
+    const teacher = await User.create({
+      email: 'gc-page-token-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Page Token Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+
+    const token = await loginToken(client, teacher.email)
+    const firstResponse = await client
+      .get('/api/v1/integrations/google-classroom/courses/gc-course-1/coursework')
+      .header('Authorization', `Bearer ${token}`)
+      .qs({ pageSize: 1 })
+
+    firstResponse.assertStatus(200)
+    const firstBody = firstResponse.body() as any
+    assert.lengthOf(firstBody.data, 1)
+    const firstId = firstBody.data[0].id
+
+    if (firstBody.nextPageToken) {
+      const secondResponse = await client
+        .get('/api/v1/integrations/google-classroom/courses/gc-course-1/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 1, pageToken: firstBody.nextPageToken })
+
+      secondResponse.assertStatus(200)
+      const secondBody = secondResponse.body() as any
+      assert.lengthOf(secondBody.data, 1)
+      assert.notEqual(secondBody.data[0].id, firstId)
+    }
+  })
+
+  test('coursework pagination last page returns null nextPageToken', async ({ client, assert }) => {
+    const institutionId = await createInstitution('GC-PAGE-4')
+    const teacher = await User.create({
+      email: 'gc-page-last-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Page Last Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+
+    const token = await loginToken(client, teacher.email)
+    const response = await client
+      .get('/api/v1/integrations/google-classroom/courses/gc-course-1/coursework')
+      .header('Authorization', `Bearer ${token}`)
+      .qs({ pageSize: 50 })
+
+    response.assertStatus(200)
+    const body = response.body() as any
+    assert.isArray(body.data)
+    assert.isNull(body.nextPageToken)
+  })
+
+  test('coursework pagination rejects invalid page size', async ({ client }) => {
+    const institutionId = await createInstitution('GC-PAGE-5')
+    const teacher = await User.create({
+      email: 'gc-page-invalid-teacher@example.com',
+      password: 'Secret123!',
+      fullName: 'GC Page Invalid Teacher',
+      institutionId,
+      isActive: true,
+    })
+    await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+    await connectMockClassroom(teacher.id, institutionId)
+
+    const token = await loginToken(client, teacher.email)
+    const response = await client
+      .get('/api/v1/integrations/google-classroom/courses/gc-course-1/coursework')
+      .header('Authorization', `Bearer ${token}`)
+      .qs({ pageSize: 100 })
+
+    response.assertStatus(422)
+  })
 })

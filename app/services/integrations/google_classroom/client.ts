@@ -289,6 +289,58 @@ export async function listGoogleClassroomCourseWork(
   return courseWork
 }
 
+export interface PaginatedCourseWorkResult {
+  courseWork: GoogleClassroomCourseWork[]
+  nextPageToken: string | null
+}
+
+export async function listGoogleClassroomCourseWorkPaginated(
+  refreshToken: string,
+  courseId: string,
+  options?: {
+    pageSize?: number
+    pageToken?: string
+  }
+): Promise<PaginatedCourseWorkResult> {
+  const pageSize = options?.pageSize ?? 10
+  const pageToken = options?.pageToken
+
+  if (googleClassroomConfig.mockMode) {
+    const allWork = mockCourseWorkForCourse(courseId)
+    const start = pageToken ? Number.parseInt(pageToken, 10) : 0
+    const end = start + pageSize
+    const page = allWork.slice(start, end)
+    const next = end < allWork.length ? String(end) : null
+    return { courseWork: page, nextPageToken: next }
+  }
+
+  const accessToken = await getGoogleClassroomAccessToken(refreshToken)
+  const query: Record<string, string> = {
+    pageSize: String(pageSize),
+    orderBy: 'updateTime desc',
+    courseWorkStates: 'PUBLISHED',
+  }
+  if (pageToken) query.pageToken = pageToken
+
+  const response = await classroomFetch<ClassroomListResponse>(
+    accessToken,
+    `/courses/${encodeURIComponent(courseId)}/courseWork`,
+    query
+  )
+
+  const rows = response.courseWork ?? []
+  const courseWork: GoogleClassroomCourseWork[] = []
+  for (const row of rows) {
+    const mapped = mapCourseWork(row)
+    if (mapped) courseWork.push(mapped)
+  }
+
+  return {
+    courseWork,
+    nextPageToken: response.nextPageToken ?? null,
+  }
+}
+
 export async function getGoogleClassroomCourseWork(
   refreshToken: string,
   courseId: string,
