@@ -225,10 +225,11 @@ export default class GoogleClassroomController {
         }
 
         if (error.status === 403) {
-          const hasRateReason = error.details?.some(
-            (d) => d.reason === 'rate' || d.reason === 'userRateLimitExceeded'
-          )
-          if (hasRateReason) {
+          const checkReason = (reason: string) =>
+            error.details?.some((d: any) => d.reason === reason) ||
+            (error as any).errors?.some((e: any) => e.reason === reason)
+
+          if (checkReason('rateLimitExceeded') || checkReason('userRateLimitExceeded')) {
             return response.status(429).json({
               error: {
                 code: 'GOOGLE_CLASSROOM_RATE_LIMITED',
@@ -238,8 +239,7 @@ export default class GoogleClassroomController {
             })
           }
 
-          const hasQuotaReason = error.details?.some((d) => d.reason === 'quotaExceeded')
-          if (hasQuotaReason) {
+          if (checkReason('quotaExceeded')) {
             return response.status(429).json({
               error: {
                 code: 'GOOGLE_CLASSROOM_QUOTA_EXCEEDED',
@@ -286,7 +286,18 @@ export default class GoogleClassroomController {
             },
           })
         }
-        if (error.status === 503 || error.details?.some((d) => d.reason === 'RESOURCE_EXHAUSTED')) {
+
+        if (error.status === 503) {
+          return response.serviceUnavailable({
+            error: {
+              code: 'GOOGLE_CLASSROOM_UNAVAILABLE',
+              message: 'Google Classroom is temporarily unavailable. Please try again later.',
+              requestId: request.id(),
+            },
+          })
+        }
+
+        if (error.message?.includes('RESOURCE_EXHAUSTED')) {
           return response.status(429).json({
             error: {
               code: 'GOOGLE_CLASSROOM_QUOTA_EXCEEDED',
@@ -297,7 +308,6 @@ export default class GoogleClassroomController {
         }
       }
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to list coursework'
       gcLogError(
         'Classroom coursework list failed',
         {
@@ -311,7 +321,7 @@ export default class GoogleClassroomController {
       return response.internalServerError({
         error: {
           code: 'CLASSROOM_COURSEWORK_LIST_FAILED',
-          message: errorMessage,
+          message: 'An unexpected error occurred while listing coursework.',
           requestId: request.id(),
         },
       })

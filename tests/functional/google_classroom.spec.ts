@@ -1113,4 +1113,315 @@ test.group('Google Classroom connector', (group) => {
 
     response.assertStatus(422)
   })
+
+  test.group('Error handling (controller-level)', (errorGroup) => {
+    let originalFetch: typeof globalThis.fetch
+
+    errorGroup.setup(() => {
+      originalFetch = globalThis.fetch
+    })
+
+    errorGroup.teardown(() => {
+      globalThis.fetch = originalFetch
+    })
+
+    test('401 invalid_grant on first refresh returns GOOGLE_TOKEN_EXPIRED', async ({
+      client,
+      assert,
+    }) => {
+      const institutionId = await createInstitution('GC-ERR-401-FIRST')
+      const teacher = await User.create({
+        email: 'gc-err-401-first@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 401 First Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(
+            JSON.stringify({ error: 'invalid_grant', error_description: 'Token expired' }),
+            { status: 400 }
+          )
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(JSON.stringify({ error: { message: 'Unauthorized' } }), {
+            status: 401,
+          })
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(401)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'GOOGLE_TOKEN_EXPIRED')
+      assert.notInclude(body.error.message, 'Classroom API')
+      assert.notInclude(body.error.message, '401')
+    })
+
+    test('403 rateLimitExceeded returns GOOGLE_CLASSROOM_RATE_LIMITED', async ({
+      client,
+      assert,
+    }) => {
+      const institutionId = await createInstitution('GC-ERR-403-RATE')
+      const teacher = await User.create({
+        email: 'gc-err-403-rate@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 403 Rate Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), {
+            status: 200,
+          })
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(
+            JSON.stringify({
+              error: {
+                message: 'Rate limit exceeded',
+                errors: [{ reason: 'rateLimitExceeded' }],
+              },
+            }),
+            { status: 403 }
+          )
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(429)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'GOOGLE_CLASSROOM_RATE_LIMITED')
+    })
+
+    test('403 quotaExceeded returns GOOGLE_CLASSROOM_QUOTA_EXCEEDED', async ({
+      client,
+      assert,
+    }) => {
+      const institutionId = await createInstitution('GC-ERR-403-QUOTA')
+      const teacher = await User.create({
+        email: 'gc-err-403-quota@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 403 Quota Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), {
+            status: 200,
+          })
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(
+            JSON.stringify({
+              error: {
+                message: 'Quota exceeded',
+                details: [{ reason: 'quotaExceeded' }],
+              },
+            }),
+            { status: 403 }
+          )
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(429)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'GOOGLE_CLASSROOM_QUOTA_EXCEEDED')
+    })
+
+    test('429 returns GOOGLE_CLASSROOM_RATE_LIMITED', async ({ client, assert }) => {
+      const institutionId = await createInstitution('GC-ERR-429')
+      const teacher = await User.create({
+        email: 'gc-err-429@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 429 Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), {
+            status: 200,
+          })
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(JSON.stringify({ error: { message: 'Rate limit exceeded' } }), {
+            status: 429,
+          })
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(429)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'GOOGLE_CLASSROOM_RATE_LIMITED')
+    })
+
+    test('503 returns GOOGLE_CLASSROOM_UNAVAILABLE', async ({ client, assert }) => {
+      const institutionId = await createInstitution('GC-ERR-503')
+      const teacher = await User.create({
+        email: 'gc-err-503@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 503 Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), {
+            status: 200,
+          })
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(JSON.stringify({ error: { message: 'Service unavailable' } }), {
+            status: 503,
+          })
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(503)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'GOOGLE_CLASSROOM_UNAVAILABLE')
+    })
+
+    test('404 returns GOOGLE_CLASSROOM_NOT_FOUND', async ({ client, assert }) => {
+      const institutionId = await createInstitution('GC-ERR-404')
+      const teacher = await User.create({
+        email: 'gc-err-404@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 404 Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), {
+            status: 200,
+          })
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(JSON.stringify({ error: { message: 'Not found' } }), { status: 404 })
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(404)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'GOOGLE_CLASSROOM_NOT_FOUND')
+    })
+
+    test('500 fallback returns generic message without Google text', async ({ client, assert }) => {
+      const institutionId = await createInstitution('GC-ERR-500')
+      const teacher = await User.create({
+        email: 'gc-err-500@example.com',
+        password: 'Secret123!',
+        fullName: 'GC Err 500 Teacher',
+        institutionId,
+        isActive: true,
+      })
+      await assignRoleToUser(teacher.id, 'teacher', 'Teacher')
+      await connectMockClassroom(teacher.id, institutionId)
+
+      globalThis.fetch = (async (input: string | URL) => {
+        const url = String(input)
+        if (url.includes('oauth2.googleapis.com/token')) {
+          return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), {
+            status: 200,
+          })
+        }
+        if (url.includes('classroom.googleapis.com')) {
+          return new Response(
+            JSON.stringify({
+              error: {
+                message: 'Internal server error from Google API with sensitive details',
+                code: 500,
+              },
+            }),
+            { status: 500 }
+          )
+        }
+        return originalFetch(input as any)
+      }) as typeof fetch
+
+      const token = await loginToken(client, teacher.email)
+      const response = await client
+        .get('/api/v1/integrations/google-classroom/courses/test-course/coursework')
+        .header('Authorization', `Bearer ${token}`)
+        .qs({ pageSize: 10 })
+
+      response.assertStatus(500)
+      const body = response.body() as any
+      assert.equal(body.error.code, 'CLASSROOM_COURSEWORK_LIST_FAILED')
+      assert.notInclude(body.error.message.toLowerCase(), 'google')
+      assert.notInclude(body.error.message, 'Internal server error from Google API')
+      assert.notInclude(body.error.message, 'sensitive')
+      assert.notInclude(body.error.message, 'Classroom API')
+      assert.notInclude(body.error.message, '500')
+    })
+  })
 })
