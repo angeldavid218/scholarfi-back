@@ -28,6 +28,17 @@ export type { ClassroomGradeMaps, ClassroomRosterMember }
 const CLASSROOM_BASE = 'https://classroom.googleapis.com/v1'
 const ACCESS_TOKEN_EXPIRY_SKEW_MS = 60_000
 
+export class ClassroomApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public details?: Array<{ reason?: string }>
+  ) {
+    super(message)
+    this.name = 'ClassroomApiError'
+  }
+}
+
 interface CachedAccessToken {
   accessToken: string
   expiresAtMs: number
@@ -171,7 +182,20 @@ async function classroomFetch<T>(
 
   if (!response.ok) {
     const text = await response.text()
-    const error = new Error(`Classroom API ${path} failed: ${response.status} ${text}`)
+    let details: Array<{ reason?: string }> | undefined
+    try {
+      const parsed = JSON.parse(text)
+      if (parsed?.error?.details && Array.isArray(parsed.error.details)) {
+        details = parsed.error.details
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    const error = new ClassroomApiError(
+      `Classroom API ${path} failed: ${response.status} ${text}`,
+      response.status,
+      details
+    )
     gcLogError('Classroom API request failed', logCtx ?? {}, error, {
       path,
       status: response.status,
@@ -227,23 +251,17 @@ export async function getGoogleClassroomAccessToken(
   }
 
   gcLogDebug('Refreshing Google access token', logCtx ?? {})
-  try {
-    const tokens = await refreshGoogleAccessToken(refreshToken)
-    const expiresIn = tokens.expires_in ?? 3600
-    accessTokenCache.set(refreshToken, {
-      accessToken: tokens.access_token,
-      expiresAtMs: Date.now() + expiresIn * 1000,
-    })
-    gcLogDebug('Google access token refreshed', logCtx ?? {}, {
-      expiresIn,
-      scopeCount: tokens.scope?.split(' ').length ?? 0,
-    })
-    return tokens.access_token
-  } catch (error) {
-    accessTokenCache.delete(refreshToken)
-    gcLogError('Google access token refresh failed', logCtx ?? {}, error)
-    throw error
-  }
+  const tokens = await refreshGoogleAccessToken(refreshToken)
+  const expiresIn = tokens.expires_in ?? 3600
+  accessTokenCache.set(refreshToken, {
+    accessToken: tokens.access_token,
+    expiresAtMs: Date.now() + expiresIn * 1000,
+  })
+  gcLogDebug('Google access token refreshed', logCtx ?? {}, {
+    expiresIn,
+    scopeCount: tokens.scope?.split(' ').length ?? 0,
+  })
+  return tokens.access_token
 }
 
 export function clearGoogleClassroomAccessTokenCache(): void {
@@ -287,6 +305,85 @@ export async function listGoogleClassroomCourseWork(
     if (mapped) courseWork.push(mapped)
   }
   return courseWork
+}
+
+export interface PaginatedCourseWorkResult {
+  courseWork: GoogleClassroomCourseWork[]
+  nextPageToken: string | null
+}
+
+export async function listGoogleClassroomCourseWorkPaginated(
+  refreshToken: string,
+  courseId: string,
+  options?: {
+    pageSize?: number
+    pageToken?: string
+  }
+): Promise<PaginatedCourseWorkResult> {
+  const pageSize = options?.pageSize ?? 10
+  const pageToken = options?.pageToken
+
+  if (googleClassroomConfig.mockMode) {
+    const allWork = mockCourseWorkForCourse(courseId)
+    const start = pageToken ? Number.parseInt(pageToken, 10) : 0
+    const end = start + pageSize
+    const page = allWork.slice(start, end)
+    const next = end < allWork.length ? String(end) : null
+    return { courseWork: page, nextPageToken: next }
+  }
+
+  const query: Record<string, string> = {
+    pageSize: String(pageSize),
+    orderBy: 'updateTime desc',
+    courseWorkStates: 'PUBLISHED',
+  }
+  if (pageToken) query.pageToken = pageToken
+
+  let accessToken = await getGoogleClassroomAccessToken(refreshToken)
+  const path = `/courses/${encodeURIComponent(courseId)}/courseWork`
+
+  try {
+    const response = await classroomFetch<ClassroomListResponse>(accessToken, path, query)
+    const rows = response.courseWork ?? []
+    const courseWork: GoogleClassroomCourseWork[] = []
+    for (const row of rows) {
+      const mapped = mapCourseWork(row)
+      if (mapped) courseWork.push(mapped)
+    }
+
+    return {
+      courseWork,
+      nextPageToken: response.nextPageToken ?? null,
+    }
+  } catch (error) {
+    if (error instanceof ClassroomApiError && error.status === 401) {
+      accessTokenCache.delete(refreshToken)
+      try {
+        accessToken = await getGoogleClassroomAccessToken(refreshToken)
+        const response = await classroomFetch<ClassroomListResponse>(accessToken, path, query)
+        const rows = response.courseWork ?? []
+        const courseWork: GoogleClassroomCourseWork[] = []
+        for (const row of rows) {
+          const mapped = mapCourseWork(row)
+          if (mapped) courseWork.push(mapped)
+        }
+
+        return {
+          courseWork,
+          nextPageToken: response.nextPageToken ?? null,
+        }
+      } catch (retryError) {
+        if (
+          retryError instanceof Error &&
+          (retryError.message.includes('invalid_grant') || retryError.message.includes('401'))
+        ) {
+          throw new ClassroomApiError('Token refresh failed with invalid_grant', 401)
+        }
+        throw retryError
+      }
+    }
+    throw error
+  }
 }
 
 export async function getGoogleClassroomCourseWork(

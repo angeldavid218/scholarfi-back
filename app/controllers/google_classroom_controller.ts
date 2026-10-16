@@ -2,7 +2,9 @@ import googleClassroomConfig, { assertGoogleClassroomConfig } from '#config/goog
 import ClassroomSyncRun from '#models/classroom_sync_run'
 import { gcLogError, gcLogInfo } from '#services/integrations/google_classroom/logger'
 import {
+  ClassroomApiError,
   listGoogleClassroomCourseWork,
+  listGoogleClassroomCourseWorkPaginated,
   listGoogleClassroomCourses,
 } from '#services/integrations/google_classroom/client'
 import { syncClassroomStudentsForTeacher } from '#services/integrations/google_classroom/student_roster_sync_service'
@@ -169,7 +171,7 @@ export default class GoogleClassroomController {
   }
 
   async listCourseWork({ auth, request, response, params }: HttpContext) {
-    await request.validateUsing(listClassroomCourseWorkValidator)
+    const payload = await request.validateUsing(listClassroomCourseWorkValidator)
     const user = auth.getUserOrFail()
     const refreshToken = await requireClassroomRefreshToken(
       user.id,
@@ -178,8 +180,142 @@ export default class GoogleClassroomController {
     )
     if (!refreshToken) return
 
-    const courseWork = await listGoogleClassroomCourseWork(refreshToken, params.courseId)
-    return { data: courseWork }
+    const hasPageSize = payload.pageSize !== undefined
+    const hasPageToken = payload.pageToken !== undefined
+
+    if (!hasPageSize && !hasPageToken) {
+      const allCourseWork = await listGoogleClassroomCourseWork(refreshToken, params.courseId)
+      return { data: allCourseWork }
+    }
+
+    const pageSize = payload.pageSize ?? 10
+    const pageToken = payload.pageToken
+
+    try {
+      const result = await listGoogleClassroomCourseWorkPaginated(refreshToken, params.courseId, {
+        pageSize,
+        pageToken,
+      })
+      return {
+        data: {
+          items: result.courseWork,
+          nextPageToken: result.nextPageToken ?? null,
+        },
+      }
+    } catch (error) {
+      if (error instanceof ClassroomApiError) {
+        if (error.status === 401) {
+          return response.unauthorized({
+            error: {
+              code: 'GOOGLE_TOKEN_EXPIRED',
+              message: 'Google Classroom access has expired. Please reconnect your account.',
+              requestId: request.id(),
+            },
+          })
+        }
+
+        if (error.status === 429) {
+          return response.status(429).json({
+            error: {
+              code: 'GOOGLE_CLASSROOM_RATE_LIMITED',
+              message: 'Google Classroom API rate limit exceeded. Please try again later.',
+              requestId: request.id(),
+            },
+          })
+        }
+
+        if (error.status === 403) {
+          const hasRateReason = error.details?.some(
+            (d) => d.reason === 'rate' || d.reason === 'userRateLimitExceeded'
+          )
+          if (hasRateReason) {
+            return response.status(429).json({
+              error: {
+                code: 'GOOGLE_CLASSROOM_RATE_LIMITED',
+                message: 'Google Classroom API rate limit exceeded. Please try again later.',
+                requestId: request.id(),
+              },
+            })
+          }
+
+          const hasQuotaReason = error.details?.some((d) => d.reason === 'quotaExceeded')
+          if (hasQuotaReason) {
+            return response.status(429).json({
+              error: {
+                code: 'GOOGLE_CLASSROOM_QUOTA_EXCEEDED',
+                message: 'Google Classroom API quota exceeded. Please try again later.',
+                requestId: request.id(),
+              },
+            })
+          }
+
+          return response.forbidden({
+            error: {
+              code: 'GOOGLE_CLASSROOM_FORBIDDEN',
+              message: 'Access to this Google Classroom resource is forbidden.',
+              requestId: request.id(),
+            },
+          })
+        }
+
+        if (error.status === 400) {
+          if (pageToken) {
+            return response.badRequest({
+              error: {
+                code: 'INVALID_PAGE_TOKEN',
+                message: 'Invalid page token provided.',
+                requestId: request.id(),
+              },
+            })
+          }
+          return response.badRequest({
+            error: {
+              code: 'GOOGLE_CLASSROOM_BAD_REQUEST',
+              message: 'Invalid request to Google Classroom API.',
+              requestId: request.id(),
+            },
+          })
+        }
+
+        if (error.status === 404) {
+          return response.notFound({
+            error: {
+              code: 'GOOGLE_CLASSROOM_NOT_FOUND',
+              message: 'Google Classroom course or resource not found.',
+              requestId: request.id(),
+            },
+          })
+        }
+        if (error.status === 503 || error.details?.some((d) => d.reason === 'RESOURCE_EXHAUSTED')) {
+          return response.status(429).json({
+            error: {
+              code: 'GOOGLE_CLASSROOM_QUOTA_EXCEEDED',
+              message: 'Google Classroom API quota exceeded. Please try again later.',
+              requestId: request.id(),
+            },
+          })
+        }
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Failed to list coursework'
+      gcLogError(
+        'Classroom coursework list failed',
+        {
+          requestId: request.id(),
+          teacherId: user.id,
+          courseId: params.courseId,
+        },
+        error
+      )
+
+      return response.internalServerError({
+        error: {
+          code: 'CLASSROOM_COURSEWORK_LIST_FAILED',
+          message: errorMessage,
+          requestId: request.id(),
+        },
+      })
+    }
   }
 
   async syncStudents({ auth, response, request }: HttpContext) {
