@@ -14,28 +14,52 @@ export const MOCK_COURSES: GoogleClassroomCourse[] = [
   { id: 'gc-course-1', name: 'Matematicas 3A', section: '3A', courseState: 'ACTIVE' },
 ]
 
-/** Two published items so import-all + sync-all can unlock the first-5 milestone without a heavy roster. */
-export const MOCK_COURSEWORK: Record<string, GoogleClassroomCourseWork[]> = {
-  'gc-course-1': [
-    {
-      id: 'gc-work-1',
-      title: 'Ecuaciones lineales',
-      description: 'Resolver ejercicios del capitulo 4',
-      maxPoints: 10,
-      state: 'PUBLISHED',
-      dueDate: '2026-07-15',
-      dueTime: null,
-    },
-    {
-      id: 'gc-work-2',
-      title: 'Repaso unidad 2',
-      description: 'Actividad de repaso',
+const CORE_COURSEWORK: GoogleClassroomCourseWork[] = [
+  {
+    id: 'gc-work-1',
+    title: 'Ecuaciones lineales',
+    description: 'Resolver ejercicios del capitulo 4',
+    maxPoints: 10,
+    state: 'PUBLISHED',
+    dueDate: '2026-07-15',
+    dueTime: null,
+  },
+  {
+    id: 'gc-work-2',
+    title: 'Repaso unidad 2',
+    description: 'Actividad de repaso',
+    maxPoints: 10,
+    state: 'PUBLISHED',
+    dueDate: null,
+    dueTime: null,
+  },
+]
+
+/**
+ * Extra published activities so the teacher Classroom list (page size 15)
+ * has a next page. Ids continue after the two core assignments.
+ */
+const PAGINATION_COURSEWORK_COUNT = 30
+
+const PAGINATION_COURSEWORK: GoogleClassroomCourseWork[] = Array.from(
+  { length: PAGINATION_COURSEWORK_COUNT },
+  (_, index) => {
+    const number = index + CORE_COURSEWORK.length + 1
+    return {
+      id: `gc-work-${number}`,
+      title: `Actividad ${number}`,
+      description: `Ejercicio de practica ${number}`,
       maxPoints: 10,
       state: 'PUBLISHED',
       dueDate: null,
       dueTime: null,
-    },
-  ],
+    }
+  }
+)
+
+/** Core pair stays first so existing import/sync flows still target gc-work-1 and gc-work-2. */
+export const MOCK_COURSEWORK: Record<string, GoogleClassroomCourseWork[]> = {
+  'gc-course-1': [...CORE_COURSEWORK, ...PAGINATION_COURSEWORK],
 }
 
 const MOCK_SUBMISSIONS: Record<string, GoogleClassroomStudentSubmission[]> = Object.fromEntries(
