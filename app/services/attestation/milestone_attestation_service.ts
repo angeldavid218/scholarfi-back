@@ -187,6 +187,9 @@ export async function listMilestoneCandidatesForInstitution(
     let status: MilestoneCandidateView['status'] = 'eligible'
     if (attestationStatus === 'attested' && attestationPda) {
       status = 'attested'
+    } else if (attestationStatus === 'processing') {
+      // Do not map processing to eligible, treat as pending
+      status = 'pending'
     } else if (attestationStatus === 'failed') {
       status = 'failed'
     } else if (attestationStatus === 'pending') {
@@ -428,7 +431,7 @@ export async function attestFirst5ActivitiesForStudent(params: {
     }
   }
 
-  const existing = await StudentAchievementAttestation.query()
+  let existing = await StudentAchievementAttestation.query()
     .where({
       studentId: params.studentId,
       achievementKey,
@@ -448,12 +451,24 @@ export async function attestFirst5ActivitiesForStudent(params: {
     }
   }
 
+  // If record is currently processing, return in-progress status
+  if (existing?.status === 'processing') {
+    return {
+      studentId: params.studentId,
+      institutionId: params.institutionId,
+      achievementKey,
+      title,
+      rewardedCount,
+      status: 'in_progress',
+      errorMessage: 'Attestation is currently being processed',
+    }
+  }
+
   const achHash = achievementHash(achievementKey, params.studentId)
   const achHashHex = hashToHex(achHash)
 
-  const row =
-    existing ??
-    (await StudentAchievementAttestation.create({
+  if (!existing) {
+    existing = await StudentAchievementAttestation.create({
       studentId: params.studentId,
       institutionId: params.institutionId,
       achievementKey,
@@ -461,17 +476,30 @@ export async function attestFirst5ActivitiesForStudent(params: {
       achievementHash: achHashHex,
       status: 'pending',
       attempts: 0,
-    }))
+    })
+  }
 
-  row.achievementHash = achHashHex
-  row.threshold = threshold
-  row.institutionId = params.institutionId
+  // Atomically claim the row for processing
+  const { claimAttestationForProcessing } = await import(
+    '#services/attestation/milestone_attestation_claim_service'
+  )
+  const claimed = await claimAttestationForProcessing(existing.id, 3)
+
+  if (!claimed) {
+    return {
+      studentId: params.studentId,
+      institutionId: params.institutionId,
+      achievementKey,
+      title,
+      rewardedCount,
+      status: 'in_progress',
+      errorMessage: 'Unable to claim record (may be processing or max attempts reached)',
+    }
+  }
+
+  const row = await StudentAchievementAttestation.findOrFail(existing.id)
 
   try {
-    row.status = 'processing'
-    row.attempts = (row.attempts ?? 0) + 1
-    row.lastAttemptAt = DateTime.now()
-    await row.save()
 
     const connection = createSasConnection()
     const signer = loadSasAuthorizedSignerKeypair()
@@ -518,9 +546,15 @@ export async function attestFirst5ActivitiesForStudent(params: {
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    row.status = 'failed'
-    row.errorMessage = msg
-    await row.save()
+    
+    // Only mark as failed if still owned by this attempt (status=processing)
+    await row.refresh()
+    if (row.status === 'processing') {
+      row.status = 'failed'
+      row.errorMessage = msg
+      await row.save()
+    }
+
     logger.error(
       { err: error, studentId: params.studentId, achievementKey },
       'Milestone attestation failed'

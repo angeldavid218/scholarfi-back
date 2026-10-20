@@ -300,6 +300,18 @@ export async function mintOutstandingDiploma(params: {
     return { diploma: preview.existingDiploma, alreadyMinted: true }
   }
 
+  // If existing diploma is processing, return in-progress result
+  if (preview.existingDiploma?.status === 'processing') {
+    return {
+      diploma: {
+        ...preview.existingDiploma,
+        status: 'processing' as any,
+        errorMessage: 'Mint in progress',
+      },
+      alreadyMinted: false,
+    }
+  }
+
   const tokenService = await makeTokenServiceForInstitution(params.institutionId)
   await tokenService.createWallet(String(best.studentId))
   const student = await User.findOrFail(best.studentId)
@@ -315,28 +327,44 @@ export async function mintOutstandingDiploma(params: {
     ? await StudentDiplomaMint.findOrFail(preview.existingDiploma.id)
     : new StudentDiplomaMint()
 
-  row.institutionId = params.institutionId
-  row.studentId = best.studentId
-  row.kind = OUTSTANDING_STUDENT_DIPLOMA_KIND
-  row.rank = best.rank
-  row.points = best.points
-  row.displayName = best.displayName
-  row.status = 'pending'
-  row.errorMessage = null
-  row.merkleTree = tokenConfig.cnftMerkleTree
-  row.attempts = row.attempts ?? 0
-  await row.save()
+  if (!row.id) {
+    row.institutionId = params.institutionId
+    row.studentId = best.studentId
+    row.kind = OUTSTANDING_STUDENT_DIPLOMA_KIND
+    row.rank = best.rank
+    row.points = best.points
+    row.displayName = best.displayName
+    row.status = 'pending'
+    row.errorMessage = null
+    row.merkleTree = tokenConfig.cnftMerkleTree
+    row.attempts = 0
+    await row.save()
 
-  row.metadataUri = diplomaMetadataUri(row.id)
-  await row.save()
+    row.metadataUri = diplomaMetadataUri(row.id)
+    await row.save()
+  }
+
+  // Atomically claim the row for processing
+  const { claimDiplomaForProcessing } = await import('#services/cnft/cnft_diploma_claim_service')
+  const claimed = await claimDiplomaForProcessing(row.id, 3)
+
+  if (!claimed) {
+    return {
+      diploma: {
+        ...toDiplomaView(row, preview.institutionName),
+        status: 'processing' as any,
+        errorMessage: 'Unable to claim (may be processing or max attempts reached)',
+      },
+      alreadyMinted: false,
+    }
+  }
+
+  // Refresh row after claim
+  await row.refresh()
 
   const achievement = DIPLOMA_ACHIEVEMENT_TYPES[preview.achievementType]
 
   try {
-    row.status = 'processing'
-    row.attempts = (row.attempts ?? 0) + 1
-    row.lastAttemptAt = DateTime.now()
-    await row.save()
 
     const umi = createCnftUmi()
     const minted = await mintearCnft(

@@ -201,6 +201,8 @@ Each command uses a **Postgres advisory lock** to prevent overlapping runs:
 
 When a lock is already held, the command logs "already running" and exits with code 0 (success) so Render doesn't mark the cron job as failed.
 
+**IMPORTANT**: Advisory locks require a **direct database connection** (not PgBouncer in transaction mode). The lock implementation holds a dedicated connection for the entire run lifetime to ensure the lock persists. If using PgBouncer, configure it in session mode or provide a direct database URL for cron jobs.
+
 ### Row-Level Claims
 
 Before sending any blockchain transaction, the command uses an **atomic UPDATE ... WHERE status IN (eligible) RETURNING** to claim the record:
@@ -230,22 +232,21 @@ The existing HTTP endpoints (`POST /attestations/milestones/run`, `POST /diploma
 - Set status to `processing` + increment attempts before sending the transaction
 - No duplicate sends even if the endpoint is called concurrently
 
-## Nightly Queue Scheduler on Render
+## Coexistence with Queue Worker
 
-**The queue scheduler (`start/scheduler.ts`) is NOT removed** from this PR. It registers the nightly classroom sync job in the database at web boot.
+**The queue worker (`queue:work`) is NOT replaced** by this PR. The queue infrastructure remains in use for:
 
-However, **on Render without a persistent `queue:work` worker**, the scheduled job will **never be dispatched** because:
+- Other background jobs (e.g., leaderboard updates, email notifications)
+- The queue scheduler (`start/scheduler.ts`) which registers database-scheduled jobs
+- Local development workflows
 
-1. The `queue_schedules` table holds the cron definition
-2. The `queue:work` process normally polls that table and dispatches due jobs
-3. Without `queue:work` running, nothing dispatches the job
+**What changes on Render**:
 
-**Recommendation**: The `start/scheduler.ts` file can remain as-is for local dev (where developers may run `npm run queue:work`), but **on Render, rely solely on the Render Cron Jobs** defined above. The database-scheduled job will sit idle.
+- Classroom sync, SAS attestations, and cNFT mints are now handled by Render Cron Jobs (not the queue)
+- The queue worker can still run for other features if needed
+- The database-scheduled nightly sync job (registered by `start/scheduler.ts`) will sit idle unless `queue:work` is running
 
-If you want to fully remove the queue dependency in production, a follow-up PR could:
-
-- Remove `start/scheduler.ts` from the `preloads` array in `adonisrc.ts` for the `web` environment
-- Or gate it with an env var like `ENABLE_QUEUE_SCHEDULER=false`
+**Recommendation**: Keep `queue:work` running if you have other queue-driven features. If classroom sync, attestations, and mints are your only queue use cases, you can safely stop the queue worker on Render and rely solely on the cron jobs defined above.
 
 ## Testing Locally
 

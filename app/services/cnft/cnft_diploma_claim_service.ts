@@ -25,7 +25,10 @@ export interface ClaimedDiploma {
  * Sets status='processing' only if status is in an eligible state.
  * Returns null if the row is already claimed or not found.
  */
-export async function claimDiplomaForProcessing(id: number): Promise<ClaimedDiploma | null> {
+export async function claimDiplomaForProcessing(
+  id: number,
+  maxAttempts: number = 3
+): Promise<ClaimedDiploma | null> {
   const eligibleStatuses = ['pending', 'failed']
 
   const result = await db.rawQuery(
@@ -36,10 +39,11 @@ export async function claimDiplomaForProcessing(id: number): Promise<ClaimedDipl
         last_attempt_at = NOW()
     WHERE id = ?
       AND status IN (${eligibleStatuses.map(() => '?').join(',')})
+      AND attempts < ?
     RETURNING id, institution_id, student_id, kind, rank, points, display_name,
               asset_id, merkle_tree, leaf_index, signature, metadata_uri, status, attempts
     `,
-    [id, ...eligibleStatuses]
+    [id, ...eligibleStatuses, maxAttempts]
   )
 
   return (result.rows[0] as ClaimedDiploma | undefined) ?? null
@@ -76,8 +80,20 @@ export async function markDiplomaFailed(id: number, errorMessage: string): Promi
 }
 
 /**
+ * Mark a diploma as needs_review for manual intervention.
+ */
+export async function markDiplomaNeedsReview(id: number, reason: string): Promise<void> {
+  await db.from('student_diploma_mints').where('id', id).update({
+    status: 'needs_review',
+    error_message: reason,
+    updated_at: DateTime.now().toSQL(),
+  })
+}
+
+/**
  * Check if a diploma asset exists on-chain to recover from stale 'processing' status.
- * If it exists, update the DB to 'confirmed'. Otherwise, reset to 'failed'.
+ * Verifies via DAS getAsset (if assetId) or checks signature status.
+ * If found on-chain, mark confirmed. If not found after stale timeout, mark needs_review.
  */
 export async function recoverStaleDiploma(id: number): Promise<void> {
   const row = await StudentDiplomaMint.find(id)
@@ -86,17 +102,46 @@ export async function recoverStaleDiploma(id: number): Promise<void> {
     return
   }
 
-  if (row.assetId) {
-    logger.info({ id, assetId: row.assetId }, 'Asset ID exists, marking confirmed')
-    await db.from('student_diploma_mints').where('id', id).update({
-      status: 'confirmed',
-      updated_at: DateTime.now().toSQL(),
-    })
-    return
-  }
+  try {
+    if (row.assetId) {
+      const { getAsset } = await import('#services/cnft/cnft_funciones')
+      const asset = await getAsset(row.assetId)
+      if (asset) {
+        logger.info({ id, assetId: row.assetId }, 'Asset found on-chain, marking confirmed')
+        await db.from('student_diploma_mints').where('id', id).update({
+          status: 'confirmed',
+          updated_at: DateTime.now().toSQL(),
+        })
+        return
+      }
+    }
 
-  logger.warn({ id }, 'No asset ID, cannot verify on-chain, marking failed')
-  await markDiplomaFailed(id, 'Recovery failed: no asset ID to verify')
+    if (row.signature) {
+      const { getSignatureStatuses } = await import('#services/cnft/cnft_funciones')
+      const statuses = await getSignatureStatuses([row.signature])
+      if (statuses && statuses[0]?.confirmationStatus) {
+        logger.info(
+          { id, signature: row.signature, status: statuses[0] },
+          'Transaction confirmed on-chain'
+        )
+        await db.from('student_diploma_mints').where('id', id).update({
+          status: 'confirmed',
+          updated_at: DateTime.now().toSQL(),
+        })
+        return
+      }
+    }
+
+    logger.warn({ id }, 'No on-chain confirmation found, marking needs_review')
+    await markDiplomaNeedsReview(
+      id,
+      'Recovery: no on-chain confirmation after stale timeout (assetId/signature not found)'
+    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error({ err: error, id }, 'Stale diploma recovery error')
+    await markDiplomaNeedsReview(id, `Recovery error: ${message}`)
+  }
 }
 
 /**

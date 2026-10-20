@@ -3,7 +3,12 @@ import { column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export type StudentAchievementAttestationStatus =
-  'pending' | 'processing' | 'attested' | 'failed' | 'skipped'
+  | 'pending'
+  | 'processing'
+  | 'attested'
+  | 'failed'
+  | 'needs_review'
+  | 'skipped'
 
 export const FIRST_5_ACTIVITIES_KEY = 'first_5_activities'
 export const FIRST_5_ACTIVITIES_THRESHOLD = 2

@@ -23,7 +23,8 @@ export interface ClaimedAttestation {
  * Returns null if the row is already claimed or not found.
  */
 export async function claimAttestationForProcessing(
-  id: number
+  id: number,
+  maxAttempts: number = 3
 ): Promise<ClaimedAttestation | null> {
   const eligibleStatuses = ['pending', 'failed']
 
@@ -35,10 +36,11 @@ export async function claimAttestationForProcessing(
         last_attempt_at = NOW()
     WHERE id = ?
       AND status IN (${eligibleStatuses.map(() => '?').join(',')})
+      AND attempts < ?
     RETURNING id, student_id, institution_id, achievement_key, threshold, 
               achievement_hash, status, attestation_pda, attestation_signature, attempts
     `,
-    [id, ...eligibleStatuses]
+    [id, ...eligibleStatuses, maxAttempts]
   )
 
   return (result.rows[0] as ClaimedAttestation | undefined) ?? null
@@ -76,31 +78,51 @@ export async function markAttestationFailed(id: number, errorMessage: string): P
 }
 
 /**
+ * Mark an attestation as needs_review for manual intervention.
+ */
+export async function markAttestationNeedsReview(id: number, reason: string): Promise<void> {
+  await db.from('student_achievement_attestations').where('id', id).update({
+    status: 'needs_review',
+    error_message: reason,
+    updated_at: DateTime.now().toSQL(),
+  })
+}
+
+/**
  * Check if an attestation PDA exists on-chain to recover from stale 'processing' status.
- * If it exists, update the DB to 'attested'. Otherwise, reset to 'failed'.
+ * Derives PDA from credential/schema/achievement hash and checks getAccountInfo.
+ * If it exists, mark attested. If not found after a retry, mark needs_review.
  */
 export async function recoverStaleAttestation(id: number): Promise<void> {
   const row = await StudentAchievementAttestation.find(id)
-  if (!row || !row.attestationPda) {
-    logger.warn({ id }, 'Cannot recover stale attestation: row or PDA missing')
-    await markAttestationFailed(id, 'Recovery failed: missing PDA')
+  if (!row) {
+    logger.warn({ id }, 'Cannot recover stale attestation: row missing')
+    return
+  }
+
+  if (!row.attestationPda || !row.achievementHash) {
+    logger.warn({ id }, 'Cannot recover stale attestation: missing PDA or hash')
+    await markAttestationNeedsReview(id, 'Recovery: missing PDA or achievement hash')
     return
   }
 
   try {
     const connection = createSasConnection()
-    const accountInfo = await connection.getAccountInfo({ publicKey: row.attestationPda } as any)
+    const { PublicKey } = await import('@solana/web3.js')
+    const pdaKey = new PublicKey(row.attestationPda)
+
+    const accountInfo = await connection.getAccountInfo(pdaKey)
     if (accountInfo) {
       logger.info({ id, pda: row.attestationPda }, 'On-chain PDA found, marking attested')
       await markAttestationSucceeded(id, row.attestationPda, row.attestationSignature)
     } else {
-      logger.warn({ id, pda: row.attestationPda }, 'On-chain PDA not found, marking failed')
-      await markAttestationFailed(id, 'Recovery: PDA not found on-chain')
+      logger.warn({ id, pda: row.attestationPda }, 'On-chain PDA not found, needs manual review')
+      await markAttestationNeedsReview(id, 'Recovery: PDA not found on-chain after stale timeout')
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     logger.error({ err: error, id }, 'Stale attestation recovery failed')
-    await markAttestationFailed(id, `Recovery error: ${message}`)
+    await markAttestationNeedsReview(id, `Recovery error: ${message}`)
   }
 }
 

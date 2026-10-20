@@ -1,5 +1,6 @@
 import db from '@adonisjs/lucid/services/db'
 import logger from '@adonisjs/core/services/logger'
+import type { Client } from 'pg'
 
 export interface GlobalLock {
   acquired: boolean
@@ -8,33 +9,58 @@ export interface GlobalLock {
 
 /**
  * Acquire a Postgres advisory lock for the duration of a cron command run.
+ * Uses a dedicated connection that persists for the lock lifetime.
+ * IMPORTANT: Requires a direct database connection (not PgBouncer in transaction mode).
  * Returns { acquired: false } if another process holds the lock (overlap detected).
  */
 export async function tryAcquireGlobalLock(lockName: string): Promise<GlobalLock> {
   const lockId = hashStringToInt32(lockName)
 
-  const result = await db.rawQuery('SELECT pg_try_advisory_lock(?) as pg_try_advisory_lock', [
-    lockId,
-  ])
+  // Get a dedicated connection that will persist for the lock lifetime
+  const connection = db.connection()
+  const client = await connection.getWriteClient()
 
-  const acquired = (result.rows[0] as any)?.pg_try_advisory_lock === true
+  let acquired = false
 
-  if (!acquired) {
-    logger.info({ lockName, lockId }, 'Global lock already held by another process')
-    return {
-      acquired: false,
-      release: async () => {},
+  try {
+    const result = await client.raw('SELECT pg_try_advisory_lock(?) as acquired', [lockId])
+    acquired = result.rows[0]?.acquired === true
+
+    if (!acquired) {
+      logger.info({ lockName, lockId }, 'Global lock already held by another process')
+      await client.release()
+      return {
+        acquired: false,
+        release: async () => {},
+      }
     }
-  }
 
-  logger.info({ lockName, lockId }, 'Global lock acquired')
+    logger.info({ lockName, lockId }, 'Global lock acquired')
 
-  return {
-    acquired: true,
-    release: async () => {
-      await db.rawQuery('SELECT pg_advisory_unlock(?)', [lockId])
-      logger.info({ lockName, lockId }, 'Global lock released')
-    },
+    return {
+      acquired: true,
+      release: async () => {
+        try {
+          const unlockResult = await client.raw('SELECT pg_advisory_unlock(?) as unlocked', [
+            lockId,
+          ])
+          const unlocked = unlockResult.rows[0]?.unlocked === true
+          if (!unlocked) {
+            logger.warn({ lockName, lockId }, 'Advisory unlock returned false (lock not held)')
+          } else {
+            logger.info({ lockName, lockId }, 'Global lock released')
+          }
+        } catch (error) {
+          logger.error({ err: error, lockName, lockId }, 'Failed to release advisory lock')
+        } finally {
+          await client.release()
+        }
+      },
+    }
+  } catch (error) {
+    logger.error({ err: error, lockName, lockId }, 'Failed to acquire advisory lock')
+    await client.release()
+    throw error
   }
 }
 

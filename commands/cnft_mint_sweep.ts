@@ -157,6 +157,24 @@ export default class CnftMintSweep extends BaseCommand {
   ): Promise<'minted' | 'skipped' | 'failed'> {
     if (!claimed) return 'skipped'
 
+    // If signature exists, check chain before retrying
+    if (claimed.signature) {
+      const { getSignatureStatuses } = await import('#services/cnft/cnft_funciones')
+      const statuses = await getSignatureStatuses([claimed.signature])
+      if (statuses && statuses[0]?.confirmationStatus) {
+        this.logger.info(
+          `Signature ${claimed.signature} already confirmed, marking succeeded`
+        )
+        await markDiplomaSucceeded(
+          claimed.id,
+          claimed.assetId || '',
+          claimed.leafIndex || 0,
+          claimed.signature
+        )
+        return 'minted'
+      }
+    }
+
     const onChain = await isInstitutionOnChainExecution(claimed.institutionId)
     if (!onChain) {
       this.logger.info(
@@ -209,6 +227,15 @@ export default class CnftMintSweep extends BaseCommand {
       return 'minted'
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+      
+      // Check if non-retryable error
+      if (/insufficient funds|invalid account|account not found/i.test(message)) {
+        const { markDiplomaNeedsReview } = await import('#services/cnft/cnft_diploma_claim_service')
+        await markDiplomaNeedsReview(claimed.id, `Non-retryable: ${message}`)
+        this.logger.error(`Non-retryable error for diploma ${claimed.id}: ${message}`)
+        return 'failed'
+      }
+
       await markDiplomaFailed(claimed.id, message)
       this.logger.error(`Failed diploma ${claimed.id} for student ${claimed.studentId}: ${message}`)
       return 'failed'
