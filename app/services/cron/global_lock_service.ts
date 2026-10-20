@@ -9,7 +9,7 @@ export interface GlobalLock {
 
 /**
  * Acquire a Postgres advisory lock for the duration of a cron command run.
- * Uses a session-level advisory lock OR a no-op implementation for non-Postgres dialects.
+ * Uses a dedicated Knex connection (session-level) OR a no-op for non-Postgres dialects.
  * IMPORTANT: Requires a direct database connection (not PgBouncer in transaction mode).
  * Returns { acquired: false } if another process holds the lock (overlap detected).
  */
@@ -27,41 +27,52 @@ export async function tryAcquireGlobalLock(lockName: string): Promise<GlobalLock
 
   const lockId = hashStringToInt32(lockName)
 
-  // For Postgres: use raw query with bound parameters
-  // This keeps the connection open for the query lifetime
+  // Acquire a dedicated Knex connection for the lock lifetime
+  const connection = db.connection()
+  const knex = (connection as any).client
+  const conn = await knex.acquireConnection()
   let released = false
 
-  const result = await db.rawQuery('SELECT pg_try_advisory_lock(?) as acquired', [lockId])
-  const acquired = result.rows[0]?.acquired === true
+  try {
+    const result = await conn.raw('SELECT pg_try_advisory_lock(?) as acquired', [lockId])
+    const acquired = result.rows[0]?.acquired === true
 
-  if (!acquired) {
-    logger.info({ lockName, lockId }, 'Global lock already held by another process')
-    return {
-      acquired: false,
-      release: async () => {},
-    }
-  }
-
-  logger.info({ lockName, lockId }, 'Global lock acquired (session-level)')
-
-  return {
-    acquired: true,
-    release: async () => {
-      if (released) return
-      released = true
-
-      try {
-        const unlockResult = await db.rawQuery('SELECT pg_advisory_unlock(?) as unlocked', [lockId])
-        const unlocked = unlockResult.rows[0]?.unlocked === true
-        if (!unlocked) {
-          logger.warn({ lockName, lockId }, 'Advisory unlock returned false (lock not held)')
-        } else {
-          logger.info({ lockName, lockId }, 'Global lock released')
-        }
-      } catch (error) {
-        logger.error({ err: error, lockName, lockId }, 'Failed to release advisory lock')
+    if (!acquired) {
+      logger.info({ lockName, lockId }, 'Global lock already held by another process')
+      await knex.releaseConnection(conn)
+      return {
+        acquired: false,
+        release: async () => {},
       }
-    },
+    }
+
+    logger.info({ lockName, lockId }, 'Global lock acquired (session-level)')
+
+    return {
+      acquired: true,
+      release: async () => {
+        if (released) return
+        released = true
+
+        try {
+          const unlockResult = await conn.raw('SELECT pg_advisory_unlock(?) as unlocked', [lockId])
+          const unlocked = unlockResult.rows[0]?.unlocked === true
+          if (!unlocked) {
+            logger.warn({ lockName, lockId }, 'Advisory unlock returned false (lock not held)')
+          } else {
+            logger.info({ lockName, lockId }, 'Global lock released')
+          }
+        } catch (error) {
+          logger.error({ err: error, lockName, lockId }, 'Failed to release advisory lock')
+        } finally {
+          await knex.releaseConnection(conn)
+        }
+      },
+    }
+  } catch (error) {
+    logger.error({ err: error, lockName, lockId }, 'Failed to acquire advisory lock')
+    await knex.releaseConnection(conn)
+    throw error
   }
 }
 

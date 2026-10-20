@@ -543,7 +543,7 @@ export class SubmissionSchema extends BaseModel {
   @column()
   declare evidenceUrl: string | null
   @column()
-  declare externalGrade: number | null
+  declare externalGrade: string | null
   @column.dateTime()
   declare gradeCheckedAt: DateTime | null
   @column({ isPrimary: true })

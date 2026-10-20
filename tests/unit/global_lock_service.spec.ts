@@ -49,36 +49,39 @@ test.group('Global lock service', () => {
       return
     }
 
-    // Note: This test may not work reliably with connection pooling
-    // In production with a dedicated connection or transaction-level locks, this would work
-    // For now, we verify locks can be acquired and released
     const lock1 = await tryAcquireGlobalLock('test-concurrent-lock')
     assert.isTrue(lock1.acquired)
 
+    const lock2 = await tryAcquireGlobalLock('test-concurrent-lock')
+    assert.isFalse(lock2.acquired)
+
     await lock1.release()
 
-    // Can acquire after release
-    const lock2 = await tryAcquireGlobalLock('test-concurrent-lock')
-    assert.isTrue(lock2.acquired)
-    await lock2.release()
+    const lock3 = await tryAcquireGlobalLock('test-concurrent-lock')
+    assert.isTrue(lock3.acquired)
+    await lock3.release()
   })
 
-  test('lock can be acquired and released properly', async ({ assert }) => {
+  test('lock persists while held then releases properly', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
       return
     }
 
-    const lock = await tryAcquireGlobalLock('test-lock-lifecycle')
+    const lock = await tryAcquireGlobalLock('test-lock-persistence')
     assert.isTrue(lock.acquired)
 
     // Sleep briefly to simulate work
     await new Promise((resolve) => setTimeout(resolve, 100))
 
+    // Lock should still be held - second attempt fails
+    const lock2 = await tryAcquireGlobalLock('test-lock-persistence')
+    assert.isFalse(lock2.acquired)
+
     await lock.release()
 
     // After release, can acquire again
-    const lock2 = await tryAcquireGlobalLock('test-lock-lifecycle')
-    assert.isTrue(lock2.acquired)
-    await lock2.release()
+    const lock3 = await tryAcquireGlobalLock('test-lock-persistence')
+    assert.isTrue(lock3.acquired)
+    await lock3.release()
   })
 })

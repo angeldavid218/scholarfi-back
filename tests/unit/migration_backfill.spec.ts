@@ -46,11 +46,11 @@ test.group('Migration backfill', (group) => {
       errorMessage: 'Old failure',
     })
 
-    // Run the backfill logic (same as migration)
+    // Run the backfill logic (same as migration - ALL failed rows)
     await db.rawQuery(`
       UPDATE student_achievement_attestations
       SET attempts = 999, status = 'needs_review'
-      WHERE status = 'failed' AND (attempts IS NULL OR attempts = 0)
+      WHERE status = 'failed'
     `)
 
     await attestation.refresh()
@@ -82,11 +82,11 @@ test.group('Migration backfill', (group) => {
       errorMessage: 'Old failure',
     })
 
-    // Run the backfill logic (same as migration)
+    // Run the backfill logic (same as migration - ALL failed rows)
     await db.rawQuery(`
       UPDATE student_diploma_mints
       SET attempts = 999, status = 'needs_review'
-      WHERE status = 'failed' AND (attempts IS NULL OR attempts = 0)
+      WHERE status = 'failed'
     `)
 
     await diploma.refresh()
@@ -94,7 +94,7 @@ test.group('Migration backfill', (group) => {
     assert.equal(diploma.attempts, 999)
   })
 
-  test('backfill does not affect already-retried failed rows', async ({ assert }) => {
+  test('backfill affects ALL failed rows including already-retried', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
       return
     }
@@ -117,16 +117,16 @@ test.group('Migration backfill', (group) => {
       errorMessage: 'Recent failure',
     })
 
-    // Run the backfill logic
+    // Run the backfill logic (ALL failed rows)
     await db.rawQuery(`
       UPDATE student_achievement_attestations
       SET attempts = 999, status = 'needs_review'
-      WHERE status = 'failed' AND (attempts IS NULL OR attempts = 0)
+      WHERE status = 'failed'
     `)
 
     await attestation.refresh()
-    // Should remain unchanged
-    assert.equal(attestation.status, 'failed')
-    assert.equal(attestation.attempts, 2)
+    // Should now be needs_review
+    assert.equal(attestation.status, 'needs_review')
+    assert.equal(attestation.attempts, 999)
   })
 })

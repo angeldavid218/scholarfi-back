@@ -6,7 +6,7 @@ export default class extends BaseSchema {
       `
       UPDATE student_achievement_attestations
       SET attempts = 999, status = 'needs_review'
-      WHERE status = 'failed' AND (attempts IS NULL OR attempts = 0)
+      WHERE status = 'failed'
       `
     )
 
@@ -14,7 +14,7 @@ export default class extends BaseSchema {
       `
       UPDATE student_diploma_mints
       SET attempts = 999, status = 'needs_review'
-      WHERE status = 'failed' AND (attempts IS NULL OR attempts = 0)
+      WHERE status = 'failed'
       `
     )
   }
