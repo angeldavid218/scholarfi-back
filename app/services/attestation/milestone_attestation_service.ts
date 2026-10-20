@@ -1,6 +1,5 @@
 import db from '@adonisjs/lucid/services/db'
 import logger from '@adonisjs/core/services/logger'
-import { DateTime } from 'luxon'
 import User from '#models/user'
 import StudentAchievementAttestation, {
   FIRST_5_ACTIVITIES_KEY,
@@ -363,7 +362,7 @@ export type MilestoneAttestResult = {
   achievementKey: string
   title: string
   rewardedCount: number
-  status: 'attested' | 'already_attested' | 'skipped' | 'failed'
+  status: 'attested' | 'already_attested' | 'skipped' | 'failed' | 'in_progress'
   attestationPda?: string
   attestationSignature?: string | null
   errorMessage?: string

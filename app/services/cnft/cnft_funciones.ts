@@ -237,7 +237,8 @@ export async function leerCnft(umi: Umi, assetId: PublicKey | string): Promise<D
  */
 export async function getAsset(assetId: string): Promise<DasApiAsset | null> {
   try {
-    const umi = await import('#services/cnft/cnft_diploma_service').then((m) => m.createUmiClient())
+    const { createCnftUmi } = await import('#services/cnft/umi_client')
+    const umi = createCnftUmi()
     return await leerCnft(umi, assetId)
   } catch (error) {
     if (esNoEncontrado(error)) return null
@@ -252,7 +253,7 @@ export async function getSignatureStatuses(
   signatures: string[]
 ): Promise<Array<{ confirmationStatus?: string } | null> | null> {
   try {
-    const { Connection, PublicKey } = await import('@solana/web3.js')
+    const { Connection } = await import('@solana/web3.js')
     const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com'
     const connection = new Connection(rpcUrl, 'confirmed')
     const result = await connection.getSignatureStatuses(signatures)

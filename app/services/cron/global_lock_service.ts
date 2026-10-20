@@ -1,6 +1,5 @@
 import db from '@adonisjs/lucid/services/db'
 import logger from '@adonisjs/core/services/logger'
-import type { Client } from 'pg'
 
 export interface GlobalLock {
   acquired: boolean
@@ -9,57 +8,47 @@ export interface GlobalLock {
 
 /**
  * Acquire a Postgres advisory lock for the duration of a cron command run.
- * Uses a dedicated connection that persists for the lock lifetime.
+ * Uses a transaction-level advisory lock (pg_try_advisory_xact_lock) which is
+ * automatically released when the transaction ends.
  * IMPORTANT: Requires a direct database connection (not PgBouncer in transaction mode).
  * Returns { acquired: false } if another process holds the lock (overlap detected).
  */
 export async function tryAcquireGlobalLock(lockName: string): Promise<GlobalLock> {
   const lockId = hashStringToInt32(lockName)
 
-  // Get a dedicated connection that will persist for the lock lifetime
-  const connection = db.connection()
-  const client = await connection.getWriteClient()
-
-  let acquired = false
+  // Use a transaction for xact-level advisory lock
+  const trx = await db.transaction()
 
   try {
-    const result = await client.raw('SELECT pg_try_advisory_lock(?) as acquired', [lockId])
-    acquired = result.rows[0]?.acquired === true
+    const result = await trx.rawQuery('SELECT pg_try_advisory_xact_lock(?) as acquired', [lockId])
+    const acquired = result.rows[0]?.acquired === true
 
     if (!acquired) {
       logger.info({ lockName, lockId }, 'Global lock already held by another process')
-      await client.release()
+      await trx.rollback()
       return {
         acquired: false,
         release: async () => {},
       }
     }
 
-    logger.info({ lockName, lockId }, 'Global lock acquired')
+    logger.info({ lockName, lockId }, 'Global lock acquired (xact-level)')
 
     return {
       acquired: true,
       release: async () => {
         try {
-          const unlockResult = await client.raw('SELECT pg_advisory_unlock(?) as unlocked', [
-            lockId,
-          ])
-          const unlocked = unlockResult.rows[0]?.unlocked === true
-          if (!unlocked) {
-            logger.warn({ lockName, lockId }, 'Advisory unlock returned false (lock not held)')
-          } else {
-            logger.info({ lockName, lockId }, 'Global lock released')
-          }
+          logger.info({ lockName, lockId }, 'Releasing global lock (committing transaction)')
+          await trx.commit()
         } catch (error) {
-          logger.error({ err: error, lockName, lockId }, 'Failed to release advisory lock')
-        } finally {
-          await client.release()
+          logger.error({ err: error, lockName, lockId }, 'Failed to commit transaction')
+          await trx.rollback()
         }
       },
     }
   } catch (error) {
     logger.error({ err: error, lockName, lockId }, 'Failed to acquire advisory lock')
-    await client.release()
+    await trx.rollback()
     throw error
   }
 }

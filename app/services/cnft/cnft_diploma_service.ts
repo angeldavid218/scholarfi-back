@@ -372,7 +372,7 @@ export async function mintOutstandingDiploma(params: {
       tokenConfig.cnftMerkleTree,
       {
         name: truncateUtf8Bytes(`${achievement.label} - ${best.displayName}`, MAX_CNFT_NAME_BYTES),
-        uri: row.metadataUri,
+        uri: row.metadataUri || diplomaMetadataUri(row.id),
         sellerFeeBasisPoints: 0,
       },
       student.walletPublicKey

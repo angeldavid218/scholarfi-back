@@ -43,4 +43,41 @@ test.group('Global lock service', () => {
     await lockA.release()
     await lockB.release()
   })
+
+  test('concurrent lock attempts on same name fail for second caller', async ({ assert }) => {
+    if (env.get('DB_CONNECTION') !== 'pg') {
+      return
+    }
+
+    const lock1 = await tryAcquireGlobalLock('test-concurrent-lock')
+    assert.isTrue(lock1.acquired)
+
+    const lock2 = await tryAcquireGlobalLock('test-concurrent-lock')
+    assert.isFalse(lock2.acquired)
+
+    await lock1.release()
+  })
+
+  test('lock persists for duration of hold (dedicated connection)', async ({ assert }) => {
+    if (env.get('DB_CONNECTION') !== 'pg') {
+      return
+    }
+
+    const lock = await tryAcquireGlobalLock('test-lock-persistence-check')
+    assert.isTrue(lock.acquired)
+
+    // Sleep briefly to simulate work
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    // Lock should still be held
+    const lock2 = await tryAcquireGlobalLock('test-lock-persistence-check')
+    assert.isFalse(lock2.acquired)
+
+    await lock.release()
+
+    // Now it should be available
+    const lock3 = await tryAcquireGlobalLock('test-lock-persistence-check')
+    assert.isTrue(lock3.acquired)
+    await lock3.release()
+  })
 })
