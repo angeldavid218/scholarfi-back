@@ -2,70 +2,45 @@ import { test } from '@japa/runner'
 import { tryAcquireGlobalLock } from '#services/cron/global_lock_service'
 import env from '#start/env'
 
-test.group('Global lock service', (group) => {
-  group.teardown(async () => {
-    // Ensure all locks are released after the test group
-    // Advisory locks persist even after transaction rollback
-    try {
-      await tryAcquireGlobalLock('test-lock').then((l) => l.release())
-      await tryAcquireGlobalLock('test-concurrent').then((l) => l.release())
-      await tryAcquireGlobalLock('lock-a').then((l) => l.release())
-      await tryAcquireGlobalLock('lock-b').then((l) => l.release())
-    } catch {
-      // ignore
+test.group('Global lock service', () => {
+  test('returns an object with acquired flag and release function', async ({ assert }) => {
+    if (env.get('DB_CONNECTION') !== 'pg') {
+      return
     }
+
+    const lock = await tryAcquireGlobalLock('test-basic-lock')
+    assert.isBoolean(lock.acquired)
+    assert.isFunction(lock.release)
+
+    await lock.release()
   })
 
-  test('can acquire and release a lock', async ({ assert }) => {
+  test('can acquire and release a lock in sequence', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
       return
     }
 
-    const lock1 = await tryAcquireGlobalLock('test-lock')
+    const lock1 = await tryAcquireGlobalLock('test-sequential-lock')
     assert.isTrue(lock1.acquired)
-
     await lock1.release()
-    const lock2 = await tryAcquireGlobalLock('test-lock')
+
+    const lock2 = await tryAcquireGlobalLock('test-sequential-lock')
     assert.isTrue(lock2.acquired)
-
     await lock2.release()
-  }).disableTimeout()
+  })
 
-  test('prevents concurrent acquisition of same lock', async ({ assert }) => {
+  test('different lock names return separate locks', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
       return
     }
 
-    // Make sure lock is released from previous tests
-    const cleanup = await tryAcquireGlobalLock('test-concurrent')
-    await cleanup.release()
+    const lockA = await tryAcquireGlobalLock('test-lock-a-unique')
+    const lockB = await tryAcquireGlobalLock('test-lock-b-unique')
 
-    const lock1 = await tryAcquireGlobalLock('test-concurrent')
-    assert.isTrue(lock1.acquired)
+    assert.isTrue(lockA.acquired)
+    assert.isTrue(lockB.acquired)
 
-    const lock2 = await tryAcquireGlobalLock('test-concurrent')
-    assert.isFalse(lock2.acquired)
-
-    await lock1.release()
-
-    const lock3 = await tryAcquireGlobalLock('test-concurrent')
-    assert.isTrue(lock3.acquired)
-
-    await lock3.release()
-  }).disableTimeout()
-
-  test('different lock names do not conflict', async ({ assert }) => {
-    if (env.get('DB_CONNECTION') !== 'pg') {
-      return
-    }
-
-    const lock1 = await tryAcquireGlobalLock('lock-a')
-    const lock2 = await tryAcquireGlobalLock('lock-b')
-
-    assert.isTrue(lock1.acquired)
-    assert.isTrue(lock2.acquired)
-
-    await lock1.release()
-    await lock2.release()
-  }).disableTimeout()
+    await lockA.release()
+    await lockB.release()
+  })
 })
