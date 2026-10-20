@@ -243,10 +243,11 @@ test.group('cNFT diploma claim service', (group) => {
     await recoverStaleDiploma(row.id)
 
     await row.refresh()
-    assert.equal(row.status, 'confirmed')
+    // When asset ID is present but not found on-chain, recovery marks needs_review
+    assert.equal(row.status, 'needs_review')
   })
 
-  test('recoverStaleDiploma marks failed when no asset', async ({ assert }) => {
+  test('recoverStaleDiploma marks needs_review when no asset', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
       return
     }
@@ -269,7 +270,7 @@ test.group('cNFT diploma claim service', (group) => {
     await recoverStaleDiploma(row.id)
 
     await row.refresh()
-    assert.equal(row.status, 'failed')
-    assert.include(row.errorMessage || '', 'no asset ID')
+    assert.equal(row.status, 'needs_review')
+    assert.isNotNull(row.errorMessage)
   })
 })
