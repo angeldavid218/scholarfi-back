@@ -45,12 +45,13 @@ async function createInstitution() {
   return typeof row === 'number' ? row : row.id
 }
 
-async function loginToken(client: any, email: string) {
+async function loginToken(client: any, email: string, password: string = 'Secret123!') {
   const response = await client.post('/api/v1/auth/login').json({
     email,
-    password: 'Secret123!',
+    password,
   })
-  return (response.body() as any).data.token as string
+  const body = response.body() as any
+  return body?.data?.token || body?.token || ''
 }
 
 test.group('Attestations HTTP endpoints', (group) => {
@@ -60,11 +61,14 @@ test.group('Attestations HTTP endpoints', (group) => {
     const institutionId = await createInstitution()
     const studentEmail = `student-${Date.now()}-${Math.random().toString(36).substring(7)}@test.com`
 
+    const hash = await import('@adonisjs/core/services/hash')
+    const hashedPassword = await hash.default.make('Secret123!')
+
     const student = await db
       .table('users')
       .insert({
         email: studentEmail,
-        password: '$argon2id$v=19$m=65536,t=3,p=4$mock',
+        password: hashedPassword,
         full_name: 'Test Student',
         institution_id: institutionId,
         is_active: true,
@@ -106,11 +110,14 @@ test.group('Attestations HTTP endpoints', (group) => {
     const institutionId = await createInstitution()
     const studentEmail = `student-${Date.now()}-${Math.random().toString(36).substring(7)}@test.com`
 
+    const hash = await import('@adonisjs/core/services/hash')
+    const hashedPassword = await hash.default.make('Secret123!')
+
     const student = await db
       .table('users')
       .insert({
         email: studentEmail,
-        password: '$argon2id$v=19$m=65536,t=3,p=4$mock',
+        password: hashedPassword,
         full_name: 'Test Student',
         institution_id: institutionId,
         is_active: true,
