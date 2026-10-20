@@ -27,26 +27,25 @@ export async function tryAcquireGlobalLock(lockName: string): Promise<GlobalLock
 
   const lockId = hashStringToInt32(lockName)
 
-  // Acquire a dedicated Knex connection for the lock lifetime
-  const connection = db.connection()
-  const knex = (connection as any).client
-  const conn = await knex.acquireConnection()
+  // Use a transaction with pg_try_advisory_xact_lock to hold the lock
+  // The lock is automatically released when the transaction ends
+  const trx = await db.transaction()
   let released = false
 
   try {
-    const result = await conn.raw('SELECT pg_try_advisory_lock(?) as acquired', [lockId])
+    const result = await trx.rawQuery('SELECT pg_try_advisory_xact_lock(?) as acquired', [lockId])
     const acquired = result.rows[0]?.acquired === true
 
     if (!acquired) {
       logger.info({ lockName, lockId }, 'Global lock already held by another process')
-      await knex.releaseConnection(conn)
+      await trx.rollback()
       return {
         acquired: false,
         release: async () => {},
       }
     }
 
-    logger.info({ lockName, lockId }, 'Global lock acquired (session-level)')
+    logger.info({ lockName, lockId }, 'Global lock acquired (xact-level)')
 
     return {
       acquired: true,
@@ -55,23 +54,17 @@ export async function tryAcquireGlobalLock(lockName: string): Promise<GlobalLock
         released = true
 
         try {
-          const unlockResult = await conn.raw('SELECT pg_advisory_unlock(?) as unlocked', [lockId])
-          const unlocked = unlockResult.rows[0]?.unlocked === true
-          if (!unlocked) {
-            logger.warn({ lockName, lockId }, 'Advisory unlock returned false (lock not held)')
-          } else {
-            logger.info({ lockName, lockId }, 'Global lock released')
-          }
+          logger.info({ lockName, lockId }, 'Releasing global lock (committing transaction)')
+          await trx.commit()
         } catch (error) {
-          logger.error({ err: error, lockName, lockId }, 'Failed to release advisory lock')
-        } finally {
-          await knex.releaseConnection(conn)
+          logger.error({ err: error, lockName, lockId }, 'Failed to commit transaction')
+          await trx.rollback()
         }
       },
     }
   } catch (error) {
     logger.error({ err: error, lockName, lockId }, 'Failed to acquire advisory lock')
-    await knex.releaseConnection(conn)
+    await trx.rollback()
     throw error
   }
 }
