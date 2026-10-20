@@ -119,7 +119,24 @@ export async function findEligibleDiplomas(params: {
     query = query.where('institution_id', params.institutionId)
   }
 
-  return query.select('*')
+  const rows = await query.select(
+    'id',
+    'institution_id as institutionId',
+    'student_id as studentId',
+    'kind',
+    'rank',
+    'points',
+    'display_name as displayName',
+    'asset_id as assetId',
+    'merkle_tree as merkleTree',
+    'leaf_index as leafIndex',
+    'signature',
+    'metadata_uri as metadataUri',
+    'status',
+    'attempts'
+  )
+
+  return rows as ClaimedDiploma[]
 }
 
 /**

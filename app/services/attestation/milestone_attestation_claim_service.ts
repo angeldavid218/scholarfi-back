@@ -126,7 +126,20 @@ export async function findEligibleAttestations(params: {
     query = query.where('institution_id', params.institutionId)
   }
 
-  return query.select('*')
+  const rows = await query.select(
+    'id',
+    'student_id as studentId',
+    'institution_id as institutionId',
+    'achievement_key as achievementKey',
+    'threshold',
+    'achievement_hash as achievementHash',
+    'status',
+    'attestation_pda as attestationPda',
+    'attestation_signature as attestationSignature',
+    'attempts'
+  )
+
+  return rows as ClaimedAttestation[]
 }
 
 /**

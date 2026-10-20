@@ -149,7 +149,7 @@ test.group('Attestation claim service', (group) => {
       limit: 10,
     })
 
-    assert.equal(eligible.length, 1)
+    assert.lengthOf(eligible, 1)
     assert.equal(eligible[0].studentId, studentId1)
   })
 

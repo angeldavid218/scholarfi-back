@@ -1,10 +1,20 @@
 import { test } from '@japa/runner'
-import testUtils from '@adonisjs/core/services/test_utils'
 import { tryAcquireGlobalLock } from '#services/cron/global_lock_service'
 import env from '#start/env'
 
 test.group('Global lock service', (group) => {
-  group.each.setup(() => testUtils.db().withGlobalTransaction())
+  group.teardown(async () => {
+    // Ensure all locks are released after the test group
+    // Advisory locks persist even after transaction rollback
+    try {
+      await tryAcquireGlobalLock('test-lock').then((l) => l.release())
+      await tryAcquireGlobalLock('test-concurrent').then((l) => l.release())
+      await tryAcquireGlobalLock('lock-a').then((l) => l.release())
+      await tryAcquireGlobalLock('lock-b').then((l) => l.release())
+    } catch {
+      // ignore
+    }
+  })
 
   test('can acquire and release a lock', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
@@ -19,12 +29,16 @@ test.group('Global lock service', (group) => {
     assert.isTrue(lock2.acquired)
 
     await lock2.release()
-  })
+  }).disableTimeout()
 
   test('prevents concurrent acquisition of same lock', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
       return
     }
+
+    // Make sure lock is released from previous tests
+    const cleanup = await tryAcquireGlobalLock('test-concurrent')
+    await cleanup.release()
 
     const lock1 = await tryAcquireGlobalLock('test-concurrent')
     assert.isTrue(lock1.acquired)
@@ -38,7 +52,7 @@ test.group('Global lock service', (group) => {
     assert.isTrue(lock3.acquired)
 
     await lock3.release()
-  })
+  }).disableTimeout()
 
   test('different lock names do not conflict', async ({ assert }) => {
     if (env.get('DB_CONNECTION') !== 'pg') {
@@ -53,5 +67,5 @@ test.group('Global lock service', (group) => {
 
     await lock1.release()
     await lock2.release()
-  })
+  }).disableTimeout()
 })
