@@ -2,11 +2,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export type StudentDiplomaMintStatus =
-  | 'pending'
-  | 'processing'
-  | 'confirmed'
-  | 'failed'
-  | 'needs_review'
+  'pending' | 'processing' | 'confirmed' | 'failed' | 'needs_review'
 export const OUTSTANDING_STUDENT_DIPLOMA_KIND = 'outstanding_student'
 
 export default class StudentDiplomaMint extends BaseModel {

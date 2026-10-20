@@ -22,9 +22,8 @@ test.group('Double-send protection', (group) => {
   })
 
   test('SAS attestation claim enforces attempts < max', async ({ assert }) => {
-    const { claimAttestationForProcessing } = await import(
-      '#services/attestation/milestone_attestation_claim_service'
-    )
+    const { claimAttestationForProcessing } =
+      await import('#services/attestation/milestone_attestation_claim_service')
 
     const user = await User.create({
       email: 'test@example.com',
@@ -51,9 +50,7 @@ test.group('Double-send protection', (group) => {
   })
 
   test('cNFT diploma claim enforces attempts < max', async ({ assert }) => {
-    const { claimDiplomaForProcessing } = await import(
-      '#services/cnft/cnft_diploma_claim_service'
-    )
+    const { claimDiplomaForProcessing } = await import('#services/cnft/cnft_diploma_claim_service')
 
     const user = await User.create({
       email: 'test2@example.com',
@@ -80,14 +77,13 @@ test.group('Double-send protection', (group) => {
   })
 
   test('needs_review status persists in database', async ({ assert }) => {
-    const { markAttestationNeedsReview } = await import(
-      '#services/attestation/milestone_attestation_claim_service'
-    )
+    const { markAttestationNeedsReview } =
+      await import('#services/attestation/milestone_attestation_claim_service')
 
     const user = await User.create({
       email: 'test3@example.com',
       password: await hash.make('password'),
-      
+
       institutionId: institution.id,
     })
 
@@ -109,14 +105,13 @@ test.group('Double-send protection', (group) => {
   })
 
   test('stale attestation recovery marks needs_review when PDA not found', async ({ assert }) => {
-    const { recoverStaleAttestation } = await import(
-      '#services/attestation/milestone_attestation_claim_service'
-    )
+    const { recoverStaleAttestation } =
+      await import('#services/attestation/milestone_attestation_claim_service')
 
     const user = await User.create({
       email: 'test4@example.com',
       password: await hash.make('password'),
-      
+
       institutionId: institution.id,
     })
 
@@ -146,7 +141,7 @@ test.group('Double-send protection', (group) => {
     const user = await User.create({
       email: 'test5@example.com',
       password: await hash.make('password'),
-      
+
       institutionId: institution.id,
     })
 
@@ -187,9 +182,8 @@ test.group('Double-send protection', (group) => {
       attempts: 1,
     })
 
-    const { attestFirst5ActivitiesForStudent } = await import(
-      '#services/attestation/milestone_attestation_service'
-    )
+    const { attestFirst5ActivitiesForStudent } =
+      await import('#services/attestation/milestone_attestation_service')
 
     const result = await attestFirst5ActivitiesForStudent({
       studentId: user.id,
@@ -242,9 +236,8 @@ test.group('Double-send protection', (group) => {
     })
 
     // The key test: attempting to claim should fail since it's already processing
-    const { claimAttestationForProcessing } = await import(
-      '#services/attestation/milestone_attestation_claim_service'
-    )
+    const { claimAttestationForProcessing } =
+      await import('#services/attestation/milestone_attestation_claim_service')
     const claimed = await claimAttestationForProcessing(attestation.id, 3)
     assert.isNull(claimed, 'Should not be able to claim a processing record')
   })

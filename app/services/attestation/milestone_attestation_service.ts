@@ -479,9 +479,8 @@ export async function attestFirst5ActivitiesForStudent(params: {
   }
 
   // Atomically claim the row for processing
-  const { claimAttestationForProcessing } = await import(
-    '#services/attestation/milestone_attestation_claim_service'
-  )
+  const { claimAttestationForProcessing } =
+    await import('#services/attestation/milestone_attestation_claim_service')
   const claimed = await claimAttestationForProcessing(existing.id, 3)
 
   if (!claimed) {
@@ -499,7 +498,6 @@ export async function attestFirst5ActivitiesForStudent(params: {
   const row = await StudentAchievementAttestation.findOrFail(existing.id)
 
   try {
-
     const connection = createSasConnection()
     const signer = loadSasAuthorizedSignerKeypair()
     const credentialPda = await resolveCredentialPda(signer)
@@ -545,7 +543,7 @@ export async function attestFirst5ActivitiesForStudent(params: {
     }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    
+
     // Only mark as failed if still owned by this attempt (status=processing)
     await row.refresh()
     if (row.status === 'processing') {

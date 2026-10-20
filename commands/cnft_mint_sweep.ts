@@ -162,9 +162,7 @@ export default class CnftMintSweep extends BaseCommand {
       const { getSignatureStatuses } = await import('#services/cnft/cnft_funciones')
       const statuses = await getSignatureStatuses([claimed.signature])
       if (statuses && statuses[0]?.confirmationStatus) {
-        this.logger.info(
-          `Signature ${claimed.signature} already confirmed, marking succeeded`
-        )
+        this.logger.info(`Signature ${claimed.signature} already confirmed, marking succeeded`)
         await markDiplomaSucceeded(
           claimed.id,
           claimed.assetId || '',
@@ -227,7 +225,7 @@ export default class CnftMintSweep extends BaseCommand {
       return 'minted'
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      
+
       // Check if non-retryable error
       if (/insufficient funds|invalid account|account not found/i.test(message)) {
         const { markDiplomaNeedsReview } = await import('#services/cnft/cnft_diploma_claim_service')

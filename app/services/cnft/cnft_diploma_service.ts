@@ -365,7 +365,6 @@ export async function mintOutstandingDiploma(params: {
   const achievement = DIPLOMA_ACHIEVEMENT_TYPES[preview.achievementType]
 
   try {
-
     const umi = createCnftUmi()
     const minted = await mintearCnft(
       umi,
