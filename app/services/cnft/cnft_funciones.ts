@@ -231,3 +231,34 @@ export async function leerCnft(umi: Umi, assetId: PublicKey | string): Promise<D
     'El indexador DAS no encontró el cNFT (puede seguir indexándose).'
   )
 }
+
+/**
+ * Check if an asset exists on-chain via DAS API (returns null if not found).
+ */
+export async function getAsset(assetId: string): Promise<DasApiAsset | null> {
+  try {
+    const { createCnftUmi } = await import('#services/cnft/umi_client')
+    const umi = createCnftUmi()
+    return await leerCnft(umi, assetId)
+  } catch (error) {
+    if (esNoEncontrado(error)) return null
+    throw error
+  }
+}
+
+/**
+ * Get signature statuses from Solana RPC for multiple signatures.
+ */
+export async function getSignatureStatuses(
+  signatures: string[]
+): Promise<Array<{ confirmationStatus?: string } | null> | null> {
+  try {
+    const { Connection } = await import('@solana/web3.js')
+    const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com'
+    const connection = new Connection(rpcUrl, 'confirmed')
+    const result = await connection.getSignatureStatuses(signatures)
+    return result.value
+  } catch (error) {
+    return null
+  }
+}
