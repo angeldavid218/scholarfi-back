@@ -27,7 +27,7 @@ test.group('cNFT mint pre-send signature check', (group) => {
       walletPublicKey: '11111111111111111111111111111111',
     })
 
-    // Create a diploma with a signature (simulating a previous send)
+    // Create a diploma with a signature in failed state (can be retried)
     const diploma = await StudentDiplomaMint.create({
       studentId: user.id,
       institutionId: institution.id,
@@ -35,7 +35,7 @@ test.group('cNFT mint pre-send signature check', (group) => {
       rank: 1,
       points: 100,
       displayName: 'Test',
-      status: 'processing',
+      status: 'failed',
       attempts: 1,
       signature: 'existing-signature-123',
     })
