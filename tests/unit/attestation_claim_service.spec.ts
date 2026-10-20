@@ -29,7 +29,7 @@ async function createUser(institutionId: number): Promise<number> {
   const inserted = await db
     .table('users')
     .insert({
-      email: `student-${Date.now()}@test.com`,
+      email: `student-${Date.now()}-${Math.random().toString(36).substring(7)}@test.com`,
       password: 'hashed',
       full_name: 'Test Student',
       institution_id: institutionId,
