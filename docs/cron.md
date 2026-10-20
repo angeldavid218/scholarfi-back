@@ -201,7 +201,7 @@ Each command uses a **Postgres advisory lock** to prevent overlapping runs:
 
 When a lock is already held, the command logs "already running" and exits with code 0 (success) so Render doesn't mark the cron job as failed.
 
-**IMPORTANT**: Advisory locks require a **direct database connection** (not PgBouncer in transaction mode). The lock implementation holds a dedicated connection for the entire run lifetime to ensure the lock persists. If using PgBouncer, configure it in session mode or provide a direct database URL for cron jobs.
+**IMPORTANT**: Advisory locks require a **direct database connection** (not PgBouncer in transaction mode). The lock implementation uses session-level advisory locks (`pg_try_advisory_lock`) with a dedicated connection held for the entire run duration. If using PgBouncer, configure it in session mode or provide a direct database URL for cron jobs.
 
 ### Row-Level Claims
 
