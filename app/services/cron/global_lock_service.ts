@@ -16,7 +16,8 @@ export async function tryAcquireGlobalLock(lockName: string): Promise<GlobalLock
   const lockId = hashStringToInt32(lockName)
 
   // Get a raw Knex client connection that we'll hold for the lock duration
-  const knex = db.connection().client!
+  const connection = db.connection()
+  const knex = (connection as any).client
   const conn = await knex.acquireConnection()
 
   try {
