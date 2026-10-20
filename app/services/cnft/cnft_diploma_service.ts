@@ -324,6 +324,7 @@ export async function mintOutstandingDiploma(params: {
   row.status = 'pending'
   row.errorMessage = null
   row.merkleTree = tokenConfig.cnftMerkleTree
+  row.attempts = row.attempts ?? 0
   await row.save()
 
   row.metadataUri = diplomaMetadataUri(row.id)
@@ -332,6 +333,11 @@ export async function mintOutstandingDiploma(params: {
   const achievement = DIPLOMA_ACHIEVEMENT_TYPES[preview.achievementType]
 
   try {
+    row.status = 'processing'
+    row.attempts = (row.attempts ?? 0) + 1
+    row.lastAttemptAt = DateTime.now()
+    await row.save()
+
     const umi = createCnftUmi()
     const minted = await mintearCnft(
       umi,

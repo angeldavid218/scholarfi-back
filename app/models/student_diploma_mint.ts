@@ -1,7 +1,7 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
-export type StudentDiplomaMintStatus = 'pending' | 'confirmed' | 'failed'
+export type StudentDiplomaMintStatus = 'pending' | 'processing' | 'confirmed' | 'failed'
 export const OUTSTANDING_STUDENT_DIPLOMA_KIND = 'outstanding_student'
 
 export default class StudentDiplomaMint extends BaseModel {
@@ -48,6 +48,12 @@ export default class StudentDiplomaMint extends BaseModel {
 
   @column()
   declare errorMessage: string | null
+
+  @column()
+  declare attempts: number
+
+  @column.dateTime()
+  declare lastAttemptAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

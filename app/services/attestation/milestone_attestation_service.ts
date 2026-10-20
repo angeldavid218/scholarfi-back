@@ -1,5 +1,6 @@
 import db from '@adonisjs/lucid/services/db'
 import logger from '@adonisjs/core/services/logger'
+import { DateTime } from 'luxon'
 import User from '#models/user'
 import StudentAchievementAttestation, {
   FIRST_5_ACTIVITIES_KEY,
@@ -459,6 +460,7 @@ export async function attestFirst5ActivitiesForStudent(params: {
       threshold,
       achievementHash: achHashHex,
       status: 'pending',
+      attempts: 0,
     }))
 
   row.achievementHash = achHashHex
@@ -466,6 +468,11 @@ export async function attestFirst5ActivitiesForStudent(params: {
   row.institutionId = params.institutionId
 
   try {
+    row.status = 'processing'
+    row.attempts = (row.attempts ?? 0) + 1
+    row.lastAttemptAt = DateTime.now()
+    await row.save()
+
     const connection = createSasConnection()
     const signer = loadSasAuthorizedSignerKeypair()
     const credentialPda = await resolveCredentialPda(signer)
