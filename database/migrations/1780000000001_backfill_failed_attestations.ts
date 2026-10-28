@@ -1,0 +1,25 @@
+import { BaseSchema } from '@adonisjs/lucid/schema'
+
+export default class extends BaseSchema {
+  async up() {
+    await this.db.rawQuery(
+      `
+      UPDATE student_achievement_attestations
+      SET attempts = 999, status = 'needs_review'
+      WHERE status = 'failed'
+      `
+    )
+
+    await this.db.rawQuery(
+      `
+      UPDATE student_diploma_mints
+      SET attempts = 999, status = 'needs_review'
+      WHERE status = 'failed'
+      `
+    )
+  }
+
+  async down() {
+    // No-op: backfill is one-way
+  }
+}

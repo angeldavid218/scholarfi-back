@@ -391,12 +391,14 @@ export class SimulatedBalanceSchema extends BaseModel {
 }
 
 export class StudentAchievementAttestationSchema extends BaseModel {
-  static $columns = ['achievementHash', 'achievementKey', 'attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'institutionId', 'status', 'studentId', 'threshold', 'updatedAt'] as const
+  static $columns = ['achievementHash', 'achievementKey', 'attempts', 'attestationPda', 'attestationSignature', 'createdAt', 'errorMessage', 'id', 'institutionId', 'lastAttemptAt', 'status', 'studentId', 'threshold', 'updatedAt'] as const
   $columns = StudentAchievementAttestationSchema.$columns
   @column()
   declare achievementHash: string
   @column()
   declare achievementKey: string
+  @column()
+  declare attempts: number
   @column()
   declare attestationPda: string | null
   @column()
@@ -409,6 +411,8 @@ export class StudentAchievementAttestationSchema extends BaseModel {
   declare id: number
   @column()
   declare institutionId: number
+  @column.dateTime()
+  declare lastAttemptAt: DateTime | null
   @column()
   declare status: string
   @column()
@@ -420,10 +424,12 @@ export class StudentAchievementAttestationSchema extends BaseModel {
 }
 
 export class StudentDiplomaMintSchema extends BaseModel {
-  static $columns = ['assetId', 'createdAt', 'displayName', 'errorMessage', 'id', 'institutionId', 'kind', 'leafIndex', 'merkleTree', 'metadataUri', 'points', 'rank', 'signature', 'status', 'studentId', 'updatedAt'] as const
+  static $columns = ['assetId', 'attempts', 'createdAt', 'displayName', 'errorMessage', 'id', 'institutionId', 'kind', 'lastAttemptAt', 'leafIndex', 'merkleTree', 'metadataUri', 'points', 'rank', 'signature', 'status', 'studentId', 'updatedAt'] as const
   $columns = StudentDiplomaMintSchema.$columns
   @column()
   declare assetId: string | null
+  @column()
+  declare attempts: number
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
@@ -436,6 +442,8 @@ export class StudentDiplomaMintSchema extends BaseModel {
   declare institutionId: number
   @column()
   declare kind: string
+  @column.dateTime()
+  declare lastAttemptAt: DateTime | null
   @column()
   declare leafIndex: number | null
   @column()
