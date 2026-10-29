@@ -68,21 +68,13 @@ Teacher endpoints (require `GOOGLE_*` env vars):
 - `GET /api/v1/integrations/google-classroom/courses`
 - `GET /api/v1/integrations/google-classroom/courses/:courseId/coursework`
 - `POST /api/v1/tasks/from-classroom` — import rewarded GC assignment
-- `POST /api/v1/tasks/:id/sync-classroom` — enqueue Classroom sync (202 + `runId`; rewards run in a worker)
-- `POST /api/v1/integrations/google-classroom/sync-all` — enqueue sync for every active Classroom task (202 + `runs`)
-- `GET /api/v1/classroom-sync-runs/:runId` — poll sync job status/result
+- `POST /api/v1/tasks/:id/sync-classroom` — sync one Classroom task inside the API request (202 + `runId`)
+- `POST /api/v1/integrations/google-classroom/sync-all` — sync every active Classroom task inside the API request (202 + `runs`)
+- `GET /api/v1/classroom-sync-runs/:runId` — read the sync run status/result
 
-### Classroom sync worker (`@adonisjs/queue`)
+### Classroom sync
 
-Sync no longer blocks the HTTP request. Grades/rewards run via `SyncClassroomTaskJob` on `@adonisjs/queue` (Database adapter by default):
-
-1. Start the API: `npm run dev` (or `npm start`) — also upserts the nightly `nightly-classroom-sync` schedule (02:00 America/Mexico_City)
-2. Start the worker in a second terminal: `npm run queue:work` (`node ace queue:work --queue=classroom`) — processes per-task jobs **and** due cron schedules
-
-| `QUEUE_DRIVER`                     | Behavior                                                  |
-| ---------------------------------- | --------------------------------------------------------- |
-| `database` (default outside tests) | Enqueue to DB queue tables; requires `npm run queue:work` |
-| `sync` (default in tests)          | Process the job inline in the API process (no worker)     |
+**Sincronizar** and **Sincronizar todo** run in the web service. The scheduled sweep is a separate process: `node ace classroom:sync-all` (Render cron). It does not need `queue:work`.
 
 | Area         | Prefix             | Roles (high level)                                                                           |
 | ------------ | ------------------ | -------------------------------------------------------------------------------------------- |

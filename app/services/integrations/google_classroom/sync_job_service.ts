@@ -1,5 +1,3 @@
-import SyncClassroomTaskJob from '#jobs/sync_classroom_task_job'
-import googleClassroomConfig from '#config/google_classroom'
 import ClassroomSyncRun from '#models/classroom_sync_run'
 import Task from '#models/task'
 import { gcLogInfo } from '#services/integrations/google_classroom/logger'
@@ -10,7 +8,8 @@ import {
   markClassroomSyncRunFailed,
   markClassroomSyncRunRunning,
 } from '#services/integrations/google_classroom/sync_run_status'
-import env from '#start/env'
+
+const STALE_RUNNING_MS = 6 * 60 * 1000
 
 export interface EnqueueClassroomSyncResult {
   runId: number
@@ -45,9 +44,9 @@ export async function enqueueClassroomSyncTask(input: {
     .orderBy('id', 'desc')
     .first()
 
-  if (existing) {
+  if (existing && existing.status === 'running' && !isStaleRunningRun(existing)) {
     gcLogInfo(
-      'Classroom sync enqueue deduped',
+      'Classroom sync already running',
       {
         requestId: input.requestId,
         taskId: input.taskId,
@@ -67,22 +66,21 @@ export async function enqueueClassroomSyncTask(input: {
     }
   }
 
-  const run = await ClassroomSyncRun.create({
-    queueJobId: null,
-    taskId: input.taskId,
-    teacherId: input.teacherId,
-    institutionId: input.institutionId,
-    status: 'queued',
-    resultJson: null,
-    errorMessage: null,
-    requestId: input.requestId ?? null,
-  })
-
-  const queueDriver =
-    env.get('QUEUE_DRIVER') ?? (env.get('NODE_ENV') === 'test' ? 'sync' : 'database')
+  const run =
+    existing ??
+    (await ClassroomSyncRun.create({
+      queueJobId: null,
+      taskId: input.taskId,
+      teacherId: input.teacherId,
+      institutionId: input.institutionId,
+      status: 'queued',
+      resultJson: null,
+      errorMessage: null,
+      requestId: input.requestId ?? null,
+    }))
 
   gcLogInfo(
-    'Classroom sync enqueued',
+    'Classroom sync started',
     {
       requestId: input.requestId,
       taskId: input.taskId,
@@ -91,71 +89,31 @@ export async function enqueueClassroomSyncTask(input: {
     },
     {
       runId: run.id,
-      driver: queueDriver,
-      mockMode: googleClassroomConfig.mockMode,
+      resumed: Boolean(existing),
     }
   )
 
-  // Mock fixtures live in this API process. Running inline avoids a stale
-  // `queue:work` worker that still has old demo student emails (no_grade for everyone).
-  if (googleClassroomConfig.mockMode) {
-    await runMockClassroomSync(run, input)
-    await run.refresh()
-    return {
-      runId: run.id,
-      taskId: input.taskId,
-      status: run.status,
-      deduped: false,
-    }
-  }
-
-  try {
-    const dispatchResult = await SyncClassroomTaskJob.dispatch({
-      runId: run.id,
-      taskId: input.taskId,
-      teacherId: input.teacherId,
-      institutionId: input.institutionId,
-      requestId: input.requestId,
-    }).dedup({ id: `task:${input.taskId}`, ttl: '2m' })
-
-    if (dispatchResult.deduped === 'skipped' || dispatchResult.deduped === 'extended') {
-      // Another dispatch won; drop this unused domain run and return the active one.
-      await run.delete()
-      const active = await ClassroomSyncRun.query()
-        .where('task_id', input.taskId)
-        .andWhere('teacher_id', input.teacherId)
-        .whereIn('status', ['queued', 'running', 'completed', 'failed'])
-        .orderBy('id', 'desc')
-        .firstOrFail()
-      return {
-        runId: active.id,
-        taskId: input.taskId,
-        status: active.status,
-        deduped: true,
-      }
-    }
-
-    run.queueJobId = dispatchResult.jobId
-    await run.save()
-  } catch (error) {
-    // Sync adapter (and exhausted retries) may reject after job.failed() updates the run.
-    await run.refresh()
-    if (run.status === 'queued' || run.status === 'running') {
-      await markClassroomSyncRunFailed(run.id, unknownErrorMessage(error, 'sync_failed'))
-    }
-  }
-
+  await executeClassroomSyncRun(run, input)
   await run.refresh()
 
   return {
     runId: run.id,
     taskId: input.taskId,
     status: run.status,
-    deduped: false,
+    deduped: Boolean(existing),
   }
 }
 
-async function runMockClassroomSync(
+function isStaleRunningRun(run: ClassroomSyncRun): boolean {
+  const stamp = run.updatedAt ?? run.createdAt
+  if (!stamp) return true
+  const ms =
+    typeof stamp.toMillis === 'function' ? stamp.toMillis() : new Date(String(stamp)).getTime()
+  if (!Number.isFinite(ms)) return true
+  return Date.now() - ms > STALE_RUNNING_MS
+}
+
+async function executeClassroomSyncRun(
   run: ClassroomSyncRun,
   input: {
     taskId: number

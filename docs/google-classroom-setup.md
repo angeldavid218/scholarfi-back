@@ -59,32 +59,19 @@ Generate encryption key: `node -e "console.log(require('crypto').randomBytes(32)
 
 Evaluator walkthrough (English and Spanish): [scholarfi/docs/judge-instructions.md](../../scholarfi/docs/judge-instructions.md).
 
-## 6. Classroom sync worker (`@adonisjs/queue`)
+## 6. Classroom sync
 
-`POST /tasks/:id/sync-classroom` dispatches `SyncClassroomTaskJob` and returns `202` with a `runId`. The teacher UI polls `GET /classroom-sync-runs/:runId`.
+`POST /tasks/:id/sync-classroom` syncs that task inside the API request and returns `202` with a `runId`. The teacher UI then reads `GET /classroom-sync-runs/:runId`.
 
-`POST /integrations/google-classroom/sync-all` enqueues the same per-task job for **every active Google Classroom task** owned by the teacher (not only the current UI page) and returns `202` with `{ tasks, runs: [{ runId, taskId, status, deduped }] }`. **Sincronizar todo** on `/teacher` uses this endpoint.
+`POST /integrations/google-classroom/sync-all` runs every active Google Classroom task for that teacher inside the API request and returns `202` with `{ tasks, runs: [{ runId, taskId, status, deduped }] }`. **Sincronizar todo** on `/teacher` uses this endpoint. A separate queue worker is not required.
 
-A nightly orchestrator (`SyncAllClassroomTasksJob`) runs the same bulk enqueue for every teacher with a connected Classroom integration. It is registered on API boot in `start/scheduler.ts`:
-
-```ts
-await SyncAllClassroomTasksJob.schedule({})
-  .id('nightly-classroom-sync')
-  .cron('0 2 * * *')
-  .timezone('America/Mexico_City')
-  .run()
-```
-
-Override with `CLASSROOM_NIGHTLY_SYNC_CRON` / `CLASSROOM_NIGHTLY_SYNC_TIMEZONE` if needed. Default is 02:00 America/Mexico_City so grade sync stays off daytime CPU.
-
-When `QUEUE_DRIVER=database` (default outside tests), run the official Adonis worker alongside the API:
+The scheduled sweep is a Render cron job, not the web service:
 
 ```bash
-npm run queue:work
-# equivalent: node ace queue:work --queue=classroom
+node ace classroom:sync-all
 ```
 
-You should see `Starting worker for queues: classroom`. If it says `default` only, Classroom jobs will sit queued forever.
+That command syncs every connected teacher in its own process and exits. See [cron.md](./cron.md).
 
 ## 6b. Sync students (auto-registration)
 
@@ -111,7 +98,7 @@ Before testing end-to-end:
 - [ ] Teacher connected Classroom (`/teacher/integraciones`) — mock mode: **Usar Classroom de demo** (no Google account)
 - [ ] Teacher clicked **Sincronizar estudiantes** on `/teacher` (or students already exist with matching Classroom emails)
 - [ ] Pilot GC course has assignments with numeric `maxPoints` and graded `assignedGrade` values
-- [ ] `npm run queue:work` is running (unless `QUEUE_DRIVER=sync` **or** `GOOGLE_CLASSROOM_MOCK=true`, which syncs inline) — required for real Classroom per-task sync, **Sincronizar todo**, and the nightly cron
+- [ ] Render cron `node ace classroom:sync-all` is scheduled for the nightly sweep. **Sincronizar** and **Sincronizar todo** run inside the API request and do not need `queue:work`
 - [ ] Teacher imports coursework and clicks **Sincronizar** on the Classroom-linked task (or **Sincronizar todo** for every active Classroom task)
 
 ## Notes
