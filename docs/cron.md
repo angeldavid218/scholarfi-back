@@ -57,7 +57,7 @@ Add these three cron services to your Render Blueprint or create them manually i
 
 **Command**: `node ace classroom:sync-all`
 
-**What it does**: Enqueues sync jobs for all connected Google Classroom teachers. Sync jobs run inline (no queue worker needed) unless `QUEUE_DRIVER=sync` is explicitly set in the environment.
+**What it does**: Syncs every connected Google Classroom teacher inside this command and then exits. It does not use the queue worker. The teacher button **Sincronizar todo** is a separate path: it runs the same sync inside the API web service.
 
 **Options**:
 
@@ -234,19 +234,15 @@ The existing HTTP endpoints (`POST /attestations/milestones/run`, `POST /diploma
 
 ## Coexistence with Queue Worker
 
-**The queue worker (`queue:work`) is NOT replaced** by this PR. The queue infrastructure remains in use for:
-
-- Other background jobs (e.g., leaderboard updates, email notifications)
-- The queue scheduler (`start/scheduler.ts`) which registers database-scheduled jobs
-- Local development workflows
+Classroom sync does not use `queue:work`. Attestations and diploma mints use the cron commands in this document.
 
 **What changes on Render**:
 
-- Classroom sync, SAS attestations, and cNFT mints are now handled by Render Cron Jobs (not the queue)
+- **Sincronizar todo** runs in the web service. The nightly Classroom sweep, SAS attestations, and cNFT mints are Render cron commands
 - The queue worker can still run for other features if needed
-- The database-scheduled nightly sync job (registered by `start/scheduler.ts`) will sit idle unless `queue:work` is running
+- Classroom sync no longer registers a database schedule from `start/scheduler.ts`. The nightly sweep is only `node ace classroom:sync-all`.
 
-**Recommendation**: Keep `queue:work` running if you have other queue-driven features. If classroom sync, attestations, and mints are your only queue use cases, you can safely stop the queue worker on Render and rely solely on the cron jobs defined above.
+**Recommendation**: Do not run `queue:work` for Classroom sync. The button runs in the web service, and the schedule runs as this cron command.
 
 ## Testing Locally
 
