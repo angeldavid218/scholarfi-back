@@ -78,6 +78,7 @@ export type ScannedRoutes = {
     'previewBestDiploma': { paramsTuple?: []; params?: {} }
     'mintBestDiploma': { paramsTuple?: []; params?: {} }
     'listMyDiplomas': { paramsTuple?: []; params?: {} }
+    'listGradeProgress': { paramsTuple?: []; params?: {} }
     'previewMilestoneAttestations': { paramsTuple?: []; params?: {} }
     'runMilestoneAttestations': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
@@ -128,6 +129,7 @@ export type ScannedRoutes = {
     'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'previewBestDiploma': { paramsTuple?: []; params?: {} }
     'listMyDiplomas': { paramsTuple?: []; params?: {} }
+    'listGradeProgress': { paramsTuple?: []; params?: {} }
     'previewMilestoneAttestations': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
@@ -173,6 +175,7 @@ export type ScannedRoutes = {
     'diplomaArtwork': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'previewBestDiploma': { paramsTuple?: []; params?: {} }
     'listMyDiplomas': { paramsTuple?: []; params?: {} }
+    'listGradeProgress': { paramsTuple?: []; params?: {} }
     'previewMilestoneAttestations': { paramsTuple?: []; params?: {} }
     'studentBalance': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }
     'studentTransactions': { paramsTuple: [ParamValue]; params: {'studentId': ParamValue} }

@@ -895,6 +895,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/diplomas_controller').default['me']>>>
     }
   }
+  'listGradeProgress': {
+    methods: ["GET","HEAD"]
+    pattern: '/api/v1/grade-progress'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/grade_progress_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/grade_progress_controller').default['index']>>>
+    }
+  }
   'previewMilestoneAttestations': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/attestations/milestones/preview'

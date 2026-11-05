@@ -12,6 +12,7 @@ export const controllers = {
   DemoConfig: () => import('#controllers/demo_config_controller'),
   Diplomas: () => import('#controllers/diplomas_controller'),
   GoogleClassroom: () => import('#controllers/google_classroom_controller'),
+  GradeProgress: () => import('#controllers/grade_progress_controller'),
   Groups: () => import('#controllers/groups_controller'),
   InstitutionCredits: () => import('#controllers/institution_credits_controller'),
   Institutions: () => import('#controllers/institutions_controller'),

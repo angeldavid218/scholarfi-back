@@ -17,6 +17,33 @@ export interface ClaimedAttestation {
   attempts: number
 }
 
+/** Normalize Lucid/Knex rawQuery RETURNING shape (pg `.rows` vs sqlite array). */
+function firstReturningRow(result: unknown): Record<string, unknown> | undefined {
+  if (Array.isArray(result)) return result[0] as Record<string, unknown> | undefined
+  if (result && typeof result === 'object' && Array.isArray((result as { rows?: unknown }).rows)) {
+    return (result as { rows: Record<string, unknown>[] }).rows[0]
+  }
+  return undefined
+}
+
+function mapClaimedAttestation(row: Record<string, unknown> | undefined): ClaimedAttestation | null {
+  if (!row) return null
+  return {
+    id: Number(row.id),
+    studentId: Number(row.student_id ?? row.studentId),
+    institutionId: Number(row.institution_id ?? row.institutionId),
+    achievementKey: String(row.achievement_key ?? row.achievementKey),
+    threshold: Number(row.threshold),
+    achievementHash: String(row.achievement_hash ?? row.achievementHash),
+    status: String(row.status),
+    attestationPda: (row.attestation_pda ?? row.attestationPda ?? null) as string | null,
+    attestationSignature: (row.attestation_signature ??
+      row.attestationSignature ??
+      null) as string | null,
+    attempts: Number(row.attempts),
+  }
+}
+
 /**
  * Atomically claim a single attestation record for processing.
  * Sets status='processing' only if status is in an eligible state.
@@ -27,23 +54,24 @@ export async function claimAttestationForProcessing(
   maxAttempts: number = 3
 ): Promise<ClaimedAttestation | null> {
   const eligibleStatuses = ['pending', 'failed']
+  const lastAttemptAt = DateTime.now().toSQL()
 
   const result = await db.rawQuery(
     `
     UPDATE student_achievement_attestations
     SET status = 'processing',
         attempts = attempts + 1,
-        last_attempt_at = NOW()
+        last_attempt_at = ?
     WHERE id = ?
       AND status IN (${eligibleStatuses.map(() => '?').join(',')})
       AND attempts < ?
     RETURNING id, student_id, institution_id, achievement_key, threshold, 
               achievement_hash, status, attestation_pda, attestation_signature, attempts
     `,
-    [id, ...eligibleStatuses, maxAttempts]
+    [lastAttemptAt, id, ...eligibleStatuses, maxAttempts]
   )
 
-  return (result.rows[0] as ClaimedAttestation | undefined) ?? null
+  return mapClaimedAttestation(firstReturningRow(result))
 }
 
 /**

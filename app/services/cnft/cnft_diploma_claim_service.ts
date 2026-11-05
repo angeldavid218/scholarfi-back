@@ -20,6 +20,35 @@ export interface ClaimedDiploma {
   attempts: number
 }
 
+/** Normalize Lucid/Knex rawQuery RETURNING shape (pg `.rows` vs sqlite array). */
+function firstReturningRow(result: unknown): Record<string, unknown> | undefined {
+  if (Array.isArray(result)) return result[0] as Record<string, unknown> | undefined
+  if (result && typeof result === 'object' && Array.isArray((result as { rows?: unknown }).rows)) {
+    return (result as { rows: Record<string, unknown>[] }).rows[0]
+  }
+  return undefined
+}
+
+function mapClaimedDiploma(row: Record<string, unknown> | undefined): ClaimedDiploma | null {
+  if (!row) return null
+  return {
+    id: Number(row.id),
+    institutionId: Number(row.institution_id ?? row.institutionId),
+    studentId: Number(row.student_id ?? row.studentId),
+    kind: String(row.kind),
+    rank: Number(row.rank),
+    points: Number(row.points),
+    displayName: String(row.display_name ?? row.displayName ?? ''),
+    assetId: (row.asset_id ?? row.assetId ?? null) as string | null,
+    merkleTree: (row.merkle_tree ?? row.merkleTree ?? null) as string | null,
+    leafIndex: (row.leaf_index ?? row.leafIndex ?? null) as number | null,
+    signature: (row.signature ?? null) as string | null,
+    metadataUri: (row.metadata_uri ?? row.metadataUri ?? null) as string | null,
+    status: String(row.status),
+    attempts: Number(row.attempts),
+  }
+}
+
 /**
  * Atomically claim a single diploma record for minting.
  * Sets status='processing' only if status is in an eligible state.
@@ -30,23 +59,24 @@ export async function claimDiplomaForProcessing(
   maxAttempts: number = 3
 ): Promise<ClaimedDiploma | null> {
   const eligibleStatuses = ['pending', 'failed']
+  const lastAttemptAt = DateTime.now().toSQL()
 
   const result = await db.rawQuery(
     `
     UPDATE student_diploma_mints
     SET status = 'processing',
         attempts = attempts + 1,
-        last_attempt_at = NOW()
+        last_attempt_at = ?
     WHERE id = ?
       AND status IN (${eligibleStatuses.map(() => '?').join(',')})
       AND attempts < ?
     RETURNING id, institution_id, student_id, kind, rank, points, display_name,
               asset_id, merkle_tree, leaf_index, signature, metadata_uri, status, attempts
     `,
-    [id, ...eligibleStatuses, maxAttempts]
+    [lastAttemptAt, id, ...eligibleStatuses, maxAttempts]
   )
 
-  return (result.rows[0] as ClaimedDiploma | undefined) ?? null
+  return mapClaimedDiploma(firstReturningRow(result))
 }
 
 /**

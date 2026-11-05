@@ -1,6 +1,7 @@
 /**
  * ScholarFi academic achievement categories for cNFT credentials.
- * MVP mint path (ranking #1) maps to excelencia_academica.
+ * Excelencia: ranking #1 → kind outstanding_student.
+ * Progreso: grade half-split improving → kind progreso_academico (cron enqueue + mint-sweep).
  */
 export const DIPLOMA_ACHIEVEMENT_TYPES = {
   excelencia_academica: {

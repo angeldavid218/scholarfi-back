@@ -505,6 +505,17 @@ router
     router
       .group(() => {
         router
+          .get('/', [() => import('#controllers/grade_progress_controller'), 'index'])
+          .as('listGradeProgress')
+          .use(middleware.role({ roles: ['teacher', 'school_admin'] }))
+      })
+      .prefix('grade-progress')
+      .use(middleware.auth())
+      .use(middleware.tenantScope())
+
+    router
+      .group(() => {
+        router
           .get('/milestones/preview', [
             () => import('#controllers/attestations_controller'),
             'previewMilestones',
