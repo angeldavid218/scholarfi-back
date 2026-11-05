@@ -450,6 +450,12 @@ const routes = {
     tokens: [{"old":"/api/v1/diplomas/me","type":0,"val":"api","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"v1","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"diplomas","end":""},{"old":"/api/v1/diplomas/me","type":0,"val":"me","end":""}],
     types: placeholder as Registry['listMyDiplomas']['types'],
   },
+  'listGradeProgress': {
+    methods: ["GET","HEAD"],
+    pattern: '/api/v1/grade-progress',
+    tokens: [{"old":"/api/v1/grade-progress","type":0,"val":"api","end":""},{"old":"/api/v1/grade-progress","type":0,"val":"v1","end":""},{"old":"/api/v1/grade-progress","type":0,"val":"grade-progress","end":""}],
+    types: placeholder as Registry['listGradeProgress']['types'],
+  },
   'previewMilestoneAttestations': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/attestations/milestones/preview',

@@ -241,6 +241,7 @@ export async function previewOutstandingDiploma(params: {
     .where({
       institutionId: params.institutionId,
       studentId: best.studentId,
+      kind: OUTSTANDING_STUDENT_DIPLOMA_KIND,
     })
     .first()
 

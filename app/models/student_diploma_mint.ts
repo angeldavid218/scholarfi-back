@@ -4,6 +4,7 @@ import { DateTime } from 'luxon'
 export type StudentDiplomaMintStatus =
   'pending' | 'processing' | 'confirmed' | 'failed' | 'needs_review'
 export const OUTSTANDING_STUDENT_DIPLOMA_KIND = 'outstanding_student'
+export const PROGRESS_ACADEMICO_DIPLOMA_KIND = 'progreso_academico'
 
 export default class StudentDiplomaMint extends BaseModel {
   static table = 'student_diploma_mints'

@@ -123,7 +123,8 @@ test.group('Double-send protection', (group) => {
       achievementHash: 'hash123',
       status: 'processing',
       attempts: 1,
-      attestationPda: '11111111111111111111111111111111',
+      // Fresh keypair — well-known pubkeys (System Program, faucet examples) often exist on-chain.
+      attestationPda: (await import('@solana/web3.js')).Keypair.generate().publicKey.toBase58(),
       lastAttemptAt: DateTime.now().minus({ minutes: 40 }),
     })
 

@@ -175,7 +175,7 @@ Add these three cron services to your Render Blueprint or create them manually i
 
 **Command**: `node ace cnft:mint-sweep`
 
-**What it does**: Finds outstanding diploma mints (pending + failed with attempts < 3), claims them, mints the cNFT on-chain, and paces mints with a delay.
+**What it does**: Finds outstanding diploma mints (pending + failed with attempts < 3), claims them, mints the cNFT on-chain, and paces mints with a delay. Kind-agnostic — mints Excelencia (`outstanding_student`) and Progreso Académico (`progreso_academico`) pending rows.
 
 **Options**:
 
@@ -189,6 +189,103 @@ Add these three cron services to your Render Blueprint or create them manually i
 
 - `CNFT_MINT_DELAY_MS`: Default delay between mints (milliseconds)
 
+### 4. Grade Progress Analyze (Daily at 08:30 UTC)
+
+```yaml
+- type: cron
+  name: scholarfi-grades-analyze
+  env: docker
+  schedule: '30 8 * * *'
+  dockerfilePath: ./Dockerfile
+  dockerCommand: node ace grades:analyze-progress
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: APP_KEY
+      sync: false
+    - key: DB_CONNECTION
+      value: pg
+    - key: DB_HOST
+      fromDatabase:
+        name: scholarfi-db
+        property: host
+    - key: DB_PORT
+      fromDatabase:
+        name: scholarfi-db
+        property: port
+    - key: DB_USER
+      fromDatabase:
+        name: scholarfi-db
+        property: user
+    - key: DB_PASSWORD
+      fromDatabase:
+        name: scholarfi-db
+        property: password
+    - key: DB_DATABASE
+      fromDatabase:
+        name: scholarfi-db
+        property: database
+```
+
+**Command**: `node ace grades:analyze-progress`
+
+**What it does**: Half-split analysis of Classroom `external_grade` values (normalized with task `maxPoints`). Upserts `student_grade_progress` rows as `improving` / `maintaining` / `insufficient_data` / `none`.
+
+**Options**:
+
+- `--institution-id=<id>`: Limit to one institution
+
+### 5. Enqueue Progreso Académico Diplomas (Daily at 08:45 UTC)
+
+```yaml
+- type: cron
+  name: scholarfi-cnft-enqueue-progress
+  env: docker
+  schedule: '45 8 * * *'
+  dockerfilePath: ./Dockerfile
+  dockerCommand: node ace cnft:enqueue-progress --limit=50
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: APP_KEY
+      sync: false
+    - key: DB_CONNECTION
+      value: pg
+    - key: DB_HOST
+      fromDatabase:
+        name: scholarfi-db
+        property: host
+    - key: DB_PORT
+      fromDatabase:
+        name: scholarfi-db
+        property: port
+    - key: DB_USER
+      fromDatabase:
+        name: scholarfi-db
+        property: user
+    - key: DB_PASSWORD
+      fromDatabase:
+        name: scholarfi-db
+        property: password
+    - key: DB_DATABASE
+      fromDatabase:
+        name: scholarfi-db
+        property: database
+    - key: CNFT_MERKLE_TREE
+      sync: false
+    - key: SOLANA_RPC_URL
+      sync: false
+```
+
+**Command**: `node ace cnft:enqueue-progress`
+
+**What it does**: Reads `student_grade_progress` where `category=improving`, skips students who already have a `progreso_academico` diploma row, provisions wallets when needed, and inserts **pending** `student_diploma_mints` rows. Does **not** mint on-chain — leave that to `cnft:mint-sweep`.
+
+**Options**:
+
+- `--limit=<n>`: Max improving students to consider (default: 50)
+- `--institution-id=<id>`: Limit to one institution
+
 ## Locking and Concurrency
 
 ### Global Locks
@@ -198,6 +295,8 @@ Each command uses a **Postgres advisory lock** to prevent overlapping runs:
 - `classroom:sync-all` → lock name: `classroom:sync-all`
 - `sas:attest-sweep` → lock name: `sas:attest-sweep`
 - `cnft:mint-sweep` → lock name: `cnft:mint-sweep`
+- `grades:analyze-progress` → lock name: `grades:analyze-progress`
+- `cnft:enqueue-progress` → lock name: `cnft:enqueue-progress`
 
 When a lock is already held, the command logs "already running" and exits with code 0 (success) so Render doesn't mark the cron job as failed.
 
@@ -252,11 +351,13 @@ Run the commands manually to verify:
 # Classroom sync
 node ace classroom:sync-all
 
+# Grade progress analysis → enqueue Progreso → mint pending diplomas
+node ace grades:analyze-progress
+node ace cnft:enqueue-progress --limit=10
+node ace cnft:mint-sweep --limit=2
+
 # SAS attestations
 node ace sas:attest-sweep --limit=5
-
-# cNFT mints
-node ace cnft:mint-sweep --limit=2
 ```
 
 Run them in parallel to test lock behavior:

@@ -82,6 +82,7 @@ export interface ApiDefinition {
   previewBestDiploma: typeof routes['previewBestDiploma']
   mintBestDiploma: typeof routes['mintBestDiploma']
   listMyDiplomas: typeof routes['listMyDiplomas']
+  listGradeProgress: typeof routes['listGradeProgress']
   previewMilestoneAttestations: typeof routes['previewMilestoneAttestations']
   runMilestoneAttestations: typeof routes['runMilestoneAttestations']
   studentBalance: typeof routes['studentBalance']

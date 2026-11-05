@@ -464,6 +464,33 @@ export class StudentDiplomaMintSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class StudentGradeProgressSchema extends BaseModel {
+  static $columns = ['analyzedAt', 'category', 'createdAt', 'delta', 'earlyAvg', 'gradedCount', 'id', 'institutionId', 'lateAvg', 'studentId', 'updatedAt'] as const
+  $columns = StudentGradeProgressSchema.$columns
+  @column.dateTime()
+  declare analyzedAt: DateTime
+  @column()
+  declare category: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare delta: string | null
+  @column()
+  declare earlyAvg: string | null
+  @column()
+  declare gradedCount: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare institutionId: number
+  @column()
+  declare lateAvg: string | null
+  @column()
+  declare studentId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class SubjectSchema extends BaseModel {
   static $columns = ['code', 'createdAt', 'id', 'institutionId', 'name', 'status', 'updatedAt'] as const
   $columns = SubjectSchema.$columns
