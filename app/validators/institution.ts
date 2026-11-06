@@ -13,6 +13,11 @@ export const updateInstitutionCryptoWalletsValidator = vine.create({
   enabled: vine.boolean(),
 })
 
+/** Pass a public image URL, or null/empty string to clear and use default ScholarFi art. */
+export const updateInstitutionNftBaseImageValidator = vine.create({
+  nftBaseImageUrl: vine.string().trim().maxLength(2048).nullable(),
+})
+
 export const bootstrapSchoolAdminValidator = vine.create({
   fullName: vine.string().trim().minLength(2).maxLength(180),
   email: vine.string().trim().email().maxLength(254),

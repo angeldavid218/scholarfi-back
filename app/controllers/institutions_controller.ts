@@ -11,6 +11,7 @@ import {
   upsertTeacherStudentAssociationValidator,
   updateInstitutionStatusValidator,
   updateInstitutionCryptoWalletsValidator,
+  updateInstitutionNftBaseImageValidator,
 } from '#validators/institution'
 import type { HttpContext } from '@adonisjs/core/http'
 
@@ -33,6 +34,7 @@ function institutionPayload(institution: Institution) {
     code: institution.code,
     status: institution.status,
     cryptoWalletsEnabled: institution.cryptoWalletsEnabled,
+    nftBaseImageUrl: institution.nftBaseImageUrl,
     createdAt: institution.createdAt,
     updatedAt: institution.updatedAt,
   }
@@ -158,6 +160,55 @@ export default class InstitutionsController {
         ...institutionPayload(institution),
         walletsBackfilled,
       },
+    }
+  }
+
+  async updateNftBaseImage({ request, response, params }: HttpContext) {
+    const payload = await request.validateUsing(updateInstitutionNftBaseImageValidator)
+    const institutionId = Number(params.id)
+    const institution = await Institution.find(institutionId)
+
+    if (!institution) {
+      return response.notFound({
+        error: {
+          code: 'INSTITUTION_NOT_FOUND',
+          message: 'Institution not found',
+          requestId: request.id(),
+        },
+      })
+    }
+
+    const raw = payload.nftBaseImageUrl
+    if (raw === null || raw === '') {
+      institution.nftBaseImageUrl = null
+    } else {
+      let parsed: URL
+      try {
+        parsed = new URL(raw)
+      } catch {
+        return response.unprocessableEntity({
+          error: {
+            code: 'E_VALIDATION_ERROR',
+            message: 'nftBaseImageUrl must be a valid http(s) URL',
+            requestId: request.id(),
+          },
+        })
+      }
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return response.unprocessableEntity({
+          error: {
+            code: 'E_VALIDATION_ERROR',
+            message: 'nftBaseImageUrl must be a valid http(s) URL',
+            requestId: request.id(),
+          },
+        })
+      }
+      institution.nftBaseImageUrl = raw
+    }
+    await institution.save()
+
+    return {
+      data: institutionPayload(institution),
     }
   }
 

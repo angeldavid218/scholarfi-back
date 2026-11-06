@@ -21,6 +21,7 @@ export interface ApiDefinition {
   store: typeof routes['store']
   updateStatus: typeof routes['updateStatus']
   updateCryptoWallets: typeof routes['updateCryptoWallets']
+  updateNftBaseImage: typeof routes['updateNftBaseImage']
   showInstitutionCreditPool: typeof routes['showInstitutionCreditPool']
   allocateInstitutionCredits: typeof routes['allocateInstitutionCredits']
   showMyInstitutionCreditPool: typeof routes['showMyInstitutionCreditPool']

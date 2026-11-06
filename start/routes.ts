@@ -82,6 +82,13 @@ router
           .as('updateCryptoWallets')
           .use(middleware.role({ roles: ['super_admin'] }))
         router
+          .patch('/:id/nft-base-image', [
+            () => import('#controllers/institutions_controller'),
+            'updateNftBaseImage',
+          ])
+          .as('updateNftBaseImage')
+          .use(middleware.role({ roles: ['super_admin'] }))
+        router
           .get('/:id/credit-pool', [
             () => import('#controllers/institution_credits_controller'),
             'show',

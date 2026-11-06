@@ -42,6 +42,30 @@ test.group('Diploma metadata and artwork', () => {
     assert.include(svg, 'EXCELENCIA ACADÉMICA')
     assert.include(svg, 'Verified by ScholarFi')
     assert.include(svg, 'SF-ACH-000007')
+    assert.include(svg, 'fill="url(#bg)"')
+  })
+
+  test('artwork svg uses pilot trading-card layout when school brand is provided', ({ assert }) => {
+    const baseUrl =
+      'https://res.cloudinary.com/zit0dhuf/image/upload/v1794003141/WhatsApp_Image_2026-10-29_at_9.48.11_AM.jpg'
+    const svg = buildDiplomaSvg({
+      id: 7,
+      kind: 'outstanding_student',
+      displayName: 'María Rodríguez',
+      institutionName: 'Colegio Saint Joseph',
+      academicPeriod: '2025-2026',
+      issuedAt: DateTime.fromISO('2026-08-18T12:00:00.000Z'),
+      baseImageUrl: baseUrl,
+    })
+
+    assert.include(svg, 'width="700" height="980"')
+    assert.include(svg, `href="${baseUrl}"`)
+    assert.include(svg, 'MARÍA RODRÍGUEZ')
+    assert.include(svg, '[ESTUDIANTE / EXCELENCIA ACADÉMICA]')
+    assert.include(svg, 'MERIT/')
+    assert.include(svg, 'LOGRO/')
+    assert.include(svg, 'SF-ACH-000007')
+    assert.notInclude(svg, 'fill="url(#bg)"')
   })
 
   test('on-chain name is truncated to 32 UTF-8 bytes', ({ assert }) => {
