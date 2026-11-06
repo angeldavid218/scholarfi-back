@@ -163,6 +163,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateCryptoWallets']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'updateNftBaseImage': {
+    methods: ["PATCH"]
+    pattern: '/api/v1/institutions/:id/nft-base-image'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/institution').updateInstitutionNftBaseImageValidator)>>
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/institution').updateInstitutionNftBaseImageValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateNftBaseImage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/institutions_controller').default['updateNftBaseImage']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'showInstitutionCreditPool': {
     methods: ["GET","HEAD"]
     pattern: '/api/v1/institutions/:id/credit-pool'

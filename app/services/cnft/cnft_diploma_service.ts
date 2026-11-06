@@ -62,6 +62,7 @@ export type OutstandingPreview = {
   academicPeriod: string
   achievementType: DiplomaAchievementTypeKey
   achievementLabel: string
+  nftBaseImageUrl: string | null
   currentBest: {
     studentId: number
     displayName: string
@@ -193,6 +194,7 @@ export async function getDiplomaArtworkSvg(id: number): Promise<string | null> {
     institutionName: institution?.name ?? `Institución #${row.institutionId}`,
     academicPeriod: tokenConfig.cnftAcademicPeriod,
     issuedAt: row.updatedAt ?? row.createdAt,
+    baseImageUrl: institution?.nftBaseImageUrl ?? null,
   })
 }
 
@@ -216,6 +218,7 @@ export async function previewOutstandingDiploma(params: {
   const academicPeriod = tokenConfig.cnftAcademicPeriod
   const institution = await Institution.find(params.institutionId)
   const institutionName = institution?.name ?? `Institución #${params.institutionId}`
+  const nftBaseImageUrl = institution?.nftBaseImageUrl ?? null
 
   const board = await getInstitutionStudentLeaderboard({
     institutionId: params.institutionId,
@@ -231,6 +234,7 @@ export async function previewOutstandingDiploma(params: {
       academicPeriod,
       achievementType,
       achievementLabel,
+      nftBaseImageUrl,
       currentBest: null,
       existingDiploma: null,
     }
@@ -252,6 +256,7 @@ export async function previewOutstandingDiploma(params: {
     academicPeriod,
     achievementType,
     achievementLabel,
+    nftBaseImageUrl,
     currentBest: {
       studentId: best.studentId,
       displayName: best.displayName,

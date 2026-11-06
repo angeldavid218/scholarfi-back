@@ -209,7 +209,7 @@ export class InstitutionCreditPoolSchema extends BaseModel {
 }
 
 export class InstitutionSchema extends BaseModel {
-  static $columns = ['code', 'createdAt', 'createdBy', 'cryptoWalletsEnabled', 'id', 'name', 'status', 'updatedAt'] as const
+  static $columns = ['code', 'createdAt', 'createdBy', 'cryptoWalletsEnabled', 'id', 'name', 'nftBaseImageUrl', 'status', 'updatedAt'] as const
   $columns = InstitutionSchema.$columns
   @column()
   declare code: string
@@ -223,6 +223,8 @@ export class InstitutionSchema extends BaseModel {
   declare id: number
   @column()
   declare name: string
+  @column()
+  declare nftBaseImageUrl: string | null
   @column()
   declare status: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })

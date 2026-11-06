@@ -17,6 +17,7 @@ export type ScannedRoutes = {
     'store': { paramsTuple?: []; params?: {} }
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'updateCryptoWallets': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'updateNftBaseImage': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showInstitutionCreditPool': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'allocateInstitutionCredits': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'showMyInstitutionCreditPool': { paramsTuple?: []; params?: {} }
@@ -218,6 +219,7 @@ export type ScannedRoutes = {
   PATCH: {
     'updateStatus': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'updateCryptoWallets': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'updateNftBaseImage': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'assignUserRole': { paramsTuple: [ParamValue]; params: {'userId': ParamValue} }
     'closeTask': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'teacherActionSubmission': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }

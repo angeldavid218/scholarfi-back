@@ -84,6 +84,12 @@ const routes = {
     tokens: [{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/crypto-wallets","type":0,"val":"crypto-wallets","end":""}],
     types: placeholder as Registry['updateCryptoWallets']['types'],
   },
+  'updateNftBaseImage': {
+    methods: ["PATCH"],
+    pattern: '/api/v1/institutions/:id/nft-base-image',
+    tokens: [{"old":"/api/v1/institutions/:id/nft-base-image","type":0,"val":"api","end":""},{"old":"/api/v1/institutions/:id/nft-base-image","type":0,"val":"v1","end":""},{"old":"/api/v1/institutions/:id/nft-base-image","type":0,"val":"institutions","end":""},{"old":"/api/v1/institutions/:id/nft-base-image","type":1,"val":"id","end":""},{"old":"/api/v1/institutions/:id/nft-base-image","type":0,"val":"nft-base-image","end":""}],
+    types: placeholder as Registry['updateNftBaseImage']['types'],
+  },
   'showInstitutionCreditPool': {
     methods: ["GET","HEAD"],
     pattern: '/api/v1/institutions/:id/credit-pool',
